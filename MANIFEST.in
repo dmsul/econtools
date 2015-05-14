@@ -1,0 +1,2 @@
+include REAMDE.md
+include econtools/metrics/tests/data/*.dta
