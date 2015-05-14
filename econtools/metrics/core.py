@@ -90,7 +90,7 @@ def fitguts(y, x):
 
 def inference(y, x, xpxinv, beta, N, K, vce_type, cluster, x_for_resid=None,
               spatial_x=None, spatial_y=None, spatial_band=None,
-              spatial_kern=None):
+              spatial_kern=None, cols=None):
 
     if x_for_resid is not None:
         yhat = np.dot(x_for_resid, beta)
@@ -103,7 +103,8 @@ def inference(y, x, xpxinv, beta, N, K, vce_type, cluster, x_for_resid=None,
         t_df = g - 1
         vce_type = 'cluster'
     elif spatial_x is not None:
-        vce_type = 'spatial'
+        if vce_type is None:
+            vce_type = 'spatial'
         g = None
         t_df = N - K    # XXX: No idea what this should be
     else:
@@ -113,14 +114,15 @@ def inference(y, x, xpxinv, beta, N, K, vce_type, cluster, x_for_resid=None,
     vce = robust_vce(vce_type, xpxinv, x, resid, N, K, cluster=cluster, g=g,
                      spatial_x=spatial_x, spatial_y=spatial_y,
                      spatial_band=spatial_band,
-                     spatial_kern=spatial_kern)
-    se = pd.Series(np.sqrt(np.diagonal(vce)), index=x.columns)
+                     spatial_kern=spatial_kern,
+                     cols=cols)
+    se = pd.Series(np.sqrt(np.diagonal(vce)), index=vce.columns)
 
     t_stat = beta.div(se)
     # Set t df
     pt = pd.Series(
         stats.t.cdf(-np.abs(t_stat), t_df)*2,  # `t.cdf` is P(x<X)
-        index=x.columns
+        index=vce.columns
     )
     conf_level = .95
     crit_value = stats.t.ppf(conf_level + (1 - conf_level)/2, t_df)
@@ -138,16 +140,18 @@ def inference(y, x, xpxinv, beta, N, K, vce_type, cluster, x_for_resid=None,
 
 def robust_vce(vce_type, xpx_inv, x, resid, n, k, cluster=None, g=None,
                spatial_x=None, spatial_y=None, spatial_band=None,
-               spatial_kern=None):
+               spatial_kern=None, cols=None):
     """
     Robust variance estimators.
     """
+    if cols is None:
+        cols = x.columns
 
     # Homoskedastic
     if vce_type is None:
         s2 = np.dot(resid, resid) / (n - k)
         Sigma = s2 * xpx_inv
-        return _wrapSigma(Sigma, x.columns)
+        return _wrapSigma(Sigma, cols)
     else:
         xu = x.mul(resid, axis=0).values
 
@@ -179,9 +183,9 @@ def robust_vce(vce_type, xpx_inv, x, resid, n, k, cluster=None, g=None,
     except NameError:
         B = xu.T.dot(xu)
 
-    Sigma = xpx_inv.dot(B).dot(xpx_inv)
+    Sigma = _wrapSigma(xpx_inv.dot(B).dot(xpx_inv.T), cols)
 
-    return _wrapSigma(Sigma, x.columns)
+    return Sigma
 
 def _get_h(x, xpx_inv):         #noqa
     n = x.shape[0]
@@ -270,7 +274,8 @@ class Results(object):
                 1 - (self.ssr/(self.N - self.K))/(self.sst/(self.N - 1)))
             return self._r2_a
 
-    def Ftest(self, cols, equal=False):
+    def Ftest(self, col_names, equal=False):
+        cols = force_list(col_names)
         V = self.vce.loc[cols, cols]
         q = len(cols)
         beta = self.beta.loc[cols]
@@ -353,15 +358,14 @@ def dist_kernels(kernel, band):
 
 
 def unpack_spatialargs(argdict):
-
     if argdict is None:
         return None, None, None, None
-
-    spatial_x = argdict['x']
-    spatial_y = argdict['y']
-    spatial_band = argdict['band']
-    spatial_kern = argdict['kern']
-
+    spatial_x = argdict.pop('x', None)
+    spatial_y = argdict.pop('y', None)
+    spatial_band = argdict.pop('band', None)
+    spatial_kern = argdict.pop('kern', None)
+    if argdict:
+        raise ValueError("Extra args passed: {}".format(argdict.keys()))
     return spatial_x, spatial_y, spatial_band, spatial_kern
 
 
