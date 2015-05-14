@@ -5,7 +5,94 @@ import numpy as np
 import numpy.linalg as la
 import scipy.stats as stats
 
-from regutil import force_list, add_cons, flag_sample
+from regutil import (force_list, add_cons, flag_sample, flag_nonsingletons,
+                     demeaner)
+
+
+def regcore(df, y, x, x_end=None, z=None, avar=None,
+            vce_type=None, cluster=None, spatial_hac=None,
+            addcons=None, nocons=False, nosingles=True,
+            ):
+    # Unpack spatial HAC args
+    sp_args = unpack_spatialargs(spatial_hac)
+    spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
+
+    # Handle names and flag sample
+    xname = force_list(x)
+    x_end_name = force_list(x_end) if x_end else None
+    z_name = force_list(z) if z else None
+    sample = flag_sample(df, y, xname, x_end_name, z_name, avar, cluster,
+                         spatial_x, spatial_y)
+
+    if nosingles and avar:
+        sample &= flag_nonsingletons(df, avar)
+
+    # Restrict sample
+    Y = _set_sample(df, sample, y)
+    X = _set_sample(df, sample, xname)
+    A = _set_sample(df, sample, avar) if avar else None
+    cluster_id = _set_sample(df, sample, cluster) if cluster else None
+    space_x = _set_sample(df, sample, spatial_x) if spatial_x else None
+    space_y = _set_sample(df, sample, spatial_y) if spatial_y else None
+
+    Z = _set_sample(df, sample, z_name) if z_name else None
+    X_end = _set_sample(df, sample, x_end_name) if x_end_name else None
+
+    if avar:
+        rawY = Y.copy()
+        Y = demeaner(Y, A)
+        X = demeaner(X, A)
+        Z = demeaner(Z, A)
+        X_end = demeaner(X_end, A)
+
+    if z_name:
+        x_for_resid = pd.concat((X_end, X), axis=1)
+        X = _first_stage(X_end, X, Z)
+    else:
+        x_for_resid = None
+
+    results = fitguts(Y, X)
+
+    N, K = X.shape
+
+    # Corrections
+    if avar:
+        K += len(A.unique())    # Adjust dof's for group means
+        results.sst = rawY
+        results._nocons = True
+    else:
+        results.__dict__.update(dict(_nocons=nocons))
+
+    if z_name:
+        # R^2 doesn't mean anything in IV/2SLS
+        results._r2 = np.nan
+        results._r2_a = np.nan
+
+    inferred = inference(Y, X, results.xpxinv, results.beta, N, K,
+                         x_for_resid=x_for_resid,
+                         vce_type=vce_type, cluster=cluster_id,
+                         spatial_x=space_x, spatial_y=space_y,
+                         spatial_band=spatial_band,
+                         spatial_kern=spatial_kern)
+    results.__dict__.update(**inferred)
+
+    results.sample = sample
+
+    return results
+
+
+def _set_sample(df, sample, name):
+    return df.loc[sample, name].copy().reset_index(drop=True)
+
+
+def _first_stage(x_end, x_exog, Z):
+    X_hat = pd.concat((x_end, x_exog), axis=1)
+    all_exog = pd.concat((Z, x_exog), axis=1)
+    for an_x in x_end.columns:
+        this_x = x_end[an_x]
+        first_stage = fitguts(this_x, all_exog)
+        X_hat[an_x] = np.dot(all_exog, first_stage.beta)
+    return X_hat
 
 
 def reg(df, y, x, vce_type=None, cluster=None, nocons=False, addcons=False,
@@ -34,6 +121,7 @@ def reg(df, y, x, vce_type=None, cluster=None, nocons=False, addcons=False,
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
 
     xname = force_list(x)   # Assures a 2D regressor matrix
+
     sample = flag_sample(df, y, xname, cluster, spatial_x, spatial_y)
 
     Y = df.loc[sample, y].copy()

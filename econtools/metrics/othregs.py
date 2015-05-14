@@ -16,8 +16,6 @@ def areg(df, y, x, avar=None, vce_type=None, cluster=None, nosingles=True,
     # Unpack spatial HAC args
     sp_args = unpack_spatialargs(spatial_hac)
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
-    if spatial_x is not None:
-        vce_type = 'spatial'
 
     xname = force_list(x)
     basic_sample = flag_sample(df, y, xname, cluster, avar, spatial_x,
@@ -76,8 +74,6 @@ def tsls(df, y, x_end, z, x_exog, vce_type=None, cluster=None, addcons=False,
     # Unpack spatial HAC args
     sp_args = unpack_spatialargs(spatial_hac)
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
-    if spatial_x is not None:
-        vce_type = 'spatial'
 
     x_end_name = force_list(x_end)
     z_name = force_list(z)

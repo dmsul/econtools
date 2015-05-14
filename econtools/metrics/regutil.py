@@ -24,7 +24,7 @@ def flag_sample(df, *args):
 
 def demeaner(df, groupvar, return_mean=False):
     # Ignore empty `df` (e.g. empty list of exogenous included regressors)
-    if df.empty:
+    if df is None or df.empty:
         return df
 
     groupvar = groupvar.squeeze()
