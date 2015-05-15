@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def readme():
@@ -12,7 +12,7 @@ setup(name='econtools',
       # url=
       author='Daniel Sullivan',
       # author_email=
-      packages=['econtools'],
+      packages=find_packages(),
       install_requires=[
           'numpy>=1.9.2',
           'pandas>=0.16.0',
