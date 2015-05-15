@@ -1,2 +1,2 @@
-include REAMDE.md
+include README.md
 include econtools/metrics/tests/data/*.dta
