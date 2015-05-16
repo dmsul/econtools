@@ -1,6 +1,8 @@
+from __future__ import division
+
 import numpy as np
 
-from numpy.testing import (assert_array_almost_equal,)
+from numpy.testing import (assert_array_equal, assert_array_almost_equal,)
 
 
 class RegCompare(object):
@@ -27,8 +29,8 @@ class RegCompare(object):
     def summ_assert(self, stat):
         result = self.result.summary[stat].values
         expected = self.expected.summary[stat].values
-        assert_array_almost_equal(result, expected,
-                                  decimal=self.precision[stat])
+        digits = self.precision[stat]
+        self._assert_core(result, expected, digits)
 
     def stat_assert(self, stat):
         if stat == 'vce':
@@ -39,8 +41,16 @@ class RegCompare(object):
         else:
             result = getattr(self.result, stat)
             expected = getattr(self.expected, stat)
-        assert_array_almost_equal(expected, result,
-                                  decimal=self.precision[stat])
+        digits = self.precision[stat]
+        self._assert_core(result, expected, digits)
+
+    def _assert_core(self, result, expected, digits):
+        if digits <= 0:
+            scale = 10**(-digits)
+            assert_array_equal(np.around(result/scale)*scale,
+                               np.around(expected/scale)*scale)
+        else:
+            assert_array_almost_equal(result, expected, decimal=digits)
 
     def test_coeff(self):
         stat = 'coeff'
