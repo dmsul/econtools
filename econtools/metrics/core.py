@@ -9,50 +9,59 @@ from regutil import (force_list, add_cons, flag_sample, flag_nonsingletons,
                      demeaner)
 
 
-def regcore(df, y, x, x_end=None, z=None, avar=None,
+def regcore(df, y_name, x_name,
+            z_name=None, w_name=None, iv_method='2sls',
+            a_name=None, nosingles=True,
             vce_type=None, cluster=None, spatial_hac=None,
-            addcons=None, nocons=False, nosingles=True,
+            addcons=None, nocons=False,
             ):
     # Unpack spatial HAC args
     sp_args = unpack_spatialargs(spatial_hac)
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
 
     # Handle names and flag sample
-    xname = force_list(x)
-    x_end_name = force_list(x_end) if x_end else None
-    z_name = force_list(z) if z else None
-    sample = flag_sample(df, y, xname, x_end_name, z_name, avar, cluster,
+    x_name = force_list(x_name)
+    z_name = force_list(z_name) if z_name else None
+    w_name = force_list(w_name) if w_name else None
+    sample = flag_sample(df, y_name, x_name, z_name, w_name, a_name, cluster,
                          spatial_x, spatial_y)
 
-    if nosingles and avar:
-        sample &= flag_nonsingletons(df, avar)
+    if nosingles and a_name:
+        sample &= flag_nonsingletons(df, a_name)
 
     # Restrict sample
-    Y = _set_sample(df, sample, y)
-    X = _set_sample(df, sample, xname)
-    A = _set_sample(df, sample, avar) if avar else None
-    cluster_id = _set_sample(df, sample, cluster) if cluster else None
-    space_x = _set_sample(df, sample, spatial_x) if spatial_x else None
-    space_y = _set_sample(df, sample, spatial_y) if spatial_y else None
+    y = _set_sample(df, sample, y)
+    x = _set_sample(df, sample, x_name)
+    z = _set_sample(df, sample, z_name)
+    w = _set_sample(df, sample, w_name)
+    A = _set_sample(df, sample, a_name)
+    cluster_id = _set_sample(df, sample, cluster)
+    space_x = _set_sample(df, sample, spatial_x)
+    space_y = _set_sample(df, sample, spatial_y)
 
-    Z = _set_sample(df, sample, z_name) if z_name else None
-    X_end = _set_sample(df, sample, x_end_name) if x_end_name else None
 
-    if avar:
-        rawY = Y.copy()
-        Y = demeaner(Y, A)
-        X = demeaner(X, A)
-        Z = demeaner(Z, A)
-        X_end = demeaner(X_end, A)
-
-    if z_name:
-        x_for_resid = pd.concat((X_end, X), axis=1)
-        X = _first_stage(X_end, X, Z)
+    if a_name:
+        y_raw = y.copy()
+        y = demeaner(y, A)
+        x = demeaner(x, A)
+        w = demeaner(w, A)
+        z = demeaner(z, A)
     else:
-        x_for_resid = None
+        y_raw = y
 
-    results = fitguts(Y, X)
+    if z_name and iv_method == 'liml':
+        results, X = _liml_prep(y, x, z, w, _kappa_debug, vce_type)
+    if z_name and iv_method == '2sls':
+        X = _first_stage()
+        results = fitguts(y, X)
+    elif z_name:
+        raise ValueError
+    else:
+        X = x
+        results = fitguts(y, X)
 
+
+    # XXX still broken. Maybe liml too much to shoe-horn in ....
     N, K = X.shape
 
     # Corrections
@@ -64,9 +73,12 @@ def regcore(df, y, x, x_end=None, z=None, avar=None,
         results.__dict__.update(dict(_nocons=nocons))
 
     if z_name:
+        x_for_resid = pd.concat((x, w), axis=1)
         # R^2 doesn't mean anything in IV/2SLS
         results._r2 = np.nan
         results._r2_a = np.nan
+    else:
+        x_for_resid = None
 
     inferred = inference(Y, X, results.xpxinv, results.beta, N, K,
                          x_for_resid=x_for_resid,
@@ -82,7 +94,10 @@ def regcore(df, y, x, x_end=None, z=None, avar=None,
 
 
 def _set_sample(df, sample, name):
-    return df.loc[sample, name].copy().reset_index(drop=True)
+    if name is None:
+        return None
+    else:
+        return df.loc[sample, name].copy().reset_index(drop=True)
 
 
 def _first_stage(x_end, x_exog, Z):
@@ -93,6 +108,63 @@ def _first_stage(x_end, x_exog, Z):
         first_stage = fitguts(this_x, all_exog)
         X_hat[an_x] = np.dot(all_exog, first_stage.beta)
     return X_hat
+
+
+def _liml_prep(y, x, z, w, _kappa_debug, vce_type):
+    Z = pd.concat((z, w), axis=1)
+    kappa, ZZ_inv = _liml(y, x, w, Z)
+    X = pd.concat((x, w), axis=1)
+    # Solve system
+    XX = X.T.dot(X)
+    XZ = X.T.dot(Z)
+    Xy = X.T.dot(y)
+    Zy = Z.T.dot(y)
+
+    # When `kappa` = 1 is 2sls, `kappa` = 0 is OLS
+    if _kappa_debug is not None:
+        kappa = _kappa_debug
+    # If exactly identified, same as 2sls, make it so
+    elif len(x_name) == len(z_name):
+        kappa = 1
+
+    xpxinv = la.inv(
+        (1-kappa)*XX + kappa*np.dot(XZ.dot(ZZ_inv), XZ.T)
+    )
+    xpy = (1-kappa)*Xy + kappa*np.dot(XZ.dot(ZZ_inv), Zy)
+
+
+    beta = pd.Series(xpxinv.dot(xpy).squeeze(), index=X.columns)
+
+    if vce_type is None:
+        se_xpxinv = xpxinv
+    else:
+        se_xpxinv = xpxinv.dot(XZ).dot(ZZ_inv)
+
+    results = Results(beta=beta, xpxinv=se_xpxinv)
+    results.kappa = kappa
+
+    return results, Z
+
+def _liml_kappa(y, x, w, Z):    #noqa
+    Y = pd.concat((y, x), axis=1).astype(np.float64)
+    YY = Y.T.dot(Y)
+    YZ = Y.T.dot(Z)
+    ZZ_inv = la.inv(Z.T.dot(Z))
+
+    bread = la.inv(la.sqrtm(
+        YY - np.dot(YZ.dot(ZZ_inv), YZ.T)
+    ))
+
+    if not w.empty:
+        Yw = Y.T.dot(w)
+        ww_inv = la.inv(w.T.dot(w))
+        meat = YY - np.dot(Yw.dot(ww_inv), Yw.T)
+    else:
+        meat = YY
+
+    eigs = la.eigvalsh(bread.dot(meat).dot(bread))
+    kappa = np.min(eigs)
+    return kappa, ZZ_inv
 
 
 def reg(df, y, x, vce_type=None, cluster=None, nocons=False, addcons=False,
@@ -160,7 +232,7 @@ def reg(df, y, x, vce_type=None, cluster=None, nocons=False, addcons=False,
 
 
 def fitguts(y, x):
-
+    """Checks dimensions, inverts, instantiates `Results'"""
     # Y should be 1D
     assert y.ndim == 1
     # X should be 2D
