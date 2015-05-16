@@ -204,6 +204,9 @@ def liml(df, y_name, x_name, z_name, w_name, a_name=None,
     # When `kappa` = 1 is 2sls, `kappa` = 0 is OLS
     if _kappa_debug is not None:
         kappa = _kappa_debug
+    # If exactly identified, same as 2sls, make it so
+    elif len(x_name) == len(z_name):
+        kappa = 1
 
     xpxinv = la.inv(
         (1-kappa)*XX + kappa*np.dot(XZ.dot(ZZ_inv), XZ.T)
@@ -347,10 +350,10 @@ if __name__ == '__main__':
         df['foreign'] = df['foreign'].cat.codes
         y = 'price'
         x_end = ['mpg', 'length']
-        x_end = ['mpg']
-        z = ['weight', 'trunk', 'gear_ratio']
-        x_exog = 'length'
-        # x_exog = []
+        # x_end = ['mpg']
+        z = ['weight', 'trunk']
+        # x_exog = 'length'
+        x_exog = []
         rhv = x_end + z
         cluster = 'gear_ratio'
         if 0 == 1:
@@ -360,10 +363,10 @@ if __name__ == '__main__':
                             )
         elif 1 == 1:
             results = liml(df, y, x_end, z, x_exog,
-                           # addcons=True,
-                           a_name='foreign',
+                           addcons=True,
+                           # a_name='foreign',
                            # vce_type='robust',
-                           # cluster=cluster,
+                           cluster=cluster,
                            # _kappa_debug=1.0000516,
                            )
             results2 = tsls(df, y, x_end, z, x_exog, addcons=True,)

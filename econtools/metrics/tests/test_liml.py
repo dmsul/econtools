@@ -6,6 +6,7 @@ from econtools.metrics.util.testing import RegCompare
 
 from econtools.metrics.othregs import liml
 from data.src_liml import liml_std, liml_robust, liml_cluster
+from data.src_tsls import tsls_cluster
 
 
 class LimlCompare(RegCompare):
@@ -111,6 +112,34 @@ class TestLIML_cluster(LimlCompare):
                           cluster='gear_ratio',
                           nosingles=nosingles)
         cls.expected = liml_cluster
+
+
+class TestLIML_tsls(LimlCompare):
+
+    def __init__(self):
+        super(TestLIML_tsls, self).__init__()
+        # self.precision['se'] = 0
+        # self.precision['CI_low'] = 0
+        # self.precision['CI_high'] = 0
+
+    def test_kappa(self):
+        pass
+
+    @classmethod
+    def setup_class(cls):
+        """Stata reg output from `sysuse auto; reg price mpg`"""
+        test_path = path.split(path.relpath(__file__))[0]
+        auto_path = path.join(test_path, 'data', 'auto.dta')
+        autodata = pd.read_stata(auto_path)
+        y = 'price'
+        x_end = ['mpg', 'length']
+        z = ['weight', 'trunk']
+        x_exog = []
+        nosingles = True
+        cls.result = liml(autodata, y, x_end, z, x_exog, addcons=True,
+                          cluster='gear_ratio',
+                          nosingles=nosingles)
+        cls.expected = tsls_cluster
 
 
 if __name__ == '__main__':
