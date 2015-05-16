@@ -68,7 +68,7 @@ prog def format_results
     file write `handle' "index=var_names)," _n
 
     * Write individual stats
-    foreach stat in N r2 r2_a mss tss rss {
+    foreach stat in N r2 r2_a mss tss rss kappa {
         local temp2 = e(`stat')
         if "`temp2'" == "." local temp2 np.nan
         file write `handle'  "`stat'=`temp2'," _n
@@ -178,6 +178,22 @@ format_results `reg_type'_output "`reg_type'_std"
 qui ivreg $Y ($X = $Z) _I* if T > 1, robust
 format_results `reg_type'_output "`reg_type'_robust"
 qui ivreg $Y ($X = $Z) _I* if T > 1, cluster($cluster)
+format_results `reg_type'_output "`reg_type'_cluster"
+
+file close `reg_type'_output
+
+*** LIML ***
+global Z trunk weight headroom
+* all at once
+local reg_type liml
+format_results_header "src_`reg_type'.py" `reg_type'_output
+
+xi i.$cluster
+qui ivregress liml $Y ($X = $Z) _I* if T > 1, small
+format_results `reg_type'_output "`reg_type'_std"
+qui ivregress liml $Y ($X = $Z) _I* if T > 1, robust small
+format_results `reg_type'_output "`reg_type'_robust"
+qui ivregress liml $Y ($X = $Z) _I* if T > 1, cluster($cluster) small
 format_results `reg_type'_output "`reg_type'_cluster"
 
 file close `reg_type'_output

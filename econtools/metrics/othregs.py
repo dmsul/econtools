@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
+import scipy.linalg as la
 
 from regutil import force_list, demeaner, flag_nonsingletons
-from core import fitguts, inference, add_cons, flag_sample, unpack_spatialargs
+from core import (fitguts, inference, add_cons, flag_sample, unpack_spatialargs,
+                  Results)
 
 
 def areg(df, y, x, avar=None, vce_type=None, cluster=None, nosingles=True,
@@ -132,6 +134,137 @@ def _first_stage(x_end, x_exog, Z):
     return X_hat
 
 
+def liml(df, y_name, x_name, z_name, w_name, a_name=None,
+         vce_type=None, cluster=None, spatial_hac=None,
+         addcons=False, _kappa_debug=None,
+         nosingles=True):
+    """
+    `z` is a list of names in `x` that are the excluded instruments.
+    `x_end` is a list of names in `x` that are endogenous X's.
+    """
+
+    if addcons and a_name:
+        raise ValueError("Can't add a constent when demeaning!")
+
+    # Unpack spatial HAC args
+    sp_args = unpack_spatialargs(spatial_hac)
+    spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
+    if spatial_x is not None:
+        vce_type = 'spatial'
+
+    x_name = force_list(x_name)
+    z_name = force_list(z_name)
+    w_name = force_list(w_name)
+    sample = flag_sample(df, y_name, x_name, z_name, w_name, a_name,
+                         cluster, spatial_x, spatial_y)
+    if nosingles and a_name:
+        not_singleton = flag_nonsingletons(df, a_name)
+        sample &= not_singleton
+
+    y = df.loc[sample, y_name].copy().reset_index(drop=True)
+    x = df.loc[sample, x_name].copy().reset_index(drop=True)
+    w = df.loc[sample, w_name].copy().reset_index(drop=True)
+    z = df.loc[sample, z_name].copy().reset_index(drop=True)
+    if a_name:
+        A = df.loc[sample, a_name].copy().reset_index(drop=True)
+        y_raw = y.copy()
+        y = demeaner(y, A)
+        x = demeaner(x, A)
+        w = demeaner(w, A)
+        z = demeaner(z, A)
+    else:
+        A = None
+        y_raw = y
+
+    if cluster is not None:
+        cluster_id = df.loc[sample, cluster].copy()
+        vce_type = 'cluster'
+    else:
+        cluster_id = None
+
+    if spatial_x is not None:
+        space_x = df.loc[sample, spatial_x].copy()
+        space_y = df.loc[sample, spatial_y].copy()
+    else:
+        space_x, space_y = None, None
+
+    if addcons:
+        w = add_cons(w)
+
+    # LIML prep
+    Z = pd.concat((z, w), axis=1)
+    kappa, ZZ_inv = _liml(y, x, w, Z)
+    X = pd.concat((x, w), axis=1)
+    # Solve system
+    XX = X.T.dot(X)
+    XZ = X.T.dot(Z)
+    Xy = X.T.dot(y)
+    Zy = Z.T.dot(y)
+
+    # When `kappa` = 1 is 2sls, `kappa` = 0 is OLS
+    if _kappa_debug is not None:
+        kappa = _kappa_debug
+    # If exactly identified, same as 2sls, make it so
+    elif len(x_name) == len(z_name):
+        kappa = 1
+
+    xpxinv = la.inv(
+        (1-kappa)*XX + kappa*np.dot(XZ.dot(ZZ_inv), XZ.T)
+    )
+    xpy = (1-kappa)*Xy + kappa*np.dot(XZ.dot(ZZ_inv), Zy)
+    beta = pd.Series(xpxinv.dot(xpy).squeeze(), index=X.columns)
+
+    results = Results(beta=beta, xpxinv=xpxinv)
+    results.sst = y_raw
+    results.kappa = kappa
+
+    # R^2 doesn't mean anything in IV/2SLS
+    results._r2 = np.nan
+    results._r2_a = np.nan
+
+    # Do inference
+    N, K = X.shape
+    if a_name:
+        K += A.unique().shape[0]
+
+    if vce_type is None:
+        se_xpxinv = xpxinv
+    else:
+        se_xpxinv = xpxinv.dot(XZ).dot(ZZ_inv)
+
+    inferred = inference(y, Z, se_xpxinv, results.beta, N, K,
+                         x_for_resid=X,
+                         vce_type=vce_type, cluster=cluster_id,
+                         spatial_x=space_x, spatial_y=space_y,
+                         spatial_band=spatial_band,
+                         spatial_kern=spatial_kern, cols=X.columns)
+    results.__dict__.update(**inferred)
+
+    return results
+
+
+def _liml(y, x, w, Z):
+    Y = pd.concat((y, x), axis=1).astype(np.float64)
+    YY = Y.T.dot(Y)
+    YZ = Y.T.dot(Z)
+    ZZ_inv = la.inv(Z.T.dot(Z))
+
+    bread = la.inv(la.sqrtm(
+        YY - np.dot(YZ.dot(ZZ_inv), YZ.T)
+    ))
+
+    if not w.empty:
+        Yw = Y.T.dot(w)
+        ww_inv = la.inv(w.T.dot(w))
+        meat = YY - np.dot(Yw.dot(ww_inv), Yw.T)
+    else:
+        meat = YY
+
+    eigs = la.eigvalsh(bread.dot(meat).dot(bread))
+    kappa = np.min(eigs)
+    return kappa, ZZ_inv
+
+
 def atsls(df, y, x_end, z, x_exog, vce_type=None, cluster=None, avar=None,
           nosingles=True, spatial_hac=None):
 
@@ -209,20 +342,35 @@ if __name__ == '__main__':
     data_path = path.join(test_path, 'tests', 'data')
     if 1 == 1:
         df = pd.read_stata(path.join(data_path, 'auto.dta'))
+        for col in df.columns:
+            try:
+                df[col] = df[col].astype(np.float64)
+            except:
+                pass
         df['foreign'] = df['foreign'].cat.codes
         y = 'price'
         x_end = ['mpg', 'length']
+        # x_end = ['mpg']
         z = ['weight', 'trunk']
+        # x_exog = 'length'
         x_exog = []
         rhv = x_end + z
         cluster = 'gear_ratio'
-        if 1 == 1:
+        if 0 == 1:
             results = atsls(df, y, x_end, z, x_exog, avar=cluster,
                             nosingles=False,
                             # vce_type='robust',
                             )
-        elif 0 == 1:
-            results = tsls(df, y, x_end, z, x_exog, addcons=True)
+        elif 1 == 1:
+            results = liml(df, y, x_end, z, x_exog,
+                           addcons=True,
+                           # a_name='foreign',
+                           # vce_type='robust',
+                           cluster=cluster,
+                           # _kappa_debug=1.0000516,
+                           )
+            results2 = tsls(df, y, x_end, z, x_exog, addcons=True,)
+            # results2 = reg(df, y, x_end, addcons=True,)
         else:
             results = areg(df, y, x_end, avar=cluster,
                            # cluster=cluster
@@ -255,3 +403,4 @@ if __name__ == '__main__':
         results = atsls(y, df[rhv], x_end='tenure', z='age', avar=cluster,
                         vce_type='hc1', cluster=None)
     print results.summary
+    print results2.summary
