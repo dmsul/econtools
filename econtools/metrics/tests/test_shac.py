@@ -5,9 +5,9 @@ import numpy as np
 
 from numpy.testing import (assert_array_almost_equal,)
 
-import mysci
+from econtools.util import group_id
 
-from metrics.core import reg
+from econtools.metrics.core import reg
 
 
 class SHACRegCompare(object):
@@ -38,8 +38,7 @@ class SHACRegCompare(object):
         cls.lat = 'lat_grid'
         cls.lon = 'lon_grid'
         cls.spatial_hac = dict(x=cls.lon, y=cls.lat, kern='unif', band=0.05)
-        df = mysci.group_id(df, cols=[cls.lon, cls.lat], name=cls.cluster,
-                            merge=True)
+        df = group_id(df, cols=[cls.lon, cls.lat], name=cls.cluster, merge=True)
         cls.df = df
         K = df.shape[1]
         g = len(df[cls.cluster].unique())

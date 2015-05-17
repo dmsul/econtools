@@ -4,8 +4,9 @@ import numpy as np
 import nose
 from nose.tools import raises, assert_raises
 
-from pandas.util.testing import assert_frame_equal  # noqa
-from mysci import stata_merge, group_id
+from pandas.util.testing import assert_frame_equal
+
+from econtools.util import stata_merge, group_id
 
 
 class TestStata_merge(object):
@@ -54,8 +55,7 @@ class TestStata_merge(object):
 
     @raises(AssertionError)
     def test_fail3(self):
-        result = stata_merge(self.df1, self.df1_part, on='a', how='left',
-                             assertval=3)
+        stata_merge(self.df1, self.df1_part, on='a', how='left', assertval=3)
 
     def test_autonaming(self):
         left = self.df1.rename(columns={'a': 'tmpa'})
