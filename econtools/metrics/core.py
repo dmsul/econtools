@@ -2,8 +2,10 @@ from __future__ import division
 
 import pandas as pd
 import numpy as np
-import numpy.linalg as la           # scipy.linalg yields slightly diff results
-from numpy.linalg import matrix_rank
+import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
+from numpy.linalg import matrix_rank        # not in `scipy.linalg`
+from scipy.linalg import sqrtm              # notin `numpy.linalg`
+
 import scipy.stats as stats
 
 from regutil import (force_list, add_cons, flag_sample, flag_nonsingletons,
@@ -40,11 +42,19 @@ def ivreg(df, y_name, x_name, z_name, w_name,
     else:
         y_raw = y
 
+    # Set `vce_type` for `_liml`
+    if cluster:
+        vce_type = 'cluster'
+    elif spatial_hac:
+        vce_type = 'spatial'
+
+    # Estimation
     if method == '2sls':
         sum_in_sandwich = _first_stage(x, w, z)
         results = fitguts(y, sum_in_sandwich)
     elif method == 'liml':
-        results, sum_in_sandwich, kappa = _liml(y, x, z, w, _kappa_debug)
+        results, sum_in_sandwich, kappa = _liml(y, x, z, w, _kappa_debug,
+                                                vce_type)
         results.kappa = kappa
 
     results._r2 = np.nan
@@ -70,7 +80,8 @@ def ivreg(df, y_name, x_name, z_name, w_name,
                          vce_type=vce_type, cluster=cluster_id,
                          spatial_x=space_x, spatial_y=space_y,
                          spatial_band=spatial_band,
-                         spatial_kern=spatial_kern)
+                         spatial_kern=spatial_kern,
+                         cols=x.columns.tolist() + w.columns.tolist())
     results.__dict__.update(**inferred)
 
     results.sample = sample
@@ -88,7 +99,7 @@ def _first_stage(x, w, z):
     return X_hat
 
 
-def _liml(y, x, z, w, _kappa_debug):
+def _liml(y, x, z, w, _kappa_debug, vce_type):
     Z = pd.concat((z, w), axis=1)
     kappa, ZZ_inv = _liml_kappa(y, x, w, Z)
     X = pd.concat((x, w), axis=1)
@@ -111,9 +122,15 @@ def _liml(y, x, z, w, _kappa_debug):
     xpy = (1-kappa)*Xy + kappa*np.dot(XZ.dot(ZZ_inv), Zy)
     beta = pd.Series(xpxinv.dot(xpy).squeeze(), index=X.columns)
 
-    results = Results(beta=beta, xpxinv=xpxinv)
+    # LIML uses non-standard 'bread' in the sandwich estimator
+    if vce_type is None:
+        se_xpxinv = xpxinv
+    else:
+        se_xpxinv = xpxinv.dot(XZ).dot(ZZ_inv)
 
-    return results, X, kappa
+    results = Results(beta=beta, xpxinv=se_xpxinv)
+
+    return results, Z, kappa
 
 def _liml_kappa(y, x, w, Z):        #noqa
     Y = pd.concat((y, x), axis=1).astype(np.float64)
@@ -121,7 +138,7 @@ def _liml_kappa(y, x, w, Z):        #noqa
     YZ = Y.T.dot(Z)
     ZZ_inv = la.inv(Z.T.dot(Z))
 
-    bread = la.inv(la.sqrtm(
+    bread = la.inv(sqrtm(
         YY - np.dot(YZ.dot(ZZ_inv), YZ.T)
     ))
 
@@ -177,8 +194,7 @@ def reg(df, y_name, x_name,
 
     if a_name:
         y_raw = y.copy()
-        y = demeaner(y, A)
-        X = demeaner(X, A)
+        y, X = demeaner(A, y, X)
     else:
         y_raw = y
 
@@ -525,7 +541,7 @@ if __name__ == '__main__':
         cluster = 'gear_ratio'
         # ols.fit(y, x, cluster=cluster)
         rhv = ['mpg', 'length']
-        results = reg(df, y_name, rhv, cluster=cluster)
+        results = reg(df, y_name, rhv, cluster=cluster, a_name=cluster)
         print results.summary
     elif 1 == 1:
         y = 'price'
@@ -533,7 +549,8 @@ if __name__ == '__main__':
         z = ['weight', 'trunk']
         w = []
         cluster = 'gear_ratio'
-        tsls = ivreg(df, y, x, z, w, addcons=True)
+        tsls = ivreg(df, y, x, z, w, addcons=True, cluster='gear_ratio')
         print tsls.summary
-        liml = ivreg(df, y, x, z, w, addcons=True, method='liml')
+        liml = ivreg(df, y, x, z, w, addcons=True, cluster='gear_ratio',
+                     method='liml')
         print liml.summary

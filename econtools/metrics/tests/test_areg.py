@@ -2,8 +2,8 @@ from os import path
 
 import pandas as pd
 
-from metrics.util.testing import RegCompare
-from metrics.othregs import areg
+from econtools.metrics.util.testing import RegCompare
+from econtools.metrics.core import reg
 from data.src_areg import areg_std, areg_robust, areg_cluster
 from data.src_areg_nosing import (areg_nosing_std, areg_nosing_robust,
                                   areg_nosing_cluster)
@@ -26,9 +26,9 @@ class TestAreg_std(AregCompare):
         autodata = pd.read_stata(auto_path)
         y = 'price'
         x = ['mpg', 'length']
-        avar = 'gear_ratio'
+        a_name = 'gear_ratio'
         nosingles = False
-        cls.result = areg(autodata, y, x, avar=avar, nosingles=nosingles)
+        cls.result = reg(autodata, y, x, a_name=a_name, nosingles=nosingles)
         cls.expected = areg_std
 
 
@@ -42,10 +42,10 @@ class TestAreg_hc1(AregCompare):
         autodata = pd.read_stata(auto_path)
         y = 'price'
         x = ['mpg', 'length']
-        avar = 'gear_ratio'
+        a_name = 'gear_ratio'
         nosingles = False
-        cls.result = areg(autodata, y, x, avar=avar, vce_type='hc1',
-                          nosingles=nosingles)
+        cls.result = reg(autodata, y, x, a_name=a_name, vce_type='hc1',
+                         nosingles=nosingles)
         cls.expected = areg_robust
 
 
@@ -59,10 +59,10 @@ class TestAreg_cluster(AregCompare):
         autodata = pd.read_stata(auto_path)
         y = 'price'
         x = ['mpg', 'length']
-        avar = 'gear_ratio'
+        a_name = 'gear_ratio'
         nosingles = False
-        cls.result = areg(autodata, y, x, avar=avar, cluster=avar,
-                          nosingles=nosingles)
+        cls.result = reg(autodata, y, x, a_name=a_name, cluster=a_name,
+                         nosingles=nosingles)
         cls.expected = areg_cluster
 
 
@@ -76,9 +76,9 @@ class TestAreg_nosing_std(AregCompare):
         autodata = pd.read_stata(auto_path)
         y = 'price'
         x = ['mpg', 'length']
-        avar = 'gear_ratio'
+        a_name = 'gear_ratio'
         nosingles = True
-        cls.result = areg(autodata, y, x, avar=avar, nosingles=nosingles)
+        cls.result = reg(autodata, y, x, a_name=a_name, nosingles=nosingles)
         cls.expected = areg_nosing_std
 
 
@@ -92,10 +92,10 @@ class TestAreg_nosing_hc1(AregCompare):
         autodata = pd.read_stata(auto_path)
         y = 'price'
         x = ['mpg', 'length']
-        avar = 'gear_ratio'
+        a_name = 'gear_ratio'
         nosingles = True
-        cls.result = areg(autodata, y, x, avar=avar, vce_type='hc1',
-                          nosingles=nosingles)
+        cls.result = reg(autodata, y, x, a_name=a_name, vce_type='hc1',
+                         nosingles=nosingles)
         cls.expected = areg_nosing_robust
 
 
@@ -109,10 +109,10 @@ class TestAreg_nosing_cluster(AregCompare):
         autodata = pd.read_stata(auto_path)
         y = 'price'
         x = ['mpg', 'length']
-        avar = 'gear_ratio'
+        a_name = 'gear_ratio'
         nosingles = True
-        cls.result = areg(autodata, y, x, avar=avar, cluster=avar,
-                          nosingles=nosingles)
+        cls.result = reg(autodata, y, x, a_name=a_name, cluster=a_name,
+                         nosingles=nosingles)
         cls.expected = areg_nosing_cluster
 
 

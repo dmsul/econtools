@@ -23,7 +23,7 @@ def flag_sample(df, *args):
 
 
 def demeaner(A, *args):
-    return tuple(_demean_guts(A, args))
+    return tuple(_demean_guts(A.squeeze(), args))
 
 def _demean_guts(A, args):      #noqa
     for df in args:

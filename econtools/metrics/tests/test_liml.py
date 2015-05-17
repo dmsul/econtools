@@ -4,7 +4,7 @@ import pandas as pd
 
 from econtools.metrics.util.testing import RegCompare
 
-from econtools.metrics.othregs import liml
+from econtools.metrics.core import ivreg
 from data.src_liml import liml_std, liml_robust, liml_cluster
 from data.src_tsls import tsls_cluster
 
@@ -57,8 +57,9 @@ class TestLIML_std(LimlCompare):
         x_exog = []
         a = 'gear_ratio'
         nosingles = True
-        cls.result = liml(autodata, y, x_end, z, x_exog, a_name=a,
-                          nosingles=nosingles)
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
+                           method='liml',
+                           nosingles=nosingles)
         cls.expected = liml_std
 
 
@@ -82,9 +83,10 @@ class TestLIML_robust(LimlCompare):
         x_exog = []
         a = 'gear_ratio'
         nosingles = True
-        cls.result = liml(autodata, y, x_end, z, x_exog, a_name=a,
-                          vce_type='robust',
-                          nosingles=nosingles)
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
+                           method='liml',
+                           vce_type='robust',
+                           nosingles=nosingles)
         cls.expected = liml_robust
 
 
@@ -108,9 +110,10 @@ class TestLIML_cluster(LimlCompare):
         x_exog = []
         a = 'gear_ratio'
         nosingles = True
-        cls.result = liml(autodata, y, x_end, z, x_exog, a_name=a,
-                          cluster='gear_ratio',
-                          nosingles=nosingles)
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
+                           method='liml',
+                           cluster='gear_ratio',
+                           nosingles=nosingles)
         cls.expected = liml_cluster
 
 
@@ -136,9 +139,10 @@ class TestLIML_tsls(LimlCompare):
         z = ['weight', 'trunk']
         x_exog = []
         nosingles = True
-        cls.result = liml(autodata, y, x_end, z, x_exog, addcons=True,
-                          cluster='gear_ratio',
-                          nosingles=nosingles)
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, addcons=True,
+                           method='liml',
+                           cluster='gear_ratio',
+                           nosingles=nosingles)
         cls.expected = tsls_cluster
 
 
