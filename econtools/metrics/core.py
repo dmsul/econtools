@@ -23,6 +23,7 @@ def ivreg(df, y_name, x_name, z_name, w_name,
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
     # Handle names
     x_name = force_list(x_name)
+    w_name = force_list(w_name)
     # Flag and restrict sample
     sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y,
                    w_name, z_name)
