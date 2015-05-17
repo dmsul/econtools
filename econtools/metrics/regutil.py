@@ -22,6 +22,17 @@ def flag_sample(df, *args):
     return sample
 
 
+def set_sample(df, sample, names):
+    return tuple(_set_samp_core(df, sample, names))
+
+def _set_samp_core(df, sample, names):      #noqa
+    for name in names:
+        if name is None:
+            yield None
+        else:
+            yield df.loc[sample, name].copy().reset_index(drop=True)
+
+
 def demeaner(A, *args):
     return tuple(_demean_guts(A.squeeze(), args))
 
@@ -39,6 +50,18 @@ def _demean_guts(A, args):      #noqa
                 large_mean = large_mean.squeeze()
             demeaned = df - large_mean
             yield demeaned
+
+
+def unpack_spatialargs(argdict):
+    if argdict is None:
+        return None, None, None, None
+    spatial_x = argdict.pop('x', None)
+    spatial_y = argdict.pop('y', None)
+    spatial_band = argdict.pop('band', None)
+    spatial_kern = argdict.pop('kern', None)
+    if argdict:
+        raise ValueError("Extra args passed: {}".format(argdict.keys()))
+    return spatial_x, spatial_y, spatial_band, spatial_kern
 
 
 def flag_nonsingletons(df, avar):

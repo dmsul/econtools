@@ -8,8 +8,8 @@ from scipy.linalg import sqrtm              # notin `numpy.linalg`
 
 import scipy.stats as stats
 
-from regutil import (force_list, add_cons, flag_sample, flag_nonsingletons,
-                     demeaner)
+from regutil import (force_list, add_cons, flag_sample, set_sample,
+                     flag_nonsingletons, demeaner, unpack_spatialargs)
 
 
 def ivreg(df, y_name, x_name, z_name, w_name,
@@ -220,17 +220,6 @@ def reg(df, y_name, x_name,
     results.sample = sample
 
     return results
-
-
-def set_sample(df, sample, names):
-    return tuple(_set_samp_core(df, sample, names))
-
-def _set_samp_core(df, sample, names):      #noqa
-    for name in names:
-        if name is None:
-            yield None
-        else:
-            yield df.loc[sample, name].copy().reset_index(drop=True)
 
 
 def fitguts(y, x):
@@ -517,18 +506,6 @@ def dist_kernels(kernel, band):
         return unif
     elif kernel == 'tria':
         return tria
-
-
-def unpack_spatialargs(argdict):
-    if argdict is None:
-        return None, None, None, None
-    spatial_x = argdict.pop('x', None)
-    spatial_y = argdict.pop('y', None)
-    spatial_band = argdict.pop('band', None)
-    spatial_kern = argdict.pop('kern', None)
-    if argdict:
-        raise ValueError("Extra args passed: {}".format(argdict.keys()))
-    return spatial_x, spatial_y, spatial_band, spatial_kern
 
 
 if __name__ == '__main__':
