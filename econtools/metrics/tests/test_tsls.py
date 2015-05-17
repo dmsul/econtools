@@ -2,8 +2,8 @@ from os import path
 
 import pandas as pd
 
-from metrics.util.testing import RegCompare
-from metrics.othregs import tsls
+from econtools.metrics.util.testing import RegCompare
+from econtools.metrics.core import ivreg
 from data.src_tsls import tsls_std, tsls_robust, tsls_cluster
 
 
@@ -33,10 +33,10 @@ class TestTsls_std(TslsCompare):
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
         y = 'price'
-        x_end = ['mpg', 'length']
+        x = ['mpg', 'length']
         z = ['trunk', 'weight']
-        x_exog = []
-        cls.result = tsls(autodata, y, x_end, z, x_exog, addcons=True)
+        w = []
+        cls.result = ivreg(autodata, y, x, z, w, addcons=True)
         cls.expected = tsls_std
 
 
@@ -52,8 +52,8 @@ class TestTsls_hc1(TslsCompare):
         x_end = ['mpg', 'length']
         z = ['trunk', 'weight']
         x_exog = []
-        cls.result = tsls(autodata, y, x_end, z, x_exog, vce_type='hc1',
-                          addcons=True)
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, vce_type='hc1',
+                           addcons=True)
         cls.expected = tsls_robust
 
 
@@ -69,8 +69,8 @@ class TestTsls_cluster(TslsCompare):
         x_end = ['mpg', 'length']
         z = ['trunk', 'weight']
         x_exog = []
-        cls.result = tsls(autodata, y, x_end, z, x_exog, cluster='gear_ratio',
-                          addcons=True)
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, cluster='gear_ratio',
+                           addcons=True)
         cls.expected = tsls_cluster
 
 

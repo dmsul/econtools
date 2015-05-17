@@ -2,14 +2,146 @@ from __future__ import division
 
 import pandas as pd
 import numpy as np
-import numpy.linalg as la
+import numpy.linalg as la           # scipy.linalg yields slightly diff results
+from numpy.linalg import matrix_rank
 import scipy.stats as stats
 
 from regutil import (force_list, add_cons, flag_sample, flag_nonsingletons,
                      demeaner)
 
 
-def reg(*args, **kwargs):
+def ivreg(df, y_name, x_name, z_name, w_name,
+          method='2sls', _kappa_debug=None,
+          a_name=None, nosingles=True,
+          vce_type=None, cluster=None, spatial_hac=None,
+          addcons=None, nocons=False,
+          ):
+    # Unpack spatial HAC args
+    sp_args = unpack_spatialargs(spatial_hac)
+    spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
+    # Handle names
+    x_name = force_list(x_name)
+    # Flag and restrict sample
+    sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y,
+                   w_name, z_name)
+    sample = flag_sample(df, *sample_cols)
+    if nosingles and a_name:
+        sample &= flag_nonsingletons(df, a_name)
+    y, x, A, cluster_id, space_x, space_y, w, z = set_sample(df, sample,
+                                                             sample_cols)
+
+    if addcons and not a_name:
+        w = add_cons(w)
+
+    # Demean and save true `y` if needed
+    if a_name:
+        y_raw = y.copy()
+        y, x, z, w = demeaner(A, y, x, z, w)
+    else:
+        y_raw = y
+
+    if method == '2sls':
+        sum_in_sandwich = _first_stage(x, w, z)
+        results = fitguts(y, sum_in_sandwich)
+    elif method == 'liml':
+        results, sum_in_sandwich, kappa = _liml(y, x, z, w, _kappa_debug)
+        results.kappa = kappa
+
+    results._r2 = np.nan
+    results._r2_a = np.nan
+
+    K = x.shape[1]
+    try:
+        K += w.shape[1]
+    except:
+        pass
+    N = y.shape[0]
+
+    # Corrections
+    if a_name:
+        K += len(A.unique())    # Adjust dof's for group means
+        results.sst = y_raw
+        results._nocons = True
+    else:
+        results.__dict__.update(dict(_nocons=nocons))
+
+    inferred = inference(y, sum_in_sandwich, results.xpxinv, results.beta, N, K,
+                         x_for_resid=pd.concat((x, w), axis=1),
+                         vce_type=vce_type, cluster=cluster_id,
+                         spatial_x=space_x, spatial_y=space_y,
+                         spatial_band=spatial_band,
+                         spatial_kern=spatial_kern)
+    results.__dict__.update(**inferred)
+
+    results.sample = sample
+
+    return results
+
+
+def _first_stage(x, w, z):
+    X_hat = pd.concat((x, w), axis=1)
+    Z = pd.concat((z, w), axis=1)
+    for an_x in x.columns:
+        this_x = x[an_x]
+        first_stage = fitguts(this_x, Z)
+        X_hat[an_x] = np.dot(Z, first_stage.beta)
+    return X_hat
+
+
+def _liml(y, x, z, w, _kappa_debug):
+    Z = pd.concat((z, w), axis=1)
+    kappa, ZZ_inv = _liml_kappa(y, x, w, Z)
+    X = pd.concat((x, w), axis=1)
+    # Solve system
+    XX = X.T.dot(X)
+    XZ = X.T.dot(Z)
+    Xy = X.T.dot(y)
+    Zy = Z.T.dot(y)
+
+    # When `kappa` = 1 is 2sls, `kappa` = 0 is OLS
+    if _kappa_debug is not None:
+        kappa = _kappa_debug
+    # If exactly identified, same as 2sls, make it so
+    elif x.shape[1] == z.shape[1]:
+        kappa = 1
+
+    xpxinv = la.inv(
+        (1-kappa)*XX + kappa*np.dot(XZ.dot(ZZ_inv), XZ.T)
+    )
+    xpy = (1-kappa)*Xy + kappa*np.dot(XZ.dot(ZZ_inv), Zy)
+    beta = pd.Series(xpxinv.dot(xpy).squeeze(), index=X.columns)
+
+    results = Results(beta=beta, xpxinv=xpxinv)
+
+    return results, X, kappa
+
+def _liml_kappa(y, x, w, Z):        #noqa
+    Y = pd.concat((y, x), axis=1).astype(np.float64)
+    YY = Y.T.dot(Y)
+    YZ = Y.T.dot(Z)
+    ZZ_inv = la.inv(Z.T.dot(Z))
+
+    bread = la.inv(la.sqrtm(
+        YY - np.dot(YZ.dot(ZZ_inv), YZ.T)
+    ))
+
+    if not w.empty:
+        Yw = Y.T.dot(w)
+        ww_inv = la.inv(w.T.dot(w))
+        meat = YY - np.dot(Yw.dot(ww_inv), Yw.T)
+    else:
+        meat = YY
+
+    eigs = la.eigvalsh(bread.dot(meat).dot(bread))
+    kappa = np.min(eigs)
+    return kappa, ZZ_inv
+
+
+def reg(df, y_name, x_name,
+        a_name=None, nosingles=True,
+        vce_type=None, cluster=None, spatial_hac=None,
+        addcons=None, nocons=False,
+        ):
     """
     Parameters
     ----------
@@ -28,14 +160,6 @@ def reg(*args, **kwargs):
     ------
     Regression output object
     """
-    return regcore(*args, **kwargs)
-
-
-def regcore(df, y_name, x_name,
-            a_name=None, nosingles=True,
-            vce_type=None, cluster=None, spatial_hac=None,
-            addcons=None, nocons=False,
-            ):
     # Unpack spatial HAC args
     sp_args = unpack_spatialargs(spatial_hac)
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
@@ -91,16 +215,6 @@ def _set_samp_core(df, sample, names):      #noqa
             yield None
         else:
             yield df.loc[sample, name].copy().reset_index(drop=True)
-
-
-def _first_stage(x_end, x_exog, Z):
-    X_hat = pd.concat((x_end, x_exog), axis=1)
-    all_exog = pd.concat((Z, x_exog), axis=1)
-    for an_x in x_end.columns:
-        this_x = x_end[an_x]
-        first_stage = fitguts(this_x, all_exog)
-        X_hat[an_x] = np.dot(all_exog, first_stage.beta)
-    return X_hat
 
 
 def fitguts(y, x):
@@ -351,7 +465,7 @@ def f_stat(V, R, beta, r, df_d):
         Rbr = Rbr.reshape(-1, 1)
 
     middle = la.inv(R.dot(V).dot(R.T))
-    df_n = la.matrix_rank(R)
+    df_n = matrix_rank(R)
     # Can't just squeeze, or we get a 0-d array
     F = (Rbr.T.dot(middle).dot(Rbr)/df_n).flatten()[0]
     pF = 1 - stats.f.cdf(F, df_n, df_d)
@@ -406,9 +520,20 @@ if __name__ == '__main__':
     test_path = path.split(path.relpath(__file__))[0]
     data_path = path.join(test_path, 'tests', 'data')
     df = pd.read_stata(path.join(data_path, 'auto.dta'))
-    y_name = 'price'
-    cluster = 'gear_ratio'
-    # ols.fit(y, x, cluster=cluster)
-    rhv = ['mpg', 'length']
-    results = reg(df, y_name, rhv, cluster=cluster)
-    print results.summary
+    if 0 == 1:
+        y_name = 'price'
+        cluster = 'gear_ratio'
+        # ols.fit(y, x, cluster=cluster)
+        rhv = ['mpg', 'length']
+        results = reg(df, y_name, rhv, cluster=cluster)
+        print results.summary
+    elif 1 == 1:
+        y = 'price'
+        x = ['mpg', 'length']
+        z = ['weight', 'trunk']
+        w = []
+        cluster = 'gear_ratio'
+        tsls = ivreg(df, y, x, z, w, addcons=True)
+        print tsls.summary
+        liml = ivreg(df, y, x, z, w, addcons=True, method='liml')
+        print liml.summary
