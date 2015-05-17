@@ -2,8 +2,8 @@ from os import path
 
 import pandas as pd
 
-from metrics.util.testing import RegCompare
-from metrics.core import reg
+from econtools.metrics.util.testing import RegCompare
+from econtools.metrics.core import reg
 from data.src_ols import ols_std, ols_robust, ols_hc2, ols_hc3, ols_cluster
 
 

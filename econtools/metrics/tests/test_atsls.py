@@ -2,8 +2,8 @@ from os import path
 
 import pandas as pd
 
-from metrics.util.testing import RegCompare
-from metrics.othregs import atsls
+from econtools.metrics.util.testing import RegCompare
+from econtools.metrics.core import ivreg
 from data.src_atsls import atsls_std, atsls_robust, atsls_cluster
 from data.src_atsls_nosing import (atsls_nosing_std, atsls_nosing_robust,
                                    atsls_nosing_cluster)
@@ -50,7 +50,7 @@ class TestAtsls_std(AtslsCompare):
         x_exog = []
         a = 'gear_ratio'
         nosingles = False
-        cls.result = atsls(autodata, y, x_end, z, x_exog, avar=a,
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
                            nosingles=nosingles)
         cls.expected = atsls_std
 
@@ -79,7 +79,7 @@ class TestAtsls_robust(AtslsCompare):
         x_exog = []
         a = 'gear_ratio'
         nosingles = False
-        cls.result = atsls(autodata, y, x_end, z, x_exog, avar=a,
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
                            vce_type='robust', nosingles=nosingles)
         cls.expected = atsls_robust
 
@@ -101,7 +101,7 @@ class TestAtsls_cluster(AtslsCompare):
         x_exog = []
         a = 'gear_ratio'
         nosingles = False
-        cls.result = atsls(autodata, y, x_end, z, x_exog, avar=a, cluster=a,
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a, cluster=a,
                            nosingles=nosingles)
         cls.expected = atsls_cluster
 
@@ -123,7 +123,7 @@ class TestAtsls_nosing_std(AtslsCompare):
         x_exog = []
         a = 'gear_ratio'
         nosingles = True
-        cls.result = atsls(autodata, y, x_end, z, x_exog, avar=a,
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
                            nosingles=nosingles)
         cls.expected = atsls_nosing_std
 
@@ -152,7 +152,7 @@ class TestAtsls_nosing_robust(AtslsCompare):
         x_exog = []
         a = 'gear_ratio'
         nosingles = True
-        cls.result = atsls(autodata, y, x_end, z, x_exog, avar=a,
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
                            vce_type='robust', nosingles=nosingles)
         cls.expected = atsls_nosing_robust
 
@@ -174,7 +174,7 @@ class TestAtsls_nosing_cluster(AtslsCompare):
         x_exog = []
         a = 'gear_ratio'
         nosingles = True
-        cls.result = atsls(autodata, y, x_end, z, x_exog, avar=a, cluster=a,
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a, cluster=a,
                            nosingles=nosingles)
         cls.expected = atsls_nosing_cluster
 

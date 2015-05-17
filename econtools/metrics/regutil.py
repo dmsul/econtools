@@ -22,27 +22,46 @@ def flag_sample(df, *args):
     return sample
 
 
-def demeaner(df, groupvar, return_mean=False):
-    # Ignore empty `df` (e.g. empty list of exogenous included regressors)
-    if df.empty:
-        return df
+def set_sample(df, sample, names):
+    return tuple(_set_samp_core(df, sample, names))
 
-    groupvar = groupvar.squeeze()
-    group_name = groupvar.name
+def _set_samp_core(df, sample, names):      #noqa
+    for name in names:
+        if name is None:
+            yield None
+        else:
+            yield df.loc[sample, name].copy().reset_index(drop=True)
 
-    mean = df.groupby(groupvar).mean()
 
-    large_mean = force_df(groupvar).join(mean, on=group_name).drop(group_name,
-                                                                   axis=1)
-    if df.ndim == 1:
-        large_mean = large_mean.squeeze()
+def demeaner(A, *args):
+    return tuple(_demean_guts(A.squeeze(), args))
 
-    demeaned = df - large_mean
+def _demean_guts(A, args):      #noqa
+    for df in args:
+        # Ignore empty `df` (e.g. empty list of exogenous included regressors)
+        if df is None or df.empty:
+            yield df
+        else:
+            group_name = A.name
+            mean = df.groupby(A).mean()
+            large_mean = force_df(A).join(mean, on=group_name).drop(group_name,
+                                                                    axis=1)
+            if df.ndim == 1:
+                large_mean = large_mean.squeeze()
+            demeaned = df - large_mean
+            yield demeaned
 
-    if return_mean:
-        return demeaned, large_mean
-    else:
-        return demeaned
+
+def unpack_spatialargs(argdict):
+    if argdict is None:
+        return None, None, None, None
+    spatial_x = argdict.pop('x', None)
+    spatial_y = argdict.pop('y', None)
+    spatial_band = argdict.pop('band', None)
+    spatial_kern = argdict.pop('kern', None)
+    if argdict:
+        raise ValueError("Extra args passed: {}".format(argdict.keys()))
+    return spatial_x, spatial_y, spatial_band, spatial_kern
 
 
 def flag_nonsingletons(df, avar):

@@ -2,14 +2,164 @@ from __future__ import division
 
 import pandas as pd
 import numpy as np
-import numpy.linalg as la
+import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
+from numpy.linalg import matrix_rank        # not in `scipy.linalg`
+from scipy.linalg import sqrtm              # notin `numpy.linalg`
+
 import scipy.stats as stats
 
-from regutil import force_list, add_cons, flag_sample
+from regutil import (force_list, add_cons, flag_sample, set_sample,
+                     flag_nonsingletons, demeaner, unpack_spatialargs)
 
 
-def reg(df, y, x, vce_type=None, cluster=None, nocons=False, addcons=False,
-        spatial_hac=None):
+def ivreg(df, y_name, x_name, z_name, w_name,
+          method='2sls', _kappa_debug=None,
+          a_name=None, nosingles=True,
+          vce_type=None, cluster=None, spatial_hac=None,
+          addcons=None, nocons=False,
+          ):
+    # Unpack spatial HAC args
+    sp_args = unpack_spatialargs(spatial_hac)
+    spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
+    # Handle names
+    x_name = force_list(x_name)
+    w_name = force_list(w_name)
+    # Flag and restrict sample
+    sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y,
+                   w_name, z_name)
+    sample = flag_sample(df, *sample_cols)
+    if nosingles and a_name:
+        sample &= flag_nonsingletons(df, a_name)
+    y, x, A, cluster_id, space_x, space_y, w, z = set_sample(df, sample,
+                                                             sample_cols)
+
+    if addcons and not a_name:
+        w = add_cons(w)
+
+    # Demean and save true `y` if needed
+    if a_name:
+        y_raw = y.copy()
+        y, x, z, w = demeaner(A, y, x, z, w)
+    else:
+        y_raw = y
+
+    # Set `vce_type` for `_liml`
+    if cluster:
+        vce_type = 'cluster'
+    elif spatial_hac:
+        vce_type = 'spatial'
+
+    # Estimation
+    if method == '2sls':
+        sum_in_sandwich = _first_stage(x, w, z)
+        results = fitguts(y, sum_in_sandwich)
+    elif method == 'liml':
+        results, sum_in_sandwich, kappa = _liml(y, x, z, w, _kappa_debug,
+                                                vce_type)
+        results.kappa = kappa
+
+    results._r2 = np.nan
+    results._r2_a = np.nan
+
+    K = x.shape[1]
+    try:
+        K += w.shape[1]
+    except:
+        pass
+    N = y.shape[0]
+
+    # Corrections
+    if a_name:
+        K += len(A.unique())    # Adjust dof's for group means
+        results.sst = y_raw
+        results._nocons = True
+    else:
+        results.__dict__.update(dict(_nocons=nocons))
+
+    inferred = inference(y, sum_in_sandwich, results.xpxinv, results.beta, N, K,
+                         x_for_resid=pd.concat((x, w), axis=1),
+                         vce_type=vce_type, cluster=cluster_id,
+                         spatial_x=space_x, spatial_y=space_y,
+                         spatial_band=spatial_band,
+                         spatial_kern=spatial_kern,
+                         cols=x.columns.tolist() + w.columns.tolist())
+    results.__dict__.update(**inferred)
+
+    results.sample = sample
+
+    return results
+
+
+def _first_stage(x, w, z):
+    X_hat = pd.concat((x, w), axis=1)
+    Z = pd.concat((z, w), axis=1)
+    for an_x in x.columns:
+        this_x = x[an_x]
+        first_stage = fitguts(this_x, Z)
+        X_hat[an_x] = np.dot(Z, first_stage.beta)
+    return X_hat
+
+
+def _liml(y, x, z, w, _kappa_debug, vce_type):
+    Z = pd.concat((z, w), axis=1)
+    kappa, ZZ_inv = _liml_kappa(y, x, w, Z)
+    X = pd.concat((x, w), axis=1)
+    # Solve system
+    XX = X.T.dot(X)
+    XZ = X.T.dot(Z)
+    Xy = X.T.dot(y)
+    Zy = Z.T.dot(y)
+
+    # When `kappa` = 1 is 2sls, `kappa` = 0 is OLS
+    if _kappa_debug is not None:
+        kappa = _kappa_debug
+    # If exactly identified, same as 2sls, make it so
+    elif x.shape[1] == z.shape[1]:
+        kappa = 1
+
+    xpxinv = la.inv(
+        (1-kappa)*XX + kappa*np.dot(XZ.dot(ZZ_inv), XZ.T)
+    )
+    xpy = (1-kappa)*Xy + kappa*np.dot(XZ.dot(ZZ_inv), Zy)
+    beta = pd.Series(xpxinv.dot(xpy).squeeze(), index=X.columns)
+
+    # LIML uses non-standard 'bread' in the sandwich estimator
+    if vce_type is None:
+        se_xpxinv = xpxinv
+    else:
+        se_xpxinv = xpxinv.dot(XZ).dot(ZZ_inv)
+
+    results = Results(beta=beta, xpxinv=se_xpxinv)
+
+    return results, Z, kappa
+
+def _liml_kappa(y, x, w, Z):        #noqa
+    Y = pd.concat((y, x), axis=1).astype(np.float64)
+    YY = Y.T.dot(Y)
+    YZ = Y.T.dot(Z)
+    ZZ_inv = la.inv(Z.T.dot(Z))
+
+    bread = la.inv(sqrtm(
+        YY - np.dot(YZ.dot(ZZ_inv), YZ.T)
+    ))
+
+    if not w.empty:
+        Yw = Y.T.dot(w)
+        ww_inv = la.inv(w.T.dot(w))
+        meat = YY - np.dot(Yw.dot(ww_inv), Yw.T)
+    else:
+        meat = YY
+
+    eigs = la.eigvalsh(bread.dot(meat).dot(bread))
+    kappa = np.min(eigs)
+    return kappa, ZZ_inv
+
+
+def reg(df, y_name, x_name,
+        a_name=None, nosingles=True,
+        vce_type=None, cluster=None, spatial_hac=None,
+        addcons=None, nocons=False,
+        ):
     """
     Parameters
     ----------
@@ -28,51 +178,53 @@ def reg(df, y, x, vce_type=None, cluster=None, nocons=False, addcons=False,
     ------
     Regression output object
     """
-
-    # Unpack spatial args
+    # Unpack spatial HAC args
     sp_args = unpack_spatialargs(spatial_hac)
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
-
-    xname = force_list(x)   # Assures a 2D regressor matrix
-    sample = flag_sample(df, y, xname, cluster, spatial_x, spatial_y)
-
-    Y = df.loc[sample, y].copy()
-    X = df.loc[sample, x].copy()
-    if cluster is not None:
-        cluster_id = df.loc[sample, cluster].copy()
-    else:
-        cluster_id = None
-
-    if spatial_x is not None:
-        space_x = df.loc[sample, spatial_x].copy()
-        space_y = df.loc[sample, spatial_y].copy()
-    else:
-        space_x, space_y = None, None
+    # Handle names
+    x_name = force_list(x_name)
+    # Flag and restrict sample
+    sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y)
+    sample = flag_sample(df, *sample_cols)
+    if nosingles and a_name:
+        sample &= flag_nonsingletons(df, a_name)
+    y, X, A, cluster_id, space_x, space_y = set_sample(df, sample, sample_cols)
 
     if addcons:
         X = add_cons(X)
 
-    results = fitguts(Y, X)
-    # Pass stuff to `results` for `df_m`
-    results.__dict__.update(dict(_nocons=nocons))
-
-    # Do inference
-    if X.ndim == 1:
-        N, K = X.shape[0], 1
+    if a_name:
+        y_raw = y.copy()
+        y, X = demeaner(A, y, X)
     else:
-        N, K = X.shape
-    inferred = inference(Y, X, results.xpxinv, results.beta, N, K,
+        y_raw = y
+
+    results = fitguts(y, X)
+
+    N, K = X.shape
+
+    # Corrections
+    if a_name:
+        K += len(A.unique())    # Adjust dof's for group means
+        results.sst = y_raw
+        results._nocons = True
+    else:
+        results.__dict__.update(dict(_nocons=nocons))
+
+    inferred = inference(y, X, results.xpxinv, results.beta, N, K,
                          vce_type=vce_type, cluster=cluster_id,
                          spatial_x=space_x, spatial_y=space_y,
                          spatial_band=spatial_band,
                          spatial_kern=spatial_kern)
     results.__dict__.update(**inferred)
 
+    results.sample = sample
+
     return results
 
 
 def fitguts(y, x):
-
+    """Checks dimensions, inverts, instantiates `Results'"""
     # Y should be 1D
     assert y.ndim == 1
     # X should be 2D
@@ -319,7 +471,7 @@ def f_stat(V, R, beta, r, df_d):
         Rbr = Rbr.reshape(-1, 1)
 
     middle = la.inv(R.dot(V).dot(R.T))
-    df_n = la.matrix_rank(R)
+    df_n = matrix_rank(R)
     # Can't just squeeze, or we get a 0-d array
     F = (Rbr.T.dot(middle).dot(Rbr)/df_n).flatten()[0]
     pF = 1 - stats.f.cdf(F, df_n, df_d)
@@ -357,31 +509,26 @@ def dist_kernels(kernel, band):
         return tria
 
 
-def unpack_spatialargs(argdict):
-    if argdict is None:
-        return None, None, None, None
-    spatial_x = argdict.pop('x', None)
-    spatial_y = argdict.pop('y', None)
-    spatial_band = argdict.pop('band', None)
-    spatial_kern = argdict.pop('kern', None)
-    if argdict:
-        raise ValueError("Extra args passed: {}".format(argdict.keys()))
-    return spatial_x, spatial_y, spatial_band, spatial_kern
-
-
 if __name__ == '__main__':
     from os import path
     test_path = path.split(path.relpath(__file__))[0]
     data_path = path.join(test_path, 'tests', 'data')
     df = pd.read_stata(path.join(data_path, 'auto.dta'))
-    y = df['price']
-    cluster = df['gear_ratio']
-    # ols.fit(y, x, cluster=cluster)
-    if 1 == 1:
-        # rhv = ['mpg', 'gear_ratio']
+    if 0 == 1:
+        y_name = 'price'
+        cluster = 'gear_ratio'
+        # ols.fit(y, x, cluster=cluster)
         rhv = ['mpg', 'length']
-        results = reg(y, add_cons(df[rhv]), cluster=cluster)
-    else:
-        rhv = ['mpg', 'length']
-        results = reg(y, add_cons(df[rhv]), vce_type='hc1')
-    print results.summary
+        results = reg(df, y_name, rhv, cluster=cluster, a_name=cluster)
+        print results.summary
+    elif 1 == 1:
+        y = 'price'
+        x = ['mpg', 'length']
+        z = ['weight', 'trunk']
+        w = []
+        cluster = 'gear_ratio'
+        tsls = ivreg(df, y, x, z, w, addcons=True, cluster='gear_ratio')
+        print tsls.summary
+        liml = ivreg(df, y, x, z, w, addcons=True, cluster='gear_ratio',
+                     method='liml')
+        print liml.summary
