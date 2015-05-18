@@ -1,4 +1,44 @@
+from os.path import isfile, splitext
+
 import pandas as pd
+
+
+def load_or_build(filepath, force=False,
+                  build=None, bargs=[], bkwargs=dict(),
+                  copydta=False):
+    """Load `filepath` or build if necessary using function `build`"""
+
+    if isfile(filepath) and not force:
+        return read(filepath)
+    elif build is None:
+        raise IOError("File doesn't exist:\n{}".format(filepath))
+    else:
+        df = build(*bargs, **bkwargs)
+        write(df, filepath)
+
+        fileroot, fileext = splitext(filepath)
+        if copydta and fileext != '.dta':
+            pd.DataFrame(df).to_stata(fileroot + '.dta')
+
+        return df
+
+
+def try_pickle(filepath):
+    """
+    Use archived pickle for quicker reading. If archive doesn't exist,
+    create it for next time.
+    """
+
+    fileroot, fileext = splitext(filepath)
+    pickle_path = fileroot + '.p'
+
+    if isfile(pickle_path):
+        df = pd.read_pickle(pickle_path)
+    else:
+        df = read(filepath)
+        df.to_pickle(pickle_path)
+
+    return df
 
 
 def read(path, **kwargs):

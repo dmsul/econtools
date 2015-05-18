@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from patsy.contrasts import Treatment
 
+from econtools.util.frametools import force_list, force_iterable, force_df
+
 
 def add_cons(df):
     df = df.copy()  # Protect original df
@@ -70,27 +72,6 @@ def flag_nonsingletons(df, avar):
     big_counts = df[[avar]].join(counts.to_frame('_T'), on=avar)
     non_single = big_counts['_T'] > 1
     return non_single
-
-
-def force_df(df):
-    if df.ndim == 1:
-        df = pd.DataFrame(df.copy())
-    return df
-
-
-def force_list(x):
-    if isinstance(x, list):
-        return x
-    else:
-        return list(force_iterable(x))
-
-
-def force_iterable(x):
-    """If not iterable, wrap in tuple"""
-    if hasattr(x, '__iter__'):
-        return x
-    else:
-        return (x,)
 
 
 def windsorize(df, by, p=(.01, .99)):
