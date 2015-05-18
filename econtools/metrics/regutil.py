@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from patsy.contrasts import Treatment
 
-from econtools.util.frametools import force_list, force_iterable, force_df
+from econtools.util import force_list, force_iterable, force_df
 
 
 def add_cons(df):

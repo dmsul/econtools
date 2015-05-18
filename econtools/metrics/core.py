@@ -8,7 +8,7 @@ from scipy.linalg import sqrtm              # notin `numpy.linalg`
 
 import scipy.stats as stats
 
-from econtools.util.frametools import force_list
+from econtools.util import force_list
 from regutil import (add_cons, flag_sample, set_sample, flag_nonsingletons,
                      demeaner, unpack_spatialargs)
 
