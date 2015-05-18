@@ -8,8 +8,9 @@ from scipy.linalg import sqrtm              # notin `numpy.linalg`
 
 import scipy.stats as stats
 
-from regutil import (force_list, add_cons, flag_sample, set_sample,
-                     flag_nonsingletons, demeaner, unpack_spatialargs)
+from econtools.util.frametools import force_list
+from regutil import (add_cons, flag_sample, set_sample, flag_nonsingletons,
+                     demeaner, unpack_spatialargs)
 
 
 def ivreg(df, y_name, x_name, z_name, w_name,
