@@ -57,12 +57,10 @@ def _demean_guts(A, args):      #noqa
 def unpack_spatialargs(argdict):
     if argdict is None:
         return None, None, None, None
-    spatial_x = argdict.pop('x', None)
-    spatial_y = argdict.pop('y', None)
-    spatial_band = argdict.pop('band', None)
-    spatial_kern = argdict.pop('kern', None)
-    if argdict:
-        raise ValueError("Extra args passed: {}".format(argdict.keys()))
+    spatial_x = argdict['x']
+    spatial_y = argdict['y']
+    spatial_band = argdict['band']
+    spatial_kern = argdict['kern']
     return spatial_x, spatial_y, spatial_band, spatial_kern
 
 
