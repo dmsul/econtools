@@ -483,8 +483,8 @@ def dist_weights(xu, x, y, kernel, band):
     N, K = xu.shape
     Wxu = np.zeros((N, K))
 
-    xarr = x.squeeze().values
-    yarr = y.squeeze().values
+    xarr = x.squeeze().values.astype(float)
+    yarr = y.squeeze().values.astype(float)
     kern_func = dist_kernels(kernel, band)
     for i in xrange(N):
         dist = np.abs(np.sqrt((xarr[i] - xarr)**2 + (yarr[i] - yarr)**2))
