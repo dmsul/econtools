@@ -23,5 +23,5 @@ setup(name='econtools',
       include_package_data=True,        # To copy stuff in `MANIFEST.in`
       # dependency_links=['http://
       # zip_safe=False
-      # license='MIT'
+      license='BSD'
       )

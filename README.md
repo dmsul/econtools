@@ -1,8 +1,7 @@
 # econtools
-*econtools* is a collection of econometric functions and convenient shortcuts
-for data work with [pandas](http://github.com/pydata/pandas) and
-[numpy](https://github.com/numpy/numpy). No warranty, express or implied, etc
-etc.
+*econtools* is a Python package of econometric functions and convenient
+shortcuts for data work with [pandas](http://github.com/pydata/pandas) and
+[numpy](https://github.com/numpy/numpy).
 
 ## Econometrics
 - OLS, 2SLS, LIML
