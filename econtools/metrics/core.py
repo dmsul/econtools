@@ -14,11 +14,12 @@ from regutil import (add_cons, flag_sample, set_sample, flag_nonsingletons,
 
 
 def ivreg(df, y_name, x_name, z_name, w_name,
-          method='2sls', _kappa_debug=None,
           a_name=None, nosingles=True,
+          method='2sls', _kappa_debug=None,
           vce_type=None, cluster=None, spatial_hac=None,
-          addcons=None, nocons=False,
-          ):
+          addcons=None, nocons=False):
+    # Set `vce_type`
+    vce_type = _set_vce_type(vce_type, cluster, spatial_hac)
     # Unpack spatial HAC args
     sp_args = unpack_spatialargs(spatial_hac)
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
@@ -44,12 +45,6 @@ def ivreg(df, y_name, x_name, z_name, w_name,
     else:
         y_raw = y
 
-    # Set `vce_type` for `_liml`
-    if cluster:
-        vce_type = 'cluster'
-    elif spatial_hac:
-        vce_type = 'spatial'
-
     # Estimation
     if method == '2sls':
         sum_in_sandwich = _first_stage(x, w, z)
@@ -58,20 +53,23 @@ def ivreg(df, y_name, x_name, z_name, w_name,
         results, sum_in_sandwich, kappa = _liml(y, x, z, w, _kappa_debug,
                                                 vce_type)
         results.kappa = kappa
+    else:
+        raise ValueError("IV method '{}' not supported".format(method))
 
     results._r2 = np.nan
     results._r2_a = np.nan
 
+    N = y.shape[0]
     K = x.shape[1]
     try:
         K += w.shape[1]
     except:
         pass
-    N = y.shape[0]
 
     # Corrections
     if a_name:
-        K += len(A.unique())    # Adjust dof's for group means
+        if _fe_not_nested_cluster(cluster_id, A):
+            K += len(A.unique())    # Adjust dof's for group means
         results.sst = y_raw
         results._nocons = True
     else:
@@ -179,6 +177,8 @@ def reg(df, y_name, x_name,
     ------
     Regression output object
     """
+    # Set `vce_type`
+    vce_type = _set_vce_type(vce_type, cluster, spatial_hac)
     # Unpack spatial HAC args
     sp_args = unpack_spatialargs(spatial_hac)
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
@@ -206,7 +206,8 @@ def reg(df, y_name, x_name,
 
     # Corrections
     if a_name:
-        K += len(A.unique())    # Adjust dof's for group means
+        if _fe_not_nested_cluster(cluster_id, A):
+            K += len(A.unique())    # Adjust dof's for group means
         results.sst = y_raw
         results._nocons = True
     else:
@@ -222,6 +223,40 @@ def reg(df, y_name, x_name,
     results.sample = sample
 
     return results
+
+
+def _set_vce_type(vce_type, cluster, spatial_hac):
+    """ Check for argument conflicts, then set `vce_type` if needed.  """
+    # Check for valid arg
+    valid_vce = (None, 'robust', 'hc1', 'hc2', 'hc3', 'cluster', 'spatial')
+    if vce_type not in valid_vce:
+        raise ValueError("VCE type '{}' is not supported".format(vce_type))
+    # Check for conflicts
+    cluster_err = cluster and (vce_type != 'cluster' and vce_type is not None)
+    shac_err = spatial_hac and (vce_type != 'spatial' and vce_type is not None)
+    if (cluster and spatial_hac) or cluster_err or shac_err:
+        raise ValueError("VCE type conflict!")
+    # Set `vce_type`
+    if cluster:
+        new_vce = 'cluster'
+    elif spatial_hac:
+        new_vce = 'spatial'
+    else:
+        new_vce = vce_type
+
+    return new_vce
+
+
+def _fe_not_nested_cluster(cluster_id, A):
+    """ Check if FE's are nested within clusters (affects DOF correction)."""
+    if (cluster_id is None) or (A is None):
+        return True
+    else:
+        joint = pd.concat((cluster_id, A), axis=1)
+        names = [cluster_id.name, A.name]
+        pair_counts = joint.groupby(names)[A.name].count()
+        num_of_clusters = pair_counts.groupby(level=A.name).count()
+        return num_of_clusters.max() != 1
 
 
 def fitguts(y, x):
