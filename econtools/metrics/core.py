@@ -68,7 +68,7 @@ def ivreg(df, y_name, x_name, z_name, w_name,
 
     # Corrections
     if a_name:
-        if vce_type != 'cluster':
+        if _fe_not_nested_cluster(cluster_id, A):
             K += len(A.unique())    # Adjust dof's for group means
         results.sst = y_raw
         results._nocons = True
@@ -206,7 +206,7 @@ def reg(df, y_name, x_name,
 
     # Corrections
     if a_name:
-        if vce_type != 'cluster':
+        if _fe_not_nested_cluster(cluster_id, A):
             K += len(A.unique())    # Adjust dof's for group means
         results.sst = y_raw
         results._nocons = True
@@ -245,6 +245,18 @@ def _set_vce_type(vce_type, cluster, spatial_hac):
         new_vce = vce_type
 
     return new_vce
+
+
+def _fe_not_nested_cluster(cluster_id, A):
+    """ Check if FE's are nested within clusters (affects DOF correction)."""
+    if (cluster_id is None) or (A is None):
+        return True
+    else:
+        joint = pd.concat((cluster_id, A), axis=1)
+        names = [cluster_id.name, A.name]
+        pair_counts = joint.groupby(names)[A.name].count()
+        num_of_clusters = pair_counts.groupby(level=A.name).count()
+        return num_of_clusters.max() != 1
 
 
 def fitguts(y, x):
