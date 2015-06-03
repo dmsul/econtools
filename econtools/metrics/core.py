@@ -249,7 +249,7 @@ def _set_vce_type(vce_type, cluster, spatial_hac):
 
 def _fe_not_nested_cluster(cluster_id, A):
     """ Check if FE's are nested within clusters (affects DOF correction)."""
-    if (cluster_id is None) or (A is None):
+    if (cluster_id is None) or (A is None) or (cluster_id.name == A.name):
         return True
     else:
         joint = pd.concat((cluster_id, A), axis=1)
