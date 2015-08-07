@@ -31,7 +31,7 @@ def ivreg(df, y_name, x_name, z_name, w_name,
                    w_name, z_name)
     sample = flag_sample(df, *sample_cols)
     if nosingles and a_name:
-        sample &= flag_nonsingletons(df, a_name)
+        sample &= flag_nonsingletons(df, a_name, sample)
     y, x, A, cluster_id, space_x, space_y, w, z = set_sample(df, sample,
                                                              sample_cols)
 
@@ -188,7 +188,7 @@ def reg(df, y_name, x_name,
     sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y)
     sample = flag_sample(df, *sample_cols)
     if nosingles and a_name:
-        sample &= flag_nonsingletons(df, a_name)
+        sample &= flag_nonsingletons(df, a_name, sample)
     y, X, A, cluster_id, space_x, space_y = set_sample(df, sample, sample_cols)
 
     if addcons:
