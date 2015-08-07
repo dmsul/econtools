@@ -64,10 +64,10 @@ def unpack_spatialargs(argdict):
     return spatial_x, spatial_y, spatial_band, spatial_kern
 
 
-def flag_nonsingletons(df, avar):
+def flag_nonsingletons(df, avar, sample):
     """Boolean flag for 'not from a singleton `avar` group."""
-    counts = df.groupby(avar).size()
-    big_counts = df[[avar]].join(counts.to_frame('_T'), on=avar)
+    counts = df[sample].groupby(avar).size()
+    big_counts = df[[avar]].join(counts.to_frame('_T'), on=avar).fillna(0)
     non_single = big_counts['_T'] > 1
     return non_single
 
