@@ -17,7 +17,9 @@ def ivreg(df, y_name, x_name, z_name, w_name,
           a_name=None, nosingles=True,
           method='2sls', _kappa_debug=None,
           vce_type=None, cluster=None, spatial_hac=None,
-          addcons=None, nocons=False):
+          addcons=None, nocons=False,
+          awt_name=None,
+          ):
     # Set `vce_type`
     vce_type = _set_vce_type(vce_type, cluster, spatial_hac)
     # Unpack spatial HAC args
@@ -28,15 +30,22 @@ def ivreg(df, y_name, x_name, z_name, w_name,
     w_name = force_list(w_name)
     # Flag and restrict sample
     sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y,
-                   w_name, z_name)
+                   w_name, z_name, awt_name)
     sample = flag_sample(df, *sample_cols)
     if nosingles and a_name:
         sample &= flag_nonsingletons(df, a_name, sample)
-    y, x, A, cluster_id, space_x, space_y, w, z = set_sample(df, sample,
-                                                             sample_cols)
+    y, x, A, cluster_id, space_x, space_y, w, z, AWT = set_sample(df, sample,
+                                                                  sample_cols)
 
     if addcons and not a_name:
         w = add_cons(w)
+
+    if awt_name:
+        row_wt = _calc_aweights(AWT)
+        y = y.multiply(row_wt, axis=0)
+        x = x.multiply(row_wt, axis=0)
+        z = z.multiply(row_wt, axis=0)
+        w = w.multiply(row_wt, axis=0)
 
     # Demean and save true `y` if needed
     if a_name:
@@ -158,6 +167,7 @@ def reg(df, y_name, x_name,
         a_name=None, nosingles=True,
         vce_type=None, cluster=None, spatial_hac=None,
         addcons=None, nocons=False,
+        awt_name=None
         ):
     """
     Parameters
@@ -185,14 +195,21 @@ def reg(df, y_name, x_name,
     # Handle names
     x_name = force_list(x_name)
     # Flag and restrict sample
-    sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y)
+    sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y,
+                   awt_name)
     sample = flag_sample(df, *sample_cols)
     if nosingles and a_name:
         sample &= flag_nonsingletons(df, a_name, sample)
-    y, X, A, cluster_id, space_x, space_y = set_sample(df, sample, sample_cols)
+    y, X, A, cluster_id, space_x, space_y, AWT = set_sample(df, sample,
+                                                            sample_cols)
 
     if addcons:
         X = add_cons(X)
+
+    if awt_name:
+        row_wt = _calc_aweights(AWT)
+        y = y.multiply(row_wt, axis=0)
+        X = X.multiply(row_wt, axis=0)
 
     if a_name:
         y_raw = y.copy()
@@ -257,6 +274,12 @@ def _fe_not_nested_cluster(cluster_id, A):
         pair_counts = joint.groupby(names)[A.name].count()
         num_of_clusters = pair_counts.groupby(level=A.name).count()
         return num_of_clusters.max() != 1
+
+
+def _calc_aweights(aw):
+    scaled_total = aw.sum() / len(aw)
+    row_weights = np.sqrt(aw / scaled_total)
+    return row_weights
 
 
 def fitguts(y, x):
