@@ -385,7 +385,12 @@ def robust_vce(vce_type, xpx_inv, x, resid, n, k, cluster=None, g=None,
     elif vce_type == 'spatial':
         Wxu = dist_weights(xu, spatial_x, spatial_y, spatial_kern,
                            spatial_band)
-        Wxu *= n/(n - k)    # No dof correction? See Conley (2008)
+        # Conley (1999; 2008), Kelejian and Prucha, and Solomon Hsiang's code do
+        # not do any degree of freedom corrections.
+        # It may just be unaddressed by applied researchers (also,
+        # nesting FE's?). So follow their lead.
+        # Hsiang's code still uses the usual t dist for tests.
+        # Wxu *= n/(n - k)
     else:
         raise ValueError("`vce_type` '{}' is invalid".format(vce_type))
 
