@@ -65,7 +65,7 @@ class RegBase(object):
         )
 
         self.sample_store_labels = (
-            'y', 'x', 'A', 'cluster_id', 'space_x', 'space_y', 'AWT'
+            'y', 'x', 'A', 'cluster_id', 'shac_x', 'shac_y', 'AWT'
         )
 
         self.vars_in_reg = ('y', 'x')
@@ -646,16 +646,9 @@ def _shac_weights(xu, lon, lat, kernel, band):      #noqa
     lat_arr = lat.squeeze().values.astype(float)
     kern_func = _shac_kernels(kernel, band)
     for i in xrange(N):
-        dist = np.abs(
-            np.sqrt(
-                (lon_arr[i] - lon_arr)**2 + (lat_arr[i] - lat_arr)**2
-            )
-        )
+        dist = np.sqrt((lon_arr[i] - lon_arr)**2 + (lat_arr[i] - lat_arr)**2)
         w_i = kern_func(dist).astype(np.float64)
-        # non_zero = w_i > 1e-10
-        # Wxu_i = np.average(xu[non_zero, :], weights=w_i[non_zero], axis=0)
-        Wxu_i = w_i.dot(xu)
-        Wxu[i, :] = Wxu_i
+        Wxu[i, :] = w_i.dot(xu)
 
     return Wxu
 
@@ -711,18 +704,8 @@ if __name__ == '__main__':
     y_name = 'price'
     cluster = 'gear_ratio'
     rhv = ['mpg', 'length']
-    if 0 == 1:
-        results = reg(df, y_name, rhv,
-                      a_name=cluster,
-                      # addcons=True,
-                      cluster=cluster
-                      )
-    else:
-        z = ['trunk', 'weight', 'headroom']
-        results = ivreg(df, y_name, rhv, z, [],
-                        # addcons=True,
-                        a_name=cluster,
-                        vce_type='robust',
-                        # cluster=cluster,
-                        iv_method='2sls')
+    results = reg(df, y_name, rhv,
+                  a_name=cluster,
+                  cluster=cluster
+                  )
     print results.summary
