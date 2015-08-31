@@ -7,7 +7,7 @@ from numpy.testing import (assert_array_almost_equal,)
 
 from econtools.util import group_id
 
-from econtools.metrics.core import reg
+from econtools.metrics.core import reg, df_cluster, df_shac
 
 
 class SHACRegCompare(object):
@@ -28,8 +28,8 @@ class SHACRegCompare(object):
 
         df['y'] = 12 + 4*df['x1'] + full_point_effect + np.random.randn(N)*20
 
-        df['lat_grid'] = np.around(df['lat']*10)/10
-        df['lon_grid'] = np.around(df['lon']*10)/10
+        df['lat_grid'] = np.around(df['lat']*10) / 10
+        df['lon_grid'] = np.around(df['lon']*10) / 10
 
         cls.y = 'y'
         cls.x = ['x1']
@@ -37,29 +37,31 @@ class SHACRegCompare(object):
         cls.cluster = 'hgrid'
         cls.lat = 'lat_grid'
         cls.lon = 'lon_grid'
-        cls.spatial_hac = dict(x=cls.lon, y=cls.lat, kern='unif', band=0.05)
+        cls.spatial_hac = dict(x=cls.lon, y=cls.lat, kern='unif', band=0.01)
         df = group_id(df, cols=[cls.lon, cls.lat], name=cls.cluster, merge=True)
         cls.df = df
         K = df.shape[1]
-        g = len(df[cls.cluster].unique())
-        cls.cluster_dof_inv = ((N - K)/(N - 1))*((g-1)/g)
-        cls.shac_dof_inv = (N - K)/N
+        _, df_correct_cluster, cls.g = df_cluster(N, K, df[cls.cluster])
+        _, df_correct_shac = df_shac(N, K)
+        cls.cluster_dof_inv = 1 / df_correct_cluster
+        cls.shac_dof_inv = 1 / df_correct_shac
 
 
 class TestSHAC_reg(SHACRegCompare):
 
     def test_reg_unif(self):
         std = reg(self.df, self.y, self.x, cluster=self.cluster, addcons=True)
-        shac = reg(self.df, self.y, self.x, spatial_hac=self.spatial_hac,
+        shac = reg(self.df, self.y, self.x, shac=self.spatial_hac,
                    addcons=True)
         expected = std.vce * self.cluster_dof_inv
         result = shac.vce * self.shac_dof_inv
+        # XXX Approach equality as N to \infty. Something lurking somewhere
         assert_array_almost_equal(expected, result)
 
     def test_reg_tria(self):
         std = reg(self.df, self.y, self.x, cluster=self.cluster, addcons=True)
         self.spatial_hac['kern'] = 'tria'
-        shac = reg(self.df, self.y, self.x, spatial_hac=self.spatial_hac,
+        shac = reg(self.df, self.y, self.x, shac=self.spatial_hac,
                    addcons=True)
         expected = std.vce * self.cluster_dof_inv
         result = shac.vce * self.shac_dof_inv
