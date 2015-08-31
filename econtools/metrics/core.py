@@ -10,7 +10,7 @@ import scipy.stats as stats
 
 from econtools.util import force_list
 from regutil import (add_cons, flag_sample, set_sample, flag_nonsingletons,
-                     demeaner, unpack_spatialargs)
+                     demeaner, unpack_shac_args)
 
 
 def ivreg(df, y_name, x_name, z_name, w_name,
@@ -23,7 +23,7 @@ def ivreg(df, y_name, x_name, z_name, w_name,
     # Set `vce_type`
     vce_type = _set_vce_type(vce_type, cluster, spatial_hac)
     # Unpack spatial HAC args
-    sp_args = unpack_spatialargs(spatial_hac)
+    sp_args = unpack_shac_args(spatial_hac)
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
     # Handle names
     x_name = force_list(x_name)
@@ -190,7 +190,7 @@ def reg(df, y_name, x_name,
     # Set `vce_type`
     vce_type = _set_vce_type(vce_type, cluster, spatial_hac)
     # Unpack spatial HAC args
-    sp_args = unpack_spatialargs(spatial_hac)
+    sp_args = unpack_shac_args(spatial_hac)
     spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
     # Handle names
     x_name = force_list(x_name)
@@ -587,7 +587,7 @@ if __name__ == '__main__':
         cluster = 'gear_ratio'
         # ols.fit(y, x, cluster=cluster)
         rhv = ['mpg', 'length']
-        results = reg(df, y_name, rhv, cluster=cluster, a_name=cluster)
+        results = reg(df, y_name, rhv, addcons=True)
         print results.summary
     elif 1 == 1:
         y = 'price'

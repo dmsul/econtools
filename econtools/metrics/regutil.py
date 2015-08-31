@@ -54,14 +54,22 @@ def _demean_guts(A, args):      #noqa
             yield demeaned
 
 
-def unpack_spatialargs(argdict):
+def unpack_shac_args(argdict):
     if argdict is None:
         return None, None, None, None
-    spatial_x = argdict['x']
-    spatial_y = argdict['y']
-    spatial_band = argdict['band']
-    spatial_kern = argdict['kern']
-    return spatial_x, spatial_y, spatial_band, spatial_kern
+
+    # Check if extra args passed (Do NOT alter `argdict` with `pop`!)
+    extra_args = set(argdict.keys()).difference(set(('x', 'y', 'band', 'kern')))
+    if extra_args:
+        err_str = 'Extra `shac` args: {}'
+        raise ValueError(err_str.format(tuple(extra_args)))
+
+    shac_x = argdict['x']
+    shac_y = argdict['y']
+    shac_band = argdict['band']
+    shac_kern = argdict['kern']
+
+    return shac_x, shac_y, shac_band, shac_kern
 
 
 def flag_nonsingletons(df, avar, sample):
