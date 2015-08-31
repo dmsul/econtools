@@ -55,10 +55,10 @@ class TestLIML_std(LimlCompare):
         x_end = ['mpg', 'length']
         z = ['trunk', 'weight', 'headroom']
         x_exog = []
-        a = 'gear_ratio'
         nosingles = True
-        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
-                           method='liml',
+        cls.result = ivreg(autodata, y, x_end, z, x_exog,
+                           addcons=True,
+                           iv_method='liml',
                            nosingles=nosingles)
         cls.expected = liml_std
 
@@ -81,10 +81,10 @@ class TestLIML_robust(LimlCompare):
         x_end = ['mpg', 'length']
         z = ['trunk', 'weight', 'headroom']
         x_exog = []
-        a = 'gear_ratio'
         nosingles = True
-        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
-                           method='liml',
+        cls.result = ivreg(autodata, y, x_end, z, x_exog,
+                           addcons=True,
+                           iv_method='liml',
                            vce_type='robust',
                            nosingles=nosingles)
         cls.expected = liml_robust
@@ -108,10 +108,10 @@ class TestLIML_cluster(LimlCompare):
         x_end = ['mpg', 'length']
         z = ['trunk', 'weight', 'headroom']
         x_exog = []
-        a = 'gear_ratio'
         nosingles = True
-        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a,
-                           method='liml',
+        cls.result = ivreg(autodata, y, x_end, z, x_exog,
+                           addcons=True,
+                           iv_method='liml',
                            cluster='gear_ratio',
                            nosingles=nosingles)
         cls.expected = liml_cluster
@@ -140,7 +140,7 @@ class TestLIML_tsls(LimlCompare):
         x_exog = []
         nosingles = True
         cls.result = ivreg(autodata, y, x_end, z, x_exog, addcons=True,
-                           method='liml',
+                           iv_method='liml',
                            cluster='gear_ratio',
                            nosingles=nosingles)
         cls.expected = tsls_cluster

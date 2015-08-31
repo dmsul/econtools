@@ -125,60 +125,34 @@ file close `reg_type'_output
 local reg_type areg
 format_results_header "src_`reg_type'.py" `reg_type'_output
 
-xi i.$cluster
-qui reg $Y $X _I*,
-format_results `reg_type'_output "`reg_type'_std"
-qui reg $Y $X _I*, robust
-format_results `reg_type'_output "`reg_type'_robust"
-qui reg $Y $X _I*, cluster($cluster)
-format_results `reg_type'_output "`reg_type'_cluster"
-
-file close `reg_type'_output
-
-* areg, no singletons
-local reg_type areg_nosing
-format_results_header "src_`reg_type'.py" `reg_type'_output
-
-xi i.$cluster
 bys $cluster: gen T = _N
+gen dum = _n
+xtset $cluster dum
 
-qui reg $Y $X _I* if T > 1
+qui xtivreg2 $Y $X, fe small
 format_results `reg_type'_output "`reg_type'_std"
-qui reg $Y $X _I* if T > 1, robust
+qui xtivreg2 $Y $X, fe small robust
 format_results `reg_type'_output "`reg_type'_robust"
-qui reg $Y $X _I* if T > 1, cluster($cluster)
+qui xtivreg2 $Y $X, fe small cluster($cluster)
 format_results `reg_type'_output "`reg_type'_cluster"
 
 file close `reg_type'_output
 
 * xtivreg
+// Stata's `xtivreg` get's DoF wrong;
+// `xtivreg2` doesn't use r(table) if there are exluded instruments
 local reg_type atsls
 format_results_header "src_`reg_type'.py" `reg_type'_output
 
-xi i.$cluster
-qui ivreg $Y ($X = $Z) _I*,
+qui xtivreg $Y ($X = $Z) if T > 1, fe small
 format_results `reg_type'_output "`reg_type'_std"
-qui ivreg $Y ($X = $Z) _I*, robust
+/*
+// These are wrong, don't know why
+qui xtivreg $Y ($X = $Z), fe vce(robust)
 format_results `reg_type'_output "`reg_type'_robust"
-qui ivreg $Y ($X = $Z) _I*, cluster($cluster)
+qui xtivreg $Y ($X = $Z), fe cluster($cluster)
 format_results `reg_type'_output "`reg_type'_cluster"
-
-file close `reg_type'_output
-
-* xtivreg, no singletons
-local reg_type atsls_nosing
-format_results_header "src_`reg_type'.py" `reg_type'_output
-gen n = _n
-xtset gear_ratio n
-
-xi i.$cluster
-
-qui ivreg $Y ($X = $Z) _I* if T > 1,
-format_results `reg_type'_output "`reg_type'_std"
-qui ivreg $Y ($X = $Z) _I* if T > 1, robust
-format_results `reg_type'_output "`reg_type'_robust"
-qui ivreg $Y ($X = $Z) _I* if T > 1, cluster($cluster)
-format_results `reg_type'_output "`reg_type'_cluster"
+*/
 
 file close `reg_type'_output
 
@@ -186,14 +160,13 @@ file close `reg_type'_output
 global Z trunk weight headroom
 * all at once
 local reg_type liml
-format_results_header "src_`reg_type'.py" `reg_type'_output
+format_results_header "src_`reg_type'.py" `reg_type'_output 1
 
-xi i.$cluster
-qui ivregress liml $Y ($X = $Z) _I* if T > 1, small
-format_results `reg_type'_output "`reg_type'_std"
-qui ivregress liml $Y ($X = $Z) _I* if T > 1, robust small
-format_results `reg_type'_output "`reg_type'_robust"
-qui ivregress liml $Y ($X = $Z) _I* if T > 1, cluster($cluster) small
-format_results `reg_type'_output "`reg_type'_cluster"
+qui ivregress liml $Y ($X = $Z), small
+format_results `reg_type'_output "`reg_type'_std" 1
+qui ivregress liml $Y ($X = $Z), robust small
+format_results `reg_type'_output "`reg_type'_robust" 1
+qui ivregress liml $Y ($X = $Z), cluster($cluster) small
+format_results `reg_type'_output "`reg_type'_cluster" 1
 
 file close `reg_type'_output

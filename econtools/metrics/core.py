@@ -86,7 +86,6 @@ class RegBase(object):
     def main(self):
         self.set_sample()
         self.estimate()
-        self._set_NK()
         self.get_vce()
         self.set_dof()
         self.inference()
@@ -342,7 +341,6 @@ class IVReg(RegBase):
             beta, xpx_inv, self.Xhat, self.Xtrue, kappa = self._liml(
                 y, x, z, w, self._kappa_debug, self.vce_type
             )
-            self.results.kappa = kappa
 
         else:
             raise ValueError("IV method '{}' not supported".format(self.method))
@@ -352,6 +350,8 @@ class IVReg(RegBase):
         self.results._r2 = np.nan
         self.results._r2_a = np.nan
         self.results._add_stat('iv_method', self.iv_method)
+        if self.iv_method == 'liml':
+            self.results._add_stat('kappa', kappa)
 
     def _first_stage(self, x, w, z):
         X = pd.concat((x, w), axis=1)
@@ -712,10 +712,17 @@ if __name__ == '__main__':
     cluster = 'gear_ratio'
     rhv = ['mpg', 'length']
     if 0 == 1:
-        results = reg(df, y_name, rhv, addcons=True,
+        results = reg(df, y_name, rhv,
+                      a_name=cluster,
+                      # addcons=True,
                       cluster=cluster
                       )
     else:
-        results = ivreg(df, y_name, rhv[0], rhv[1], [], addcons=True,
-                        cluster=cluster)
+        z = ['trunk', 'weight', 'headroom']
+        results = ivreg(df, y_name, rhv, z, [],
+                        # addcons=True,
+                        a_name=cluster,
+                        vce_type='robust',
+                        # cluster=cluster,
+                        iv_method='2sls')
     print results.summary
