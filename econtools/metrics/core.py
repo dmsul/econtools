@@ -8,266 +8,287 @@ from scipy.linalg import sqrtm              # notin `numpy.linalg`
 
 import scipy.stats as stats
 
-from econtools.util import force_list
-from regutil import (add_cons, flag_sample, set_sample, flag_nonsingletons,
-                     demeaner, unpack_shac_args)
-
-
-def ivreg(df, y_name, x_name, z_name, w_name,
-          a_name=None, nosingles=True,
-          method='2sls', _kappa_debug=None,
-          vce_type=None, cluster=None, spatial_hac=None,
-          addcons=None, nocons=False,
-          awt_name=None,
-          ):
-    # Set `vce_type`
-    vce_type = _set_vce_type(vce_type, cluster, spatial_hac)
-    # Unpack spatial HAC args
-    sp_args = unpack_shac_args(spatial_hac)
-    spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
-    # Handle names
-    x_name = force_list(x_name)
-    w_name = force_list(w_name)
-    # Flag and restrict sample
-    sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y,
-                   w_name, z_name, awt_name)
-    sample = flag_sample(df, *sample_cols)
-    if nosingles and a_name:
-        sample &= flag_nonsingletons(df, a_name, sample)
-    y, x, A, cluster_id, space_x, space_y, w, z, AWT = set_sample(df, sample,
-                                                                  sample_cols)
-
-    if addcons and not a_name:
-        w = add_cons(w)
-
-    if awt_name:
-        row_wt = _calc_aweights(AWT)
-        y = y.multiply(row_wt, axis=0)
-        x = x.multiply(row_wt, axis=0)
-        z = z.multiply(row_wt, axis=0)
-        w = w.multiply(row_wt, axis=0)
-
-    # Demean and save true `y` if needed
-    if a_name:
-        y_raw = y.copy()
-        y, x, z, w = demeaner(A, y, x, z, w)
-    else:
-        y_raw = y
-
-    # Estimation
-    if method == '2sls':
-        sum_in_sandwich = _first_stage(x, w, z)
-        results = fitguts(y, sum_in_sandwich)
-    elif method == 'liml':
-        results, sum_in_sandwich, kappa = _liml(y, x, z, w, _kappa_debug,
-                                                vce_type)
-        results.kappa = kappa
-    else:
-        raise ValueError("IV method '{}' not supported".format(method))
-
-    results._r2 = np.nan
-    results._r2_a = np.nan
-
-    N = y.shape[0]
-    K = x.shape[1]
-    try:
-        K += w.shape[1]
-    except:
-        pass
-
-    # Corrections
-    if a_name:
-        if not _fe_nested_in_cluster(cluster_id, A):
-            K += len(A.unique())    # Adjust dof's for group means
-        results.sst = y_raw
-        results._nocons = True
-    else:
-        results.__dict__.update(dict(_nocons=nocons))
-
-    inferred = inference(y, sum_in_sandwich, results.xpxinv, results.beta, N, K,
-                         x_for_resid=pd.concat((x, w), axis=1),
-                         vce_type=vce_type, cluster=cluster_id,
-                         spatial_x=space_x, spatial_y=space_y,
-                         spatial_band=spatial_band,
-                         spatial_kern=spatial_kern,
-                         cols=x.columns.tolist() + w.columns.tolist())
-    results.__dict__.update(**inferred)
-
-    results.sample = sample
-
-    return results
-
-
-def _first_stage(x, w, z):
-    X_hat = pd.concat((x, w), axis=1)
-    Z = pd.concat((z, w), axis=1)
-    for an_x in x.columns:
-        this_x = x[an_x]
-        first_stage = fitguts(this_x, Z)
-        X_hat[an_x] = np.dot(Z, first_stage.beta)
-    return X_hat
-
-
-def _liml(y, x, z, w, _kappa_debug, vce_type):
-    Z = pd.concat((z, w), axis=1)
-    kappa, ZZ_inv = _liml_kappa(y, x, w, Z)
-    X = pd.concat((x, w), axis=1)
-    # Solve system
-    XX = X.T.dot(X)
-    XZ = X.T.dot(Z)
-    Xy = X.T.dot(y)
-    Zy = Z.T.dot(y)
-
-    # When `kappa` = 1 is 2sls, `kappa` = 0 is OLS
-    if _kappa_debug is not None:
-        kappa = _kappa_debug
-    # If exactly identified, same as 2sls, make it so
-    elif x.shape[1] == z.shape[1]:
-        kappa = 1
-
-    xpxinv = la.inv(
-        (1-kappa)*XX + kappa*np.dot(XZ.dot(ZZ_inv), XZ.T)
-    )
-    xpy = (1-kappa)*Xy + kappa*np.dot(XZ.dot(ZZ_inv), Zy)
-    beta = pd.Series(xpxinv.dot(xpy).squeeze(), index=X.columns)
-
-    # LIML uses non-standard 'bread' in the sandwich estimator
-    if vce_type is None:
-        se_xpxinv = xpxinv
-    else:
-        se_xpxinv = xpxinv.dot(XZ).dot(ZZ_inv)
-
-    results = Results(beta=beta, xpxinv=se_xpxinv)
-
-    return results, Z, kappa
-
-def _liml_kappa(y, x, w, Z):        #noqa
-    Y = pd.concat((y, x), axis=1).astype(np.float64)
-    YY = Y.T.dot(Y)
-    YZ = Y.T.dot(Z)
-    ZZ_inv = la.inv(Z.T.dot(Z))
-
-    bread = la.inv(sqrtm(
-        YY - np.dot(YZ.dot(ZZ_inv), YZ.T)
-    ))
-
-    if not w.empty:
-        Yw = Y.T.dot(w)
-        ww_inv = la.inv(w.T.dot(w))
-        meat = YY - np.dot(Yw.dot(ww_inv), Yw.T)
-    else:
-        meat = YY
-
-    eigs = la.eigvalsh(bread.dot(meat).dot(bread))
-    kappa = np.min(eigs)
-    return kappa, ZZ_inv
+from econtools.util import force_list, force_df
+from econtools.metrics.regutil import (unpack_shac_args, flag_sample,
+                                       flag_nonsingletons, set_sample,)
 
 
 def reg(df, y_name, x_name,
         a_name=None, nosingles=True,
-        vce_type=None, cluster=None, spatial_hac=None,
+        vce_type=None, cluster=None, shac=None,
         addcons=None, nocons=False,
         awt_name=None
         ):
-    """
-    Parameters
-    ----------
-    df  - DataFrame, contains all data that will be used in the regression.
-    y   - string, name of outcome variable
-    x   - list, name(s) of regressors
 
-    vce_type - string, type of variance-covariance estimator. Options are
-        ['robust', 'hc1', 'hc2', 'hc3', 'cluster']. 'robust' and 'hc1' do the
-        same thing; 'cluster' requires kwargs `cluster` and is not necessary.
-    cluster - Series, cluster ID's
-    nocons  - boolean, the regression does not have a constant
-    addcons - boolean, add a column of 1's to the list of regressors
+    RegWorker = Regression(
+        df, y_name, x_name,
+        a_name=a_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
+        vce_type=vce_type, cluster=cluster, shac=shac,
+        awt_name=awt_name,
+    )
 
-    Output
-    ------
-    Regression output object
-    """
-    # Set `vce_type`
-    vce_type = _set_vce_type(vce_type, cluster, spatial_hac)
-    # Unpack spatial HAC args
-    sp_args = unpack_shac_args(spatial_hac)
-    spatial_x, spatial_y, spatial_band, spatial_kern = sp_args
-    # Handle names
-    x_name = force_list(x_name)
-    # Flag and restrict sample
-    sample_cols = (y_name, x_name, a_name, cluster, spatial_x, spatial_y,
-                   awt_name)
-    sample = flag_sample(df, *sample_cols)
-    if nosingles and a_name:
-        sample &= flag_nonsingletons(df, a_name, sample)
-    y, X, A, cluster_id, space_x, space_y, AWT = set_sample(df, sample,
-                                                            sample_cols)
-
-    if addcons:
-        X = add_cons(X)
-
-    if awt_name:
-        row_wt = _calc_aweights(AWT)
-        y = y.multiply(row_wt, axis=0)
-        X = X.multiply(row_wt, axis=0)
-
-    if a_name:
-        y_raw = y.copy()
-        y, X = demeaner(A, y, X)
-    else:
-        y_raw = y
-
-    results = fitguts(y, X)
-
-    N, K = X.shape
-
-    # Corrections
-    if a_name:
-        if not _fe_nested_in_cluster(cluster_id, A):
-            K += len(A.unique())    # Adjust dof's for group means
-        results.sst = y_raw
-        results._nocons = True
-    else:
-        results.__dict__.update(dict(_nocons=nocons))
-
-    inferred = inference(y, X, results.xpxinv, results.beta, N, K,
-                         vce_type=vce_type, cluster=cluster_id,
-                         spatial_x=space_x, spatial_y=space_y,
-                         spatial_band=spatial_band,
-                         spatial_kern=spatial_kern)
-    results.__dict__.update(**inferred)
-
-    results.sample = sample
-
+    results = RegWorker.main()
     return results
 
 
-def _set_vce_type(vce_type, cluster, spatial_hac):
+def ivreg(df, y_name, x_name, z_name, w_name,
+          a_name=None, nosingles=True,
+          iv_method='2sls', _kappa_debug=None,
+          vce_type=None, cluster=None, shac=None,
+          addcons=None, nocons=False,
+          awt_name=None,
+          ):
+
+    IVRegWorker = IVReg(
+        df, y_name, x_name, z_name, w_name,
+        a_name=a_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
+        iv_method=iv_method, _kappa_debug=_kappa_debug,
+        vce_type=vce_type, cluster=cluster, shac=shac,
+        awt_name=awt_name,
+    )
+
+    results = IVRegWorker.main()
+    return results
+
+
+# Workhorse classes
+class RegBase(object):
+
+    def __init__(self, df, y_name, x_name, **kwargs):
+        self.df = df
+        self.y_name = y_name
+        self.__dict__.update(kwargs)
+
+        self.sample_cols_labels = (
+            'y_name', 'x_name', 'a_name', 'cluster', 'shac_x', 'shac_y',
+            'awt_name'
+        )
+
+        self.sample_store_labels = (
+            'y', 'x', 'A', 'cluster_id', 'space_x', 'space_y', 'AWT'
+        )
+
+        self.vars_in_reg = ('y', 'x')
+        self.add_constant_to = 'x'
+
+        # Set `vce_type`
+        self.vce_type = _set_vce_type(self.vce_type, self.cluster, self.shac)
+        # Unpack spatial HAC args
+        sp_args = unpack_shac_args(self.shac)
+        self.shac_x = sp_args[0]
+        self.shac_y = sp_args[1]
+        self.shac_band = sp_args[2]
+        self.shac_kern = sp_args[3]
+
+        # Force variable names to lists
+        self.x_name = force_list(x_name)
+
+    def main(self):
+        self.set_sample()
+        self.estimate()
+        self._set_NK()
+        self.get_vce()
+        self.set_dof()
+        self.inference()
+
+        return self.results
+
+    def set_sample(self):
+        sample_cols = tuple([self.__dict__[x] for x in self.sample_cols_labels])
+        self.sample = flag_sample(self.df, *sample_cols)
+        if self.nosingles and self.a_name:
+            self.sample &= flag_nonsingletons(self.df, self.a_name, self.sample)
+
+        sample_vars = set_sample(self.df, self.sample, sample_cols)
+        self.__dict__.update(dict(zip(self.sample_store_labels, sample_vars)))
+        self.x = force_df(self.x)
+
+        # Force regression variables to float64
+        for var in self.vars_in_reg:
+            self.__dict__[var] = self.__dict__[var].astype(np.float64)
+
+        # Demean or add constant
+        if self.a_name is not None:
+            self._demean_sample()
+        elif self.addcons:
+            _cons = np.ones(self.y.shape[0])
+            x = self.__dict__[self.add_constant_to]
+            if x.empty:
+                x = pd.DataFrame(_cons, columns=['_cons'], index=self.y.index)
+            else:
+                x['_cons'] = _cons
+            self.__dict__[self.add_constant_to] = x
+
+        # Re-weight sample
+        if self.AWT is not None:
+            self._weight_sample()
+
+    def _demean_sample(self):
+        self.y_raw = self.y.copy()
+        for var in self.vars_in_reg:
+            self.__dict__[var] = _demean(self.A, self.__dict__[var])
+
+    def _weight_sample(self):
+        row_wt = _calc_aweights(self.AWT)
+        for var in self.vars_in_reg:
+            self.__dict__[var] = self.__dict__[var].multiply(row_wt, axis=0)
+
+    def estimate(self):
+        """Defined by Implementation"""
+        raise NotImplementedError
+
+    def get_vce(self):
+        """
+        Add estimates of Variance-Covariance matrix (VCE), yhat, and residuals
+        to `results`.
+        """
+        X_inner_sum, X_for_resid = self._prep_inference_mats()
+
+        yhat = np.dot(X_for_resid, self.results.beta)
+        resid = self.y - yhat
+
+        # Check through VCE types
+        xpx_inv = self.results.xpx_inv
+        if self.vce_type is None:
+            vce = vce_homosk(xpx_inv, resid)
+        elif self.vce_type in ('robust', 'hc1'):
+            vce = vce_robust(xpx_inv, resid, X_inner_sum)
+        elif self.vce_type in ('hc2', 'hc3'):
+            vce = vce_hc23(xpx_inv, resid, X_inner_sum, hctype=self.vce_type)
+        elif self.vce_type == 'cluster':
+            vce = vce_cluster(xpx_inv, resid, X_inner_sum, self.cluster_id)
+        elif self.vce_type == 'shac':
+            vce = vce_shac(xpx_inv, resid, X_inner_sum,
+                           self.shac_x, self.shac_y, self.shac_kern,
+                           self.shac_band)
+        else:
+            raise ValueError
+
+        # Make sure it's symmetric (floating point error)
+        vce = _wrapSigma((vce + vce.T) / 2, X_for_resid.columns)
+
+        self.results._add_stat('vce', vce)
+        self.results._add_stat('yhat', yhat)
+        self.results._add_stat('resid', resid)
+
+    def _prep_inference_mats(self):
+        """
+        Set matrices for Sandwich estimator.
+
+        Note: Keep as separate method for sub-classes to override when
+          necessary.
+        """
+        X_for_inner_sum = self.x
+        X_for_residual = self.x
+        return X_for_inner_sum, X_for_residual
+
+    def set_dof(self):
+        """
+        Set degrees of freedom used in hypothesis tests and do DoF correction on
+        VCE matrix.
+        """
+        N, K = self._set_NK()
+        vce_type = self.vce_type
+
+        if vce_type in (None, 'robust', 'hc1'):
+            df, vce_correct = df_std(N, K)
+        elif vce_type in ('hc2', 'hc3'):
+            df, vce_correct = df_hc23(N, K)
+        elif vce_type == 'cluster':
+            df, vce_correct, g = df_cluster(N, K, self.cluster_id)
+            self.results._add_stat('g', g)
+        elif vce_type == 'shac':
+            df, vce_correct = df_shac(N, K)
+
+        self.results._add_stat('N', N)
+        self.results._add_stat('K', K)
+        self.results._add_stat('t_df', df)
+        self.results.vce *= vce_correct
+
+    def _set_NK(self):
+        """
+        Do this in a separate method so `IVReg` can tweak `K`
+        """
+        # Set `N` and `K`
+        N, K = self.x.shape
+
+        if self.A is not None:
+            if not _fe_nested_in_cluster(self.cluster_id, self.A):
+                K += len(self.A.unique())    # Adjust dof's for group means
+            self.results.sst = self.y_raw
+            self.results._nocons = True
+        else:
+            self.results._nocons = self.nocons
+
+        return N, K
+
+    def inference(self):
+        vce = self.results.vce
+        beta = self.results.beta
+        t_df = self.results.t_df
+
+        se = pd.Series(np.sqrt(np.diagonal(vce)), index=vce.columns)
+        t_stat = beta.div(se)
+        p_values = pd.Series(
+            stats.t.cdf(-np.abs(t_stat), t_df)*2,  # `t.cdf` is P(x<X)
+            index=vce.columns
+        )
+
+        self.results._add_stat('se', se)
+        self.results._add_stat('t_stat', t_stat)
+        self.results._add_stat('pt', p_values)
+
+        conf_level = .95
+        crit_value = stats.t.ppf(conf_level + (1 - conf_level)/2, t_df)
+        ci_lo = beta - crit_value*se
+        ci_hi = beta + crit_value*se
+
+        self.results._add_stat('ci_lo', ci_lo)
+        self.results._add_stat('ci_hi', ci_hi)
+
+def _set_vce_type(vce_type, cluster, shac):     #noqa
     """ Check for argument conflicts, then set `vce_type` if needed.  """
     # Check for valid arg
-    valid_vce = (None, 'robust', 'hc1', 'hc2', 'hc3', 'cluster', 'spatial')
+    valid_vce = (None, 'robust', 'hc1', 'hc2', 'hc3', 'cluster', 'shac')
     if vce_type not in valid_vce:
         raise ValueError("VCE type '{}' is not supported".format(vce_type))
     # Check for conflicts
     cluster_err = cluster and (vce_type != 'cluster' and vce_type is not None)
-    shac_err = spatial_hac and (vce_type != 'spatial' and vce_type is not None)
-    if (cluster and spatial_hac) or cluster_err or shac_err:
+    shac_err = shac and (vce_type != 'shac' and vce_type is not None)
+    if (cluster and shac) or cluster_err or shac_err:
         raise ValueError("VCE type conflict!")
     # Set `vce_type`
     if cluster:
         new_vce = 'cluster'
-    elif spatial_hac:
-        new_vce = 'spatial'
+    elif shac:
+        new_vce = 'shac'
     else:
         new_vce = vce_type
 
     return new_vce
 
+def _demean(A, df):                             #noqa
+    """ Demean a matrix/DataFrame within group `A` """
+    # Ignore empty `df` (e.g. empty list of exogenous included regressors)
+    if df is None or df.empty:
+        return df
+    else:
+        group_name = A.name
+        mean = df.groupby(A).mean()
+        large_mean = force_df(A).join(mean, on=group_name).drop(group_name,
+                                                                axis=1)
+        if df.ndim == 1:
+            large_mean = large_mean.squeeze()
+        demeaned = df - large_mean
+        return demeaned
 
-def _fe_nested_in_cluster(cluster_id, A):
-    """
-    Check if FE's are nested within clusters (affects DOF correction).
-    """
+def _calc_aweights(aw):                         #noqa
+    scaled_total = aw.sum() / len(aw)
+    row_weights = np.sqrt(aw / scaled_total)
+    return row_weights
+
+def _fe_nested_in_cluster(cluster_id, A):       #noqa
+    """ Check if FE's are nested within clusters (affects DOF correction). """
     if (cluster_id is None) or (A is None):
         return False
     elif (cluster_id.name == A.name):
@@ -279,150 +300,158 @@ def _fe_nested_in_cluster(cluster_id, A):
         num_of_clusters = pair_counts.groupby(level=A.name).count()
         return num_of_clusters.max() == 1
 
+def _wrapSigma(Sigma, cols):                    #noqa
+    return pd.DataFrame(Sigma, index=cols, columns=cols)
 
-def _calc_aweights(aw):
-    scaled_total = aw.sum() / len(aw)
-    row_weights = np.sqrt(aw / scaled_total)
-    return row_weights
+
+class Regression(RegBase):
+
+    def __init__(self, *args, **kwargs):
+        super(Regression, self).__init__(*args, **kwargs)
+
+    def estimate(self):
+        beta, xpx_inv = fitguts(self.y, self.x)
+        self.results = Results(beta=beta, xpx_inv=xpx_inv)
+        self.results.sst = self.y
+
+
+class IVReg(RegBase):
+
+    def __init__(self, df, y_name, x_name, z_name, w_name, **kwargs):
+        super(IVReg, self).__init__(df, y_name, x_name, **kwargs)
+        # Handle extra variable stuff for IV
+        self.z_name = force_list(z_name)
+        self.w_name = force_list(w_name)
+        self.sample_cols_labels += ('z_name', 'w_name')
+        self.sample_store_labels += ('z', 'w')
+        self.vars_in_reg += ('z', 'w')
+        self.add_constant_to = 'w'
+
+    def estimate(self):
+        y = self.y
+        x = self.x
+        w = self.w
+        z = self.z
+
+        if self.iv_method == '2sls':
+            self.Xhat, self.Xtrue = self._first_stage(x, w, z)
+            beta, xpx_inv = fitguts(self.y, self.Xhat)
+
+        elif self.iv_method == 'liml':
+            beta, xpx_inv, self.Xhat, self.Xtrue, kappa = self._liml(
+                y, x, z, w, self._kappa_debug, self.vce_type
+            )
+            self.results.kappa = kappa
+
+        else:
+            raise ValueError("IV method '{}' not supported".format(self.method))
+
+        self.results = Results(beta=beta, xpx_inv=xpx_inv)
+        self.results.sst = self.y
+        self.results._r2 = np.nan
+        self.results._r2_a = np.nan
+        self.results._add_stat('iv_method', self.iv_method)
+
+    def _first_stage(self, x, w, z):
+        X = pd.concat((x, w), axis=1)
+        Xhat = X.copy()
+        Z = pd.concat((z, w), axis=1)
+        for an_x in x.columns:
+            this_x = x[an_x]
+            pi_hat, __ = fitguts(this_x, Z)
+            Xhat[an_x] = np.dot(Z, pi_hat)
+        return Xhat, X
+
+    def _liml(self, y, x, z, w, _kappa_debug, vce_type):
+        Z = pd.concat((z, w), axis=1)
+        kappa, ZZ_inv = self._liml_kappa(y, x, w, Z)
+        X = pd.concat((x, w), axis=1)
+        # Solve system
+        XX = X.T.dot(X)
+        XZ = X.T.dot(Z)
+        Xy = X.T.dot(y)
+        Zy = Z.T.dot(y)
+
+        # When `kappa` = 1 is 2sls, `kappa` = 0 is OLS
+        if _kappa_debug is not None:
+            kappa = _kappa_debug
+        # If exactly identified, same as 2sls, make it so
+        elif x.shape[1] == z.shape[1]:
+            kappa = 1
+
+        xpx_inv = la.inv(
+            (1-kappa)*XX + kappa*np.dot(XZ.dot(ZZ_inv), XZ.T)
+        )
+        xpy = (1-kappa)*Xy + kappa*np.dot(XZ.dot(ZZ_inv), Zy)
+        beta = pd.Series(xpx_inv.dot(xpy).squeeze(), index=X.columns)
+
+        # LIML uses non-standard 'bread' in the sandwich estimator
+        if vce_type is None:
+            se_xpx_inv = xpx_inv
+        else:
+            se_xpx_inv = xpx_inv.dot(XZ).dot(ZZ_inv)
+
+        return beta, se_xpx_inv, Z, X, kappa
+
+    def _liml_kappa(self, y, x, w, Z):        #noqa
+        Y = pd.concat((y, x), axis=1).astype(np.float64)
+        YY = Y.T.dot(Y)
+        YZ = Y.T.dot(Z)
+        ZZ_inv = la.inv(Z.T.dot(Z))
+
+        bread = la.inv(sqrtm(
+            YY - np.dot(YZ.dot(ZZ_inv), YZ.T)
+        ))
+
+        if not w.empty:
+            Yw = Y.T.dot(w)
+            ww_inv = la.inv(w.T.dot(w))
+            meat = YY - np.dot(Yw.dot(ww_inv), Yw.T)
+        else:
+            meat = YY
+
+        eigs = la.eigvalsh(bread.dot(meat).dot(bread))
+        kappa = np.min(eigs)
+        return kappa, ZZ_inv
+
+    def _prep_inference_mats(self):
+        """
+        In 2SLS, true X is used to calculate residuals, Xhat used in sandwich
+        estimator (because it is used in calculating beta-hat).
+        """
+        X_for_inner_sum = self.Xhat
+        X_for_residual = self.Xtrue
+        return X_for_inner_sum, X_for_residual
+
+    def _set_NK(self):
+        N, K = super(IVReg, self)._set_NK()
+        if self.w is not None:
+            K += self.w.shape[1]
+        return N, K
 
 
 def fitguts(y, x):
-    """Checks dimensions, inverts, instantiates `Results'"""
+    """ Checks dimensions, inverts, returns beta estimate and (X'X)^-1 """
     # Y should be 1D
     assert y.ndim == 1
     # X should be 2D
     assert x.ndim == 2
 
-    xpxinv = la.inv(np.dot(x.T, x))
+    xpx_inv = la.inv(np.dot(x.T, x))
     xpy = np.dot(x.T, y)
-    beta = pd.Series(np.dot(xpxinv, xpy).squeeze(), index=x.columns)
+    beta = pd.Series(np.dot(xpx_inv, xpy).squeeze(), index=x.columns)
 
-    results = Results(beta=beta, xpxinv=xpxinv)
-    results.sst = y     # Passes `y` to sst setter, doesn't save `y`
-
-    return results
+    return beta, xpx_inv
 
 
-def inference(y, x, xpxinv, beta, N, K, vce_type, cluster, x_for_resid=None,
-              spatial_x=None, spatial_y=None, spatial_band=None,
-              spatial_kern=None, cols=None):
-
-    if x_for_resid is not None:
-        yhat = np.dot(x_for_resid, beta)
-    else:
-        yhat = np.dot(x, beta)
-    resid = y - yhat
-
-    if cluster is not None:
-        g = len(pd.value_counts(cluster))
-        t_df = g - 1
-        vce_type = 'cluster'
-    elif spatial_x is not None:
-        if vce_type is None:
-            vce_type = 'spatial'
-        g = None
-        t_df = N - K    # XXX: No idea what this should be
-    else:
-        t_df = N - K
-        g = None
-
-    vce = robust_vce(vce_type, xpxinv, x, resid, N, K, cluster=cluster, g=g,
-                     spatial_x=spatial_x, spatial_y=spatial_y,
-                     spatial_band=spatial_band,
-                     spatial_kern=spatial_kern,
-                     cols=cols)
-    se = pd.Series(np.sqrt(np.diagonal(vce)), index=vce.columns)
-
-    t_stat = beta.div(se)
-    # Set t df
-    pt = pd.Series(
-        stats.t.cdf(-np.abs(t_stat), t_df)*2,  # `t.cdf` is P(x<X)
-        index=vce.columns
-    )
-    conf_level = .95
-    crit_value = stats.t.ppf(conf_level + (1 - conf_level)/2, t_df)
-    ci_lo = beta - crit_value*se
-    ci_hi = beta + crit_value*se
-    ret_dict = dict(resid=resid, vce=vce, vce_type=vce_type, se=se,
-                    t_stat=t_stat, pt=pt, ci_lo=ci_lo, ci_hi=ci_hi, N=N, K=K)
-
-    if vce_type == "cluster":
-        ret_dict['_df_r'] = t_df
-        ret_dict['g'] = g
-
-    return ret_dict
-
-
-def robust_vce(vce_type, xpx_inv, x, resid, n, k, cluster=None, g=None,
-               spatial_x=None, spatial_y=None, spatial_band=None,
-               spatial_kern=None, cols=None):
-    """
-    Robust variance estimators.
-    """
-    if cols is None:
-        cols = x.columns
-
-    # Homoskedastic
-    if vce_type is None:
-        s2 = np.dot(resid, resid) / (n - k)
-        Sigma = s2 * xpx_inv
-        return _wrapSigma(Sigma, cols)
-    else:
-        xu = x.mul(resid, axis=0).values
-
-    # Robust
-    if vce_type in ('hc1', 'robust'):
-        xu *= np.sqrt(n / (n-k))
-    elif vce_type in ('hc2', 'hc3'):
-        h = _get_h(x, xpx_inv)[:, np.newaxis]
-        if vce_type == 'hc2':
-            xu /= np.sqrt(1 - h)
-        elif vce_type == 'hc3':
-            xu /= 1 - h
-    elif vce_type == 'cluster':
-        # sum w/in cluster groups
-        int_cluster = pd.factorize(cluster)[0]
-        xu = np.array([np.bincount(int_cluster, weights=xu[:, col])
-                       for col in range(xu.shape[1])]).T
-
-        xu *= np.sqrt(((n-1)/(n-k))*(g/(g-1)))
-    elif vce_type == 'spatial':
-        Wxu = dist_weights(xu, spatial_x, spatial_y, spatial_kern,
-                           spatial_band)
-        # Conley (1999; 2008), Kelejian and Prucha, and Solomon Hsiang's code do
-        # not do any degree of freedom corrections.
-        # It may just be unaddressed by applied researchers (also,
-        # nesting FE's?). So follow their lead.
-        # Hsiang's code still uses the usual t dist for tests.
-        # Wxu *= n/(n - k)
-    else:
-        raise ValueError("`vce_type` '{}' is invalid".format(vce_type))
-
-    try:
-        B = xu.T.dot(Wxu)
-    except NameError:
-        B = xu.T.dot(xu)
-
-    Sigma = _wrapSigma(xpx_inv.dot(B).dot(xpx_inv.T), cols)
-
-    return Sigma
-
-def _get_h(x, xpx_inv):         #noqa
-    n = x.shape[0]
-    h = np.zeros(n)
-    for i in xrange(n):
-        x_row = x.iloc[i, :]
-        h[i] = x_row.dot(xpx_inv).dot(x_row)
-    return h
-
-def _wrapSigma(Sigma, cols):    #noqa
-    return pd.DataFrame(Sigma, index=cols, columns=cols)
-
-
+# Results class
 class Results(object):
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+    def _add_stat(self, stat_name, stat):
+        self.__dict__[stat_name] = stat
 
     @property
     def summary(self):
@@ -534,6 +563,9 @@ class Results(object):
 
 
 def f_stat(V, R, beta, r, df_d):
+    """
+    Standard F test.
+    """
     Rbr = (R.dot(beta) - r)
     if Rbr.ndim == 1:
         Rbr = Rbr.reshape(-1, 1)
@@ -546,24 +578,87 @@ def f_stat(V, R, beta, r, df_d):
     return F, pF
 
 
-def dist_weights(xu, x, y, kernel, band):
+# VCE estimators
+def vce_homosk(xpx_inv, resid):
+    """ Standard OLS VCE with spherical errors. """
+    s2 = np.dot(resid, resid) / resid.shape[0]
+    vce = s2 * xpx_inv
+    return vce
+
+
+def vce_robust(xpx_inv, resid, x):
+    xu = x.mul(resid, axis=0).values
+
+    B = xu.T.dot(xu)
+    vce = sandwich(xpx_inv, B, xpx_inv.T)
+    return vce
+
+
+def vce_hc23(xpx_inv, resid, x, hctype='hc2'):
+    xu = x.mul(resid, axis=0).values
+    h = _get_h(x, xpx_inv)[:, np.newaxis]
+    if hctype == 'hc2':
+        xu /= np.sqrt(1 - h)
+    elif hctype == 'hc3':
+        xu /= 1 - h
+    else:
+        raise ValueError
+
+    B = xu.T.dot(xu)
+    vce = sandwich(xpx_inv, B, xpx_inv.T)
+    return vce
+
+def _get_h(x, xpx_inv):         #noqa
+    n = x.shape[0]
+    h = np.zeros(n)
+    for i in xrange(n):
+        x_row = x.iloc[i, :]
+        h[i] = x_row.dot(xpx_inv).dot(x_row)
+    return h
+
+
+def vce_cluster(xpx_inv, resid, x, cluster):
+    raw_xu = x.mul(resid, axis=0).values
+
+    int_cluster = pd.factorize(cluster)[0]
+    xu = np.array([np.bincount(int_cluster, weights=raw_xu[:, col])
+                   for col in range(raw_xu.shape[1])]).T
+
+    B = xu.T.dot(xu)
+    vce = sandwich(xpx_inv, B, xpx_inv.T)
+    return vce
+
+
+def vce_shac(xpx_inv, resid, x, shac_x, shac_y, shac_kern, shac_band):
+    xu = x.mul(resid, axis=0).values
+    Wxu = _shac_weights(xu, shac_x, shac_y, shac_kern, shac_band)
+
+    B = xu.T.dot(Wxu)
+    vce = sandwich(xpx_inv, B, xpx_inv.T)
+    return vce
+
+def _shac_weights(xu, lon, lat, kernel, band):      #noqa
     N, K = xu.shape
     Wxu = np.zeros((N, K))
 
-    xarr = x.squeeze().values.astype(float)
-    yarr = y.squeeze().values.astype(float)
-    kern_func = dist_kernels(kernel, band)
+    lon_arr = lon.squeeze().values.astype(float)
+    lat_arr = lat.squeeze().values.astype(float)
+    kern_func = _shac_kernels(kernel, band)
     for i in xrange(N):
-        dist = np.abs(np.sqrt((xarr[i] - xarr)**2 + (yarr[i] - yarr)**2))
+        dist = np.abs(
+            np.sqrt(
+                (lon_arr[i] - lon_arr)**2 + (lat_arr[i] - lat_arr)**2
+            )
+        )
         w_i = kern_func(dist).astype(np.float64)
         # non_zero = w_i > 1e-10
         # Wxu_i = np.average(xu[non_zero, :], weights=w_i[non_zero], axis=0)
         Wxu_i = w_i.dot(xu)
         Wxu[i, :] = Wxu_i
+
     return Wxu
 
-
-def dist_kernels(kernel, band):
+def _shac_kernels(kernel, band):                    #noqa
 
     def unif(x):
         return x <= band
@@ -577,26 +672,49 @@ def dist_kernels(kernel, band):
         return tria
 
 
+def sandwich(left, B, right):
+    return left.dot(B).dot(right)
+
+
+# DOF definitions
+def df_std(n, k):
+    df = n - k
+    vce_correct = n / df
+    return df, vce_correct
+
+
+def df_hc23(n, k):
+    df = n - k
+    vce_correct = 1
+    return df, vce_correct
+
+
+def df_cluster(n, k, cluster_id):
+    g = len(pd.value_counts(cluster_id))
+    df = g - 1
+    vce_correct = ((n - 1) / (n - k)) * (g / (g - 1))
+    return df, vce_correct, g
+
+
+def df_shac(n, k):
+    df = n - k
+    vce_correct = 1
+    return df, vce_correct
+
+
 if __name__ == '__main__':
     from os import path
     test_path = path.split(path.relpath(__file__))[0]
     data_path = path.join(test_path, 'tests', 'data')
     df = pd.read_stata(path.join(data_path, 'auto.dta'))
+    y_name = 'price'
+    cluster = 'gear_ratio'
+    rhv = ['mpg', 'length']
     if 0 == 1:
-        y_name = 'price'
-        cluster = 'gear_ratio'
-        # ols.fit(y, x, cluster=cluster)
-        rhv = ['mpg', 'length']
-        results = reg(df, y_name, rhv, addcons=True)
-        print results.summary
-    elif 1 == 1:
-        y = 'price'
-        x = ['mpg', 'length']
-        z = ['weight', 'trunk']
-        w = []
-        cluster = 'gear_ratio'
-        tsls = ivreg(df, y, x, z, w, addcons=True, cluster='gear_ratio')
-        print tsls.summary
-        liml = ivreg(df, y, x, z, w, addcons=True, cluster='gear_ratio',
-                     method='liml')
-        print liml.summary
+        results = reg(df, y_name, rhv, addcons=True,
+                      cluster=cluster
+                      )
+    else:
+        results = ivreg(df, y_name, rhv[0], rhv[1], [], addcons=True,
+                        cluster=cluster)
+    print results.summary
