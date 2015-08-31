@@ -202,7 +202,8 @@ class RegBase(object):
 
         self.results._add_stat('N', N)
         self.results._add_stat('K', K)
-        self.results._add_stat('t_df', df)
+        self.results._add_stat('df_t', df)
+        self.results._add_stat('_df_r', df)
         self.results.vce *= vce_correct
 
     def _set_NK(self):
@@ -225,7 +226,7 @@ class RegBase(object):
     def inference(self):
         vce = self.results.vce
         beta = self.results.beta
-        t_df = self.results.t_df
+        t_df = self.results.df_t
 
         se = pd.Series(np.sqrt(np.diagonal(vce)), index=vce.columns)
         t_stat = beta.div(se)
