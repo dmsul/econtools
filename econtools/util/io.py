@@ -13,6 +13,9 @@ def load_or_build(filepath, force=False,
     elif build is None:
         raise IOError("File doesn't exist:\n{}".format(filepath))
     else:
+        print "****** Building *******\n\tfile: {}".format(filepath)
+        print "\tfunc: {}".format(build.__name__)
+        print "*************"
         df = build(*bargs, **bkwargs)
         write(df, filepath)
 
