@@ -23,15 +23,15 @@ def reg(df, y_name, x_name,
     Args
     -----
     `df`, DataFrame - Data with any relevant variables.
-    `y_name`, str - Variable name of the dependent variable in `df`.
-    `x_name`, str or list - Variable name(s) of the independent variables in
-      `df`
+    `y_name`, str - Variable name in `df` of the dependent variable.
+    `x_name`, str or list - Variable name(s) in `df` of the independent
+        variables/regressors
 
     Kwargs
     ------
     `a_name`, str - Variable name in `df` to demean (within transformation)
     `nosingles`, bool - (True) Drop observations that are obsorbed by the within
-      transformation. Has no effect if `a_name = None`.
+        transformation. Has no effect if `a_name = None`.
     `vce_type`, str - Type of estimator to use for variance-covariance matrix of
         estimated coefficients. Default is standard OLS. Possible choices are:
         'robust' or 'hc1'
@@ -76,6 +76,33 @@ def ivreg(df, y_name, x_name, z_name, w_name,
           addcons=None, nocons=False,
           awt_name=None,
           ):
+    """
+    Args
+    -----
+    `df`, DataFrame - Data with any relevant variables.
+    `y_name`, str - Variable name in `df` of the dependent variable.
+    `x_name`, str or list - Variable name(s) in `df` of the endogenous
+        regressor(s)
+    `z_name`, str or list - Variable name(s) in `df` of the excluded
+        instrument(s)
+    `w_name`, str or list - Variable name(s) in `df` of the included
+        instruments/exogenous regressors
+
+    Kwargs
+    ------
+    `iv_method`, str - Instrumental variables method to use. May be '2sls' for
+        two-stage least squares (default) or 'liml' for limited-information
+        maximum likelihood.
+    Else, see `reg`.
+
+    Returns
+    -------
+    `Results` object.
+    The object returned by `ivreg` differs from `reg` in the following
+    ways:
+        - No r-squared (`r2` or `r2_a`)
+        - `kappa` parameter (always 1 if `iv_method = 2sls`)
+    """
 
     IVRegWorker = IVReg(
         df, y_name, x_name, z_name, w_name,
