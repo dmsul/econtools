@@ -3,7 +3,8 @@ import pandas as pd
 
 def force_df(s, name=None):
     """
-    Forces a Series to a DataFrame.
+    Forces a Series to a DataFrame. DataFrames are returned unaffected. Other
+    objects raise `ValueError`.
     """
     # Check if DF or Series
     if isinstance(s, pd.core.frame.DataFrame):
@@ -15,6 +16,7 @@ def force_df(s, name=None):
 
 
 def force_list(x):
+    "If type not `list`, pass to `force_interable`, then convert to list."""
     if isinstance(x, list):
         return x
     else:
