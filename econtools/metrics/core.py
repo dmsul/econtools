@@ -19,6 +19,44 @@ def reg(df, y_name, x_name,
         addcons=None, nocons=False,
         awt_name=None
         ):
+    """
+    Args
+    -----
+    `df`, DataFrame - Data with any relevant variables.
+    `y_name`, str - Variable name of the dependent variable in `df`.
+    `x_name`, str or list - Variable name(s) of the independent variables in
+      `df`
+
+    Kwargs
+    ------
+    `a_name`, str - Variable name in `df` to demean (within transformation)
+    `nosingles`, bool - (True) Drop observations that are obsorbed by the within
+      transformation. Has no effect if `a_name = None`.
+    `vce_type`, str - Type of estimator to use for variance-covariance matrix of
+        estimated coefficients. Default is standard OLS. Possible choices are:
+        'robust' or 'hc1'
+        'hc2'
+        'hc3'
+        'cluster' (requires kwarg `cluster`)
+        'shac' (requires kwarg `shac')
+    `cluster`, str - Variable name in `df` used to cluster standard errors.
+    `shac`, dict - Arguments to pass to spatial HAC estimator. Requires:
+        `x`, str - Variable name in `df` to serve as longitude.
+        `y`, str - Variable name in `df` to serve as latitude.
+        `kern`, str - Kernel to use in estimation. May be 'tria' for triangle
+            kernel, or 'unif' for uniform kernel.
+        `band`, float - Bandwidth for kernel.
+    `addcons`, bool - (False) Add a constant to independent variables. Has no
+        effect if `a_name` is passed.
+    `nocons`, bool - (False) Flag so estimators know that independent variables
+        `df` do not include a constant. Only affects degrees of freedom.
+    `awt_name`, str - Variable name in `df` to use for analytic weights in
+        regression.
+
+    Returns
+    -------
+    `Results` object
+    """
 
     RegWorker = Regression(
         df, y_name, x_name,
