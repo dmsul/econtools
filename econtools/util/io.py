@@ -1,4 +1,5 @@
 from os.path import isfile, splitext
+import argparse
 
 import pandas as pd
 
@@ -24,6 +25,14 @@ def load_or_build(filepath, force=False,
             pd.DataFrame(df).to_stata(fileroot + '.dta')
 
         return df
+
+
+def save_cli():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--save', action='store_true')
+    args = parser.parse_args()
+
+    return args.save
 
 
 def try_pickle(filepath):
