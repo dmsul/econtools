@@ -60,6 +60,7 @@ def read(path, **kwargs):
     Supported:
         csv
         p (pickle)
+        hdf (HDF5)
         dta (Stata)
     """
 
@@ -69,6 +70,8 @@ def read(path, **kwargs):
         read_f = pd.read_csv
     elif file_type == 'p':
         read_f = pd.read_pickle
+    elif file_type == 'hdf':
+        read_f = pd.read_hdf
     elif file_type == 'dta':
         read_f = pd.read_stata
     else:
@@ -85,6 +88,7 @@ def write(df, path, **kwargs):
     Supported:
         csv
         p (pickle)
+        hdf (HDF5)
         dta (Stata)
     """
 
@@ -94,6 +98,8 @@ def write(df, path, **kwargs):
         df.to_csv(path, **kwargs)
     elif file_type == 'p':
         df.to_pickle(path, **kwargs)
+    elif file_type == 'hdf':
+        df.to_hdf(path, 'frame', **kwargs)
     elif file_type == 'dta':
         df.to_stata(path, **kwargs)
     else:
