@@ -1,4 +1,5 @@
 from os.path import isfile, splitext
+import argparse
 
 import pandas as pd
 
@@ -13,6 +14,9 @@ def load_or_build(filepath, force=False,
     elif build is None:
         raise IOError("File doesn't exist:\n{}".format(filepath))
     else:
+        print "****** Building *******\n\tfile: {}".format(filepath)
+        print "\tfunc: {}".format(build.__name__)
+        print "*************"
         df = build(*bargs, **bkwargs)
         write(df, filepath)
 
@@ -21,6 +25,14 @@ def load_or_build(filepath, force=False,
             pd.DataFrame(df).to_stata(fileroot + '.dta')
 
         return df
+
+
+def save_cli():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--save', action='store_true')
+    args = parser.parse_args()
+
+    return args.save
 
 
 def try_pickle(filepath):
@@ -48,6 +60,7 @@ def read(path, **kwargs):
     Supported:
         csv
         p (pickle)
+        hdf (HDF5)
         dta (Stata)
     """
 
@@ -57,6 +70,8 @@ def read(path, **kwargs):
         read_f = pd.read_csv
     elif file_type == 'p':
         read_f = pd.read_pickle
+    elif file_type == 'hdf':
+        read_f = pd.read_hdf
     elif file_type == 'dta':
         read_f = pd.read_stata
     else:
@@ -73,6 +88,7 @@ def write(df, path, **kwargs):
     Supported:
         csv
         p (pickle)
+        hdf (HDF5)
         dta (Stata)
     """
 
@@ -82,6 +98,8 @@ def write(df, path, **kwargs):
         df.to_csv(path, **kwargs)
     elif file_type == 'p':
         df.to_pickle(path, **kwargs)
+    elif file_type == 'hdf':
+        df.to_hdf(path, 'frame', **kwargs)
     elif file_type == 'dta':
         df.to_stata(path, **kwargs)
     else:
