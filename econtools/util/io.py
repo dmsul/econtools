@@ -7,7 +7,32 @@ import pandas as pd
 def load_or_build(filepath, force=False,
                   build=None, bargs=[], bkwargs=dict(),
                   copydta=False):
-    """Load `filepath` or build if necessary using function `build`"""
+    """
+    Loads `filepath` if it exists. If it does not exist, or if `force` is
+    `True`, then builds a dataframe using `build` and writes it to disk at
+    `filepath` for future access.
+
+    Args
+    -----
+    `filepath`, str: path to DataFrame
+
+    Kwargs
+    -----
+    `force`, bool (False): Build the DataFrame and save it to `filepath` even if
+      `filepath` already exists.
+    `build`, function (None): Function that returns a DataFrame to be saved at
+      `filepath`
+    `bargs`, list ([]): args to pass to `build` function.
+    `bkwargs`, dict: kwargs to pass to `build` function.
+    `copydta`, bool (False): If `filepath` is not a Stata file (.dta), also save
+      the DataFrame as a Stata file by changing the extension of `filepath` to
+      `.dta`
+
+    Notes
+    ------
+    - If `filepath` does not exist and `build=None`, `IOError` is raised.
+    - If `filepath` exists and `force=True`, `filepath` with be written over.
+    """
 
     if isfile(filepath) and not force:
         return read(filepath)
@@ -28,6 +53,9 @@ def load_or_build(filepath, force=False,
 
 
 def save_cli():
+    """
+    CLI option to `--save`
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--save', action='store_true')
     args = parser.parse_args()

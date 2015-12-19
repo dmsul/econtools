@@ -19,6 +19,44 @@ def reg(df, y_name, x_name,
         addcons=None, nocons=False,
         awt_name=None
         ):
+    """
+    Args
+    -----
+    `df`, DataFrame - Data with any relevant variables.
+    `y_name`, str - Variable name in `df` of the dependent variable.
+    `x_name`, str or list - Variable name(s) in `df` of the independent
+        variables/regressors
+
+    Kwargs
+    ------
+    `a_name`, str - Variable name in `df` to demean (within transformation)
+    `nosingles`, bool - (True) Drop observations that are obsorbed by the within
+        transformation. Has no effect if `a_name = None`.
+    `vce_type`, str - Type of estimator to use for variance-covariance matrix of
+        estimated coefficients. Default is standard OLS. Possible choices are:
+        'robust' or 'hc1'
+        'hc2'
+        'hc3'
+        'cluster' (requires kwarg `cluster`)
+        'shac' (requires kwarg `shac')
+    `cluster`, str - Variable name in `df` used to cluster standard errors.
+    `shac`, dict - Arguments to pass to spatial HAC estimator. Requires:
+        `x`, str - Variable name in `df` to serve as longitude.
+        `y`, str - Variable name in `df` to serve as latitude.
+        `kern`, str - Kernel to use in estimation. May be 'tria' for triangle
+            kernel, or 'unif' for uniform kernel.
+        `band`, float - Bandwidth for kernel.
+    `addcons`, bool - (False) Add a constant to independent variables. Has no
+        effect if `a_name` is passed.
+    `nocons`, bool - (False) Flag so estimators know that independent variables
+        `df` do not include a constant. Only affects degrees of freedom.
+    `awt_name`, str - Variable name in `df` to use for analytic weights in
+        regression.
+
+    Returns
+    -------
+    `Results` object
+    """
 
     RegWorker = Regression(
         df, y_name, x_name,
@@ -38,6 +76,33 @@ def ivreg(df, y_name, x_name, z_name, w_name,
           addcons=None, nocons=False,
           awt_name=None,
           ):
+    """
+    Args
+    -----
+    `df`, DataFrame - Data with any relevant variables.
+    `y_name`, str - Variable name in `df` of the dependent variable.
+    `x_name`, str or list - Variable name(s) in `df` of the endogenous
+        regressor(s)
+    `z_name`, str or list - Variable name(s) in `df` of the excluded
+        instrument(s)
+    `w_name`, str or list - Variable name(s) in `df` of the included
+        instruments/exogenous regressors
+
+    Kwargs
+    ------
+    `iv_method`, str - Instrumental variables method to use. May be '2sls' for
+        two-stage least squares (default) or 'liml' for limited-information
+        maximum likelihood.
+    Else, see `reg`.
+
+    Returns
+    -------
+    `Results` object.
+    The object returned by `ivreg` differs from `reg` in the following
+    ways:
+        - No r-squared (`r2` or `r2_a`)
+        - `kappa` parameter (always 1 if `iv_method = 2sls`)
+    """
 
     IVRegWorker = IVReg(
         df, y_name, x_name, z_name, w_name,
