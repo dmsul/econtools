@@ -1,5 +1,5 @@
 import os
-from econtools.util import force_iterable
+from econtools.metrics.core import Results
 
 eol = " \\\\ \n"
 sig_labels = {1: '', .1: '*', .05: '**', .01: '***'}
@@ -34,46 +34,59 @@ class table(object):
 
 def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
                   sd=False,
-                  digits=None,
-                  empty=[]):
+                  digits=None):
     """
     Add a table row without standard errors.
 
-    `digits` must be specified for numerical values, otherwise assumes string.
+    Args
+    ----
+    `rowname`, str: Row's name.
+    `vals`, iterable: Values to fill cell rows. Can add empty cells with ''.
+
+    Kwargs
+    ------
+    `name_just`, int (24): Number of characters to align rowname to.
+    `stat_just`, int (12): Same.
+    `wrapnum`, bool (False): If True, wrap cell values in LaTeX function `num`,
+      which automatically adds commas as needed. Requires LaTex package
+      `siunitx` to use in LaTeX.
+    `sd`, bool (False): If True, wrap cell value in parentheses, as is often
+      done when the value is a standard deviation.
+    `digits`, int or None (None): How many digits after decimal to print. If
+      `None`, prints contents of `vals` exactly as is.
+
+    Return
+    ------
+    String of LaTeX tabular row with `rowname` and `vals` with the specified
+      formatting.
     """
+
     outstr = rowname.ljust(name_just)
 
     if wrapnum:
         cell = "\\num{{{}}}"
     else:
         cell = "{}"
+
     if sd:
         cell = "(" + cell + ")"
     cell = "& " + cell
 
-    for i, val in enumerate(vals):
+    if digits is None:
+        def_printval = lambda x: x
+    else:
+        def_printval = lambda x: _format_nums(x, digits=digits)
 
-        if i in empty:
-            outstr += "& ".ljust(stat_just)
-            continue
-
-        if digits is not None:
-            printval = _format_nums(val, digits=digits)
-        else:
-            printval = val
+    for val in vals:
+        printval = def_printval(val)
         outstr += cell.format(printval).ljust(stat_just)
 
-    # Add right-hand empty cells if needed
-    max_val_index = len(vals) - 1
-    if len(empty) > 0 and (max(empty) > max_val_index):
-        outstr += "& ".ljust(stat_just)*(max(empty) - max_val_index)
-
     outstr += eol
+
     return outstr
 
 
 def table_mainrow(rowname, varname, regs,
-                  lempty=0, rempty=0, empty=[],
                   name_just=24, stat_just=12, digits=3):
 
     """
@@ -100,57 +113,39 @@ def table_mainrow(rowname, varname, regs,
     String of table row.
     """
 
-    # Translate old `lempty` into `empty` list
-    len_vals = len(force_iterable(regs))
-    if (lempty or rempty) and empty:
-        raise ValueError
-    elif not empty:
-        empty = range(lempty) + range(lempty + len_vals, len_vals + rempty)
-    len_empty = len(empty)
-    len_row = len_empty + len_vals
-
     # Constants
     se_cell = "& [{}]"
     blank_stat = "& ".ljust(stat_just)
-    # Build beta and SE rows
+    # Start beta and SE rows
     beta_row = rowname.ljust(name_just)
     se_row = " ".ljust(name_just)
-    nonempty_col = 0
-    for i in range(len_row):
-        if i in empty:
+    for reg in regs:
+        if type(reg) is not Results:
             beta_row += blank_stat
             se_row += blank_stat
         else:
-            stats = _get_stats(force_iterable(regs)[nonempty_col],
-                               varname, '', digits)
-            this_beta = "& {}".format(stats['_beta'] + stats['_sig'])
-            beta_row += this_beta.ljust(stat_just)
-            se_row += se_cell.format(stats['_se']).ljust(stat_just)
-            nonempty_col += 1
-    assert nonempty_col == len_vals
+            # Beta and stars
+            this_beta = _format_nums(reg.beta[varname], digits=digits)
+            this_sig = _sig_level(reg.pt[varname])
+            beta_cell = "& {}".format(this_beta + this_sig)
+            beta_row += beta_cell.ljust(stat_just)
+            # Standard Error
+            this_se = _format_nums(reg.se[varname], digits=digits)
+            se_row += se_cell.format(this_se).ljust(stat_just)
 
     full_row = beta_row + eol + se_row + eol
 
     return full_row
 
-def _get_stats(reg, varname, label, digits=3):        #noqa
-    beta = _format_nums(reg.beta[varname], digits=digits)
-    se = _format_nums(reg.se[varname], digits=digits)
-    sig = _sig_level(reg.pt[varname])
-    names = ['beta', 'sig', 'se']
-    stats_dict = dict(zip(
-        ['{}_{}'.format(label, x) for x in names],
-        (beta, sig, se)
-    ))
-    return stats_dict
 
-def _format_nums(x, digits=3):        #noqa
+def _format_nums(x, digits=3):
     if type(x) is str:
         return x
     else:
         return '{{:.{}f}}'.format(digits).format(x)
 
-def _sig_level(p):      #noqa
+
+def _sig_level(p):
     if p > .1:
         p_level = 1
     elif .05 < p <= .1:
