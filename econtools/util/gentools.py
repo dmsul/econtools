@@ -16,7 +16,7 @@ def force_df(s, name=None):
 
 
 def force_list(x):
-    "If type not `list`, pass to `force_interable`, then convert to list."""
+    """If type not `list`, pass to `force_interable`, then convert to list."""
     if isinstance(x, list):
         return x
     else:
