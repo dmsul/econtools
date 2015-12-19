@@ -61,7 +61,7 @@ def table_mainrow(rowname, varname, regs,
     se_vals = []
     # Extract beta/sig and se values to pass to `table_statrow`
     for reg in regs:
-        if type(reg) is not Results:
+        if type(reg) is not Results or varname not in reg.beta:
             beta_vals.append('')
             se_vals.append('')
         else:
