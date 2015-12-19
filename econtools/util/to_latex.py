@@ -32,6 +32,57 @@ class table(object):
         return table_mainrow(*args, **kwargs)
 
 
+def table_mainrow(rowname, varname, regs,
+                  name_just=24, stat_just=12, digits=3):
+
+    """
+    Add a table row of regression coefficients with standard errors.
+
+    Args
+    ----
+    `rowname`, str: First cell of table row, i.e., the row's name.
+    `varname`, str: Name of variable to pull from metrics `Results`.
+    `regs`, `Results` object or iterable of `Results`: Regressions from which to
+      pull coefficients named `varname`.
+
+    Kwargs
+    ----
+    `name_just`
+    `stat_just`
+    `digits`
+
+    Returns
+    ----
+    String of table row.
+    """
+
+    # Start beta and SE rows
+    beta_vals = []
+    se_vals = []
+    # Extract beta/sig and se values to pass to `table_statrow`
+    for reg in regs:
+        if type(reg) is not Results:
+            beta_vals.append('')
+            se_vals.append('')
+        else:
+            # Beta and stars
+            this_beta = _format_nums(reg.beta[varname], digits=digits)
+            this_sig = _sig_level(reg.pt[varname])
+            beta_vals.append(this_beta + this_sig)
+            # Standard Error
+            this_se = _format_nums(reg.se[varname], digits=digits)
+            se_vals.append(this_se)
+
+    beta_row = table_statrow(rowname, beta_vals, name_just=name_just,
+                             stat_just=stat_just)
+    se_row = table_statrow('', se_vals, name_just=name_just,
+                           stat_just=stat_just)
+
+    full_row = beta_row + se_row
+
+    return full_row
+
+
 def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
                   sd=False,
                   digits=None):
@@ -68,14 +119,24 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
     else:
         cell = "{}"
 
-    if sd:
-        cell = "(" + cell + ")"
+    if sd is not False:
+        if type(sd) is not str:
+            sd = '('
+        if sd in ('(', '['):
+            leftp = sd
+            rightp = ")" if leftp == '(' else ']'
+        else:
+            err_str = "Input '{}' invalid".format(sd)
+            raise ValueError(err_str)
+
+        cell = leftp + cell + rightp
+
     cell = "& " + cell
 
     if digits is None:
-        def_printval = lambda x: x
+        def_printval = lambda x: x      #noqa
     else:
-        def_printval = lambda x: _format_nums(x, digits=digits)
+        def_printval = lambda x: _format_nums(x, digits=digits)     #noqa
 
     for val in vals:
         printval = def_printval(val)
@@ -84,58 +145,6 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
     outstr += eol
 
     return outstr
-
-
-def table_mainrow(rowname, varname, regs,
-                  name_just=24, stat_just=12, digits=3):
-
-    """
-    Add a table row of regression coefficients with standard errors.
-
-    Args
-    ----
-    `rowname`, str: First cell of table row, i.e., the row's name.
-    `varname`, str: Name of variable to pull from metrics `Results`.
-    `regs`, `Results` object or iterable of `Results`: Regressions from which to
-      pull coefficients named `varname`.
-
-    Kwargs
-    ----
-    `lempty`
-    `rempty`
-    `empty`
-    `name_just`
-    `stat_just`
-    `digits`
-
-    Returns
-    ----
-    String of table row.
-    """
-
-    # Constants
-    se_cell = "& [{}]"
-    blank_stat = "& ".ljust(stat_just)
-    # Start beta and SE rows
-    beta_row = rowname.ljust(name_just)
-    se_row = " ".ljust(name_just)
-    for reg in regs:
-        if type(reg) is not Results:
-            beta_row += blank_stat
-            se_row += blank_stat
-        else:
-            # Beta and stars
-            this_beta = _format_nums(reg.beta[varname], digits=digits)
-            this_sig = _sig_level(reg.pt[varname])
-            beta_cell = "& {}".format(this_beta + this_sig)
-            beta_row += beta_cell.ljust(stat_just)
-            # Standard Error
-            this_se = _format_nums(reg.se[varname], digits=digits)
-            se_row += se_cell.format(this_se).ljust(stat_just)
-
-    full_row = beta_row + eol + se_row + eol
-
-    return full_row
 
 
 def _format_nums(x, digits=3):
