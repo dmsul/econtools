@@ -52,6 +52,24 @@ def load_or_build(filepath, force=False,
         return df
 
 
+def loadbuild_cli():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--rebuild', action='store_true')
+    parser.add_argument('--rebuild-down', action='store_true')
+    parser.add_argument('--rebuild-all', action='store_true')
+    args = parser.parse_args()
+
+    rebuild = args.rebuild
+    rebuild_down = args.rebuild_down
+    rebuild_all = args.rebuild_all
+
+    if rebuild_all:
+        rebuild = True
+        rebuild_down = True
+
+    return rebuild, rebuild_down
+
+
 def save_cli():
     """
     CLI option to `--save`
