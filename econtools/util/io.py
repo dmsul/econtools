@@ -7,6 +7,8 @@ import pandas as pd
 from .gentools import force_df
 
 
+# TODO: Drop functional `load_or_build`, replace with decorator (once the usage
+#   in projects is updated and tested).
 def dec_load_or_build(filepath, copydta=False):
     """
     Loads `filepath` as a DataFrame if it exists, otherwise builds the data and
