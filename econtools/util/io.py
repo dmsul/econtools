@@ -1,7 +1,64 @@
 from os.path import isfile, splitext
+from functools import wraps
 import argparse
 
 import pandas as pd
+
+from .gentools import force_df
+
+
+# TODO: Drop functional `load_or_build`, replace with decorator (once the usage
+#   in projects is updated and tested).
+def dec_load_or_build(filepath, copydta=False):
+    """
+    Loads `filepath` as a DataFrame if it exists, otherwise builds the data and
+    saves it to `filepath`.
+
+    Decorator Args
+    ---------------
+    `filepath`, str: path to DataFrame
+
+    Decorator Kwargs
+    ---------------
+    `copydta`, bool: if true, save a copy of the data in Stata DTA format if
+        `filepath` is not already a DTA file.
+
+    Build Function Kwargs
+    ---------------------
+    This are additional kwargs that can be passed to the wrapped function that
+        affect the behavior of `load_or_build`.
+
+    `_rebuild`, bool (False): Build the DataFrame and save it to `filepath` even
+        if `filepath` already exists.
+    `_load`, bool (True): Try loading the data before building it. Like
+        `_rebuild`, but no copy of the data is written to disk.
+    """
+    def actualDecorator(builder):
+        @wraps(builder)
+        def wrapper(*args, **kwargs):
+            load = kwargs.pop('_load', True)
+            rebuild = kwargs.pop('_rebuild', False)
+            if load and isfile(filepath) and not rebuild:
+                # If it's on disk and there are no objections, read it
+                df = read(filepath)
+            elif not load:
+                # If `load = False` is passed, just return the built `df`
+                df = builder(*args, **kwargs)
+            else:
+                # If it's just not on disk, build it, save it, and copy it
+                print "****** Building *******\n\tfile: {}".format(filepath)
+                print "\tfunc: {}".format(builder.__name__)
+                print "*************"
+                df = builder(*args, **kwargs)
+                write(df, filepath)
+                # Copy to Stata DTA if needed
+                fileroot, fileext = splitext(filepath)
+                if copydta and fileext != '.dta':
+                    force_df(df).to_stata(fileroot + '.dta')
+
+            return df
+        return wrapper
+    return actualDecorator
 
 
 def load_or_build(filepath, force=False,
@@ -50,6 +107,24 @@ def load_or_build(filepath, force=False,
             pd.DataFrame(df).to_stata(fileroot + '.dta')
 
         return df
+
+
+def loadbuild_cli():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--rebuild', action='store_true')
+    parser.add_argument('--rebuild-down', action='store_true')
+    parser.add_argument('--rebuild-all', action='store_true')
+    args = parser.parse_args()
+
+    rebuild = args.rebuild
+    rebuild_down = args.rebuild_down
+    rebuild_all = args.rebuild_all
+
+    if rebuild_all:
+        rebuild = True
+        rebuild_down = True
+
+    return rebuild, rebuild_down
 
 
 def save_cli():
