@@ -6,10 +6,13 @@ import pandas as pd
 
 from .gentools import force_df
 
+PICKLE_EXT = 'p'
 
-# TODO: Drop functional `load_or_build`, replace with decorator (once the usage
-#   in projects is updated and tested).
-def dec_load_or_build(filepath, copydta=False):
+
+# TODO: Rename `load_or_build` to `raw_load_or_build` (still want direct
+# access), replace with decorator (once the usage in projects is updated and
+# tested)
+def dec_load_or_build(raw_filepath, copydta=False, path_args=[]):
     """
     Loads `filepath` as a DataFrame if it exists, otherwise builds the data and
     saves it to `filepath`.
@@ -32,12 +35,28 @@ def dec_load_or_build(filepath, copydta=False):
         if `filepath` already exists.
     `_load`, bool (True): Try loading the data before building it. Like
         `_rebuild`, but no copy of the data is written to disk.
+    `_path`, list-like ([]): A list of `int`s or `str`s that point to args or
+        kwargs of the build function, respectively. The value of these arguments
+        will then be use to format `filepath`.
+        Example:
+        ```
+        from econtools import dec_load_or_build
+
+        @dec_load_or_build('file_{}_{}.csv')
+        def foo(a, b=None, _path=[0, 'b']):
+            return pd.DataFrame([a, b])
+
+        if __name__ == '__main__':
+            # Saves `df` to `file_infix_suffix.csv`
+            foo('infix', 'suffix')
+        ```
     """
     def actualDecorator(builder):
         @wraps(builder)
         def wrapper(*args, **kwargs):
             load = kwargs.pop('_load', True)
             rebuild = kwargs.pop('_rebuild', False)
+            filepath = _set_filepath(raw_filepath, path_args, args, kwargs)
             if load and isfile(filepath) and not rebuild:
                 # If it's on disk and there are no objections, read it
                 df = read(filepath)
@@ -59,6 +78,34 @@ def dec_load_or_build(filepath, copydta=False):
             return df
         return wrapper
     return actualDecorator
+
+def _set_filepath(raw_path, path_args, args, kwargs):      #noqa
+    format_filepath = _parse_pathargs(path_args, args, kwargs)
+    try:
+        filepath = raw_path.format(*format_filepath)
+    except IndexError:
+        err_str = (
+            "Not enough arguments to fill file path template:\n"
+            "    Args: {}\n"
+            "    Path: {}"
+        ).format(raw_path, format_filepath)
+        raise ValueError(err_str)
+    return filepath
+
+def _parse_pathargs(path_args, args, kwargs):          #noqa
+    """ Numbers are args, strings are kwargs.  """
+    patharg_values = []
+
+    for arg in path_args:
+        arg_type = type(arg)
+        if arg_type is int:
+            patharg_values.append(args[arg])
+        elif arg_type is str:
+            patharg_values.append(kwargs[arg])
+        else:
+            raise ValueError("Path arg must be int or str.")
+
+    return patharg_values
 
 
 def load_or_build(filepath, force=False,
@@ -110,6 +157,7 @@ def load_or_build(filepath, force=False,
 
 
 def loadbuild_cli():
+    """ Convenience CLI args for rebuilding data using `load_or_build` """
     parser = argparse.ArgumentParser()
     parser.add_argument('--rebuild', action='store_true')
     parser.add_argument('--rebuild-down', action='store_true')
@@ -128,9 +176,7 @@ def loadbuild_cli():
 
 
 def save_cli():
-    """
-    CLI option to `--save`
-    """
+    """ CLI option to `--save` """
     parser = argparse.ArgumentParser()
     parser.add_argument('--save', action='store_true')
     args = parser.parse_args()
@@ -145,7 +191,7 @@ def try_pickle(filepath):
     """
 
     fileroot, fileext = splitext(filepath)
-    pickle_path = fileroot + '.p'
+    pickle_path = fileroot + '.' + PICKLE_EXT
 
     if isfile(pickle_path):
         df = pd.read_pickle(pickle_path)
@@ -171,7 +217,7 @@ def read(path, **kwargs):
 
     if file_type == 'csv':
         read_f = pd.read_csv
-    elif file_type == 'p':
+    elif file_type == PICKLE_EXT:
         read_f = pd.read_pickle
     elif file_type == 'hdf':
         read_f = pd.read_hdf
@@ -199,7 +245,7 @@ def write(df, path, **kwargs):
 
     if file_type == 'csv':
         df.to_csv(path, **kwargs)
-    elif file_type == 'p':
+    elif file_type == PICKLE_EXT:
         df.to_pickle(path, **kwargs)
     elif file_type == 'hdf':
         df.to_hdf(path, 'frame', **kwargs)
