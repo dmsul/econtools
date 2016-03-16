@@ -2,6 +2,7 @@ import re
 from os.path import isfile, splitext
 from functools import wraps
 import argparse
+from inspect import getargspec
 
 import numpy as np
 import pandas as pd
@@ -9,57 +10,61 @@ import pandas as pd
 from .gentools import force_df
 from .frametools import df_to_list
 
-PICKLE_EXT = 'p'
+PICKLE_EXT = ('pkl', 'p')   # First is default for writing to pickle
 
 
-# TODO: Rename `load_or_build` to `raw_load_or_build` (still want direct
-# access), replace with decorator (once the usage in projects is updated and
-# tested)
-def dec_load_or_build(raw_filepath, copydta=False, path_args=[]):
+# TODO: lob tests
+def load_or_build(raw_filepath, copydta=False, path_args=[]):
     """
     Loads `filepath` as a DataFrame if it exists, otherwise builds the data and
     saves it to `filepath`.
 
     Decorator Args
     ---------------
-    `filepath`, str: path to DataFrame
+    `filepath`, str: path to saved DataFrame
 
     Decorator Kwargs
     ---------------
-    `copydta`, bool: if true, save a copy of the data in Stata DTA format if
-        `filepath` is not already a DTA file.
+    `copydta`, bool (default False): if true, save a copy of the data in Stata
+        DTA format if `filepath` is not already a DTA file.
 
-    Build Function Kwargs
-    ---------------------
-    This are additional kwargs that can be passed to the wrapped function that
-        affect the behavior of `load_or_build`.
-
-    `_rebuild`, bool (False): Build the DataFrame and save it to `filepath` even
-        if `filepath` already exists.
-    `_load`, bool (True): Try loading the data before building it. Like
-        `_rebuild`, but no copy of the data is written to disk.
-    `_path`, list-like ([]): A list of `int`s or `str`s that point to args or
-        kwargs of the build function, respectively. The value of these arguments
-        will then be use to format `filepath`.
+    `path_args`, list-like ([]): A list of `int`s or `str`s that point to args
+        or kwargs of the build function, respectively. The value of these
+        arguments will then be use to format `filepath`.
         Example:
         ```
-        from econtools import dec_load_or_build
+        from econtools import load_or_build
 
-        @dec_load_or_build('file_{}_{}.csv')
-        def foo(a, b=None, _path=[0, 'b']):
+        @load_or_build('file_{}_{}.csv', path_args=[0, 'b'])
+        def foo(a, b=None):
             return pd.DataFrame([a, b])
 
         if __name__ == '__main__':
             # Saves `df` to `file_infix_suffix.csv`
             foo('infix', 'suffix')
         ```
+
+    Build Function Kwargs
+    ---------------------
+    This are additional kwargs that can be passed to the wrapped function that
+        affect the behavior of `load_or_build`.
+
+    `_rebuild`, bool (default False): Build the DataFrame and save it to
+        `filepath` even if `filepath` already exists.
+    `_load`, bool (default True): Try loading the data before building it. If
+        False, the building function is called and the result returned with no
+        data written to disk.
     """
     def actualDecorator(builder):
         @wraps(builder)
         def wrapper(*args, **kwargs):
+            # Filter the kwargs from `builder` meant for `load_or_build`
             load = kwargs.pop('_load', True)
             rebuild = kwargs.pop('_rebuild', False)
-            filepath = _set_filepath(raw_filepath, path_args, args, kwargs)
+            # Format the file path
+            argspec = getargspec(builder)
+            filepath = _set_filepath(raw_filepath, path_args, args, kwargs,
+                                     argspec)
             if load and isfile(filepath) and not rebuild:
                 # If it's on disk and there are no objections, read it
                 df = read(filepath)
@@ -82,8 +87,12 @@ def dec_load_or_build(raw_filepath, copydta=False, path_args=[]):
         return wrapper
     return actualDecorator
 
-def _set_filepath(raw_path, path_args, args, kwargs):      #noqa
-    format_filepath = _parse_pathargs(path_args, args, kwargs)
+def _set_filepath(raw_path, path_args, args, kwargs, argspec):                  #noqa
+    """
+    Parse `args` and `kwargs` as directed by `path_args` and insert them
+    into `raw_path`.
+    """
+    format_filepath = _parse_pathargs(path_args, args, kwargs, argspec)
     try:
         filepath = raw_path.format(*format_filepath)
     except IndexError:
@@ -95,25 +104,38 @@ def _set_filepath(raw_path, path_args, args, kwargs):      #noqa
         raise ValueError(err_str)
     return filepath
 
-def _parse_pathargs(path_args, args, kwargs):          #noqa
-    """ Numbers are args, strings are kwargs.  """
+def _parse_pathargs(path_args, args, kwargs, argspec):                          #noqa
+    """
+    `path_args`, iterable: Which args/kwargs to use, in order. Numbers are
+        args, strings are kwargs.
+    `args`, `kwargs`: The value of args/kwargs passed to the original builder
+        function.
+    `argspec`: Stores values of default kwargs from builder function.
+    """
     patharg_values = []
+    # Handle default kwargs
+    argnames, __, __, defaults = argspec
 
     for arg in path_args:
         arg_type = type(arg)
         if arg_type is int:
             patharg_values.append(args[arg])
         elif arg_type is str:
-            patharg_values.append(kwargs[arg])
+            try:
+                patharg_values.append(kwargs[arg])
+            except KeyError:
+                nargs = len(argnames) - len(defaults)
+                kwarg_idx = argnames.index(arg) - nargs
+                patharg_values.append(defaults[kwarg_idx])
         else:
             raise ValueError("Path arg must be int or str.")
 
     return patharg_values
 
 
-def load_or_build(filepath, force=False,
-                  build=None, bargs=[], bkwargs=dict(),
-                  copydta=False):
+def load_or_build_direct(filepath, force=False,
+                         build=None, bargs=[], bkwargs=dict(),
+                         copydta=False):
     """
     Loads `filepath` if it exists. If it does not exist, or if `force` is
     `True`, then builds a dataframe using `build` and writes it to disk at
@@ -194,7 +216,7 @@ def try_pickle(filepath):
     """
 
     fileroot, fileext = splitext(filepath)
-    pickle_path = fileroot + '.' + PICKLE_EXT
+    pickle_path = fileroot + '.' + PICKLE_EXT[0]
 
     if isfile(pickle_path):
         df = pd.read_pickle(pickle_path)
@@ -220,7 +242,7 @@ def read(path, **kwargs):
 
     if file_type == 'csv':
         read_f = pd.read_csv
-    elif file_type == PICKLE_EXT:
+    elif file_type in PICKLE_EXT:
         read_f = pd.read_pickle
     elif file_type == 'hdf':
         read_f = pd.read_hdf
@@ -248,7 +270,7 @@ def write(df, path, **kwargs):
 
     if file_type == 'csv':
         df.to_csv(path, **kwargs)
-    elif file_type == PICKLE_EXT:
+    elif file_type in PICKLE_EXT:
         df.to_pickle(path, **kwargs)
     elif file_type == 'hdf':
         df.to_hdf(path, 'frame', **kwargs)
