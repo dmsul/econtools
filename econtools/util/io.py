@@ -1,10 +1,13 @@
+import re
 from os.path import isfile, splitext
 from functools import wraps
 import argparse
 
+import numpy as np
 import pandas as pd
 
 from .gentools import force_df
+from .frametools import df_to_list
 
 PICKLE_EXT = 'p'
 
@@ -254,3 +257,145 @@ def write(df, path, **kwargs):
     else:
         err_str = 'File type {} is yet not supported.'
         raise NotImplementedError(err_str.format(file_type))
+
+
+# Iteractive stuff
+def confirmer(prompt_str, default_no=True):
+    """
+    Prompt user for yes/no answer.
+
+    Args
+    ----
+    `prompt_str`, str: Actual question/additional info.
+    `default_no`, bool (True): The default response is 'No'.
+
+    Returns
+    ----
+    `ans`, bool: User responded 'Yes'.
+    """
+    yes_opts = ('Y', 'y', 'yes', 'Yes', 'YES')
+    no_opts = ('N', 'n', 'no', 'No', 'NO')
+    default_opt = ('',)
+    if default_no:
+        choices = ' (y/[n]) >>> '
+        no_opts += default_opt
+    else:
+        choices = ' ([y]/n) >>> '
+        yes_opts += default_opt
+
+    full_prompt = prompt_str + choices
+
+    ans = force_valid_response(full_prompt, yes_opts + no_opts)
+
+    return ans in yes_opts
+
+
+def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
+                         _count=0):
+
+    ans = raw_input(prompt_str)
+
+    if listin:
+        output = _parse_list_input(ans, dtype)
+        set_ans = set(output)
+        good = set_ans <= set(good_answers)
+    else:
+        output = ans
+        good = ans in good_answers
+
+    if not good and _count < 4:
+        print "Invalid Response '{}'!".format(ans)
+        _count += 1
+        output = force_valid_response(prompt_str, good_answers, listin=listin,
+                                      dtype=dtype, _count=_count)
+    elif not good:
+        raise ValueError('Learn to read')
+
+    return output
+
+def _parse_list_input(inp, dtype):     #noqa
+    inp = re.sub('\s\s+', ' ', inp)
+    list_inp = inp.split(' ')
+    if dtype:
+        list_inp = map(dtype, list_inp)
+    return list_inp
+
+
+class DataInteractModel(object):
+
+    def __init__(self, looplist, **kwargs):
+        self.looplist = df_to_list(looplist)
+        self.__dict__.update(kwargs)  # For secondary DataFrames
+
+    def interact(self, filepath=None, writeargs=dict()):
+
+        if filepath:
+            split_path = splitext(filepath)
+            # Write notes in same format
+            notes_path = split_path[0] + '_notes' + split_path[1]
+            # Write log in ascii
+            log_path = split_path[0] + '_log.txt'
+            if isfile(log_path):
+                overwrite = confirmer('Log file already exists. Overwrite?')
+                if not overwrite:
+                    import sys
+                    sys.exit(0)
+
+        responses = []
+        notes = []
+        while self.looplist:
+            result, notes_on_result = self.display(self.looplist.pop())
+            if result is not None:
+                responses.append(result)
+                notes.append(notes_on_result)
+
+        responses_df = pd.DataFrame(responses)
+        notes_df = pd.DataFrame(notes)
+
+        if filepath:
+            write(responses_df, filepath, **writeargs)
+            write(notes_df, notes_path, **writeargs)
+            self.write_log(log_path, responses_df, notes_df)
+
+        return responses_df
+
+    def display(self, row):
+        """
+        Make a prompt string, define valid input, define response to input.
+        Should ultimately return two Series: the main result and notes.
+        """
+        pass
+
+    def write_log(self, log_path, outdf, notes):
+        """
+        By default writes the DataFrame as a dictionary for easy pasting
+        into code. Can be overridden.
+        Default format: idx: (result, notes),
+        """
+
+        with open(log_path, 'w') as f:
+            f.write('Columns: {}\n\n'.format(outdf.columns.values))
+            for idx, row in outdf.iterrows():
+                key_str = "'{}':\t" if type(idx) is str else "{}: "
+                full_line = key_str + "({}, '{}'),\n"
+                # Fix float/int/nan crap
+                row_list = _fix_dtypes(row.tolist())
+                f.write(
+                    full_line.format(idx, row_list, notes.loc[idx].squeeze()))
+
+    def _force_valid_response(self, *args, **kwargs):
+        return force_valid_response(*args, **kwargs)
+
+
+def _fix_dtypes(rowlist):
+    newlist = []
+    for x in rowlist:
+        dtype = type(x)
+        if issubclass(dtype, np.floating) or dtype is float:
+            if np.isnan(x):
+                continue
+            elif int(x) == x:
+                newlist.append(int(x))
+                continue
+        newlist.append(x)
+    return newlist
