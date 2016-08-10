@@ -21,46 +21,45 @@ class test_set_filepath(object):
     def setup(self):
         self.args = (1990, 'tria')
         self.kwargs = {'base': 'house'}
-
-    def aux_add_kwarg(self, **kwargs):
-        """
-        Quickly add new kwargs to pre-defined `self.kwargs`
-        This is so `self.kwargs` is preserved and can be tested that it's not
-        being modified.
-        """
-        this_kwargs = {key: item for key, item in self.kwargs.iteritems()}
-        this_kwargs.update(kwargs)
-        return this_kwargs
+        self.argspec = (
+            ['year', 'model', 'base'],
+            None,
+            None,
+            ['grid']
+        )
 
     def test_args1(self):
         template = 'file_{}_{}'
         expected = 'file_1990_tria'
         path_args = [0, 1]
-        result = _set_filepath(template, path_args, self.args, self.kwargs)
+        result = _set_filepath(template, path_args, self.args, self.kwargs,
+                               self.argspec)
         assert expected == result
 
     def test_args2(self):
         template = 'file_{}_{}'
         expected = 'file_house_1990'
         path_args = ['base', 0]
-        result = _set_filepath(template, path_args, self.args, self.kwargs)
+        result = _set_filepath(template, path_args, self.args, self.kwargs,
+                               self.argspec)
         assert expected == result
 
     def test_noargs(self):
         expected = 'file'
         path_args = []
-        result = _set_filepath(expected, path_args, self.args, self.kwargs)
+        result = _set_filepath(expected, path_args, self.args, self.kwargs,
+                               self.argspec)
         assert expected == result
 
     def test_too_few_args(self):
         path_args = []
         assert_raises(ValueError, _set_filepath, 'file{}', path_args, self.args,
-                      self.kwargs)
+                      self.kwargs, self.argspec)
 
     def test_badarg_float(self):
         path_args = [1.0]
         assert_raises(ValueError, _set_filepath, '', path_args, self.args,
-                      self.kwargs)
+                      self.kwargs, self.argspec)
 
 
 class test_readwrite(object):
