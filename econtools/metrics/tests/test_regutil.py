@@ -29,8 +29,10 @@ class TestWinsorize(object):
         assert_frame_equal(expected, result)
 
     def test_onesided(self):
-        expected = self.df.iloc[1:, :]
+        expected = self.df.iloc[:-1, :]
         result = winsorize(self.df, 'x', p=(0, .95))
+        print expected
+        print result
         assert_frame_equal(expected, result)
 
     def test_separate_quantiles(self):
