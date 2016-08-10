@@ -79,21 +79,6 @@ class Test_force_df(object):
         result = force_df(self.s)
         assert_frame_equal(expected, result)
 
-    def test_noname(self):
-        expected = self.sdf
-        expected.columns = [0]
-        result = force_df(self.s, forcename=True)
-        assert_frame_equal(expected, result)
-
-    def test_checkname(self):
-        expected = self.sdf
-        result = force_df(self.s, checkname=True)
-        assert_frame_equal(expected, result)
-
-    @raises(AssertionError)
-    def test_checkname_fail(self):
-        force_df(self.s, name='xxx', checkname=True)
-
     def test_passthrough(self):
         df = self.df
         assert_frame_equal(df, force_df(df))
