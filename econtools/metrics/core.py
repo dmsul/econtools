@@ -271,6 +271,7 @@ class RegBase(object):
         self.results._add_stat('K', K)
         self.results._add_stat('df_t', df)
         self.results._add_stat('_df_r', df)
+        self.results._vce_correct = vce_correct
         self.results.vce *= vce_correct
 
     def _set_NK(self):
@@ -519,6 +520,7 @@ class Results(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+    # TODO: Why do I wrap this in a method? Why does `_add_stat` exist?
     def _add_stat(self, stat_name, stat):
         self.__dict__[stat_name] = stat
 
