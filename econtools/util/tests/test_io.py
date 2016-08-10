@@ -115,7 +115,7 @@ class test_try_pickle(object):
         shutil.rmtree(self.tempdir)
 
     def test_already_p(self):
-        temppath = path.join(self.tempdir, 'this_temp.p')
+        temppath = path.join(self.tempdir, 'this_temp.pkl')
         self.df.to_pickle(temppath)
         result = try_pickle(temppath)
         assert_frame_equal(self.df, result)
@@ -128,7 +128,7 @@ class test_try_pickle(object):
         self.df.to_stata(temppath)
         try_pickle(temppath)
         result_list = glob.glob(path.join(self.tempdir, '*'))
-        expect_list = [fileroot.format(x) for x in ('p', 'dta')]
+        expect_list = [fileroot.format(x) for x in ('pkl', 'dta')]
         assert set(result_list) == set(expect_list)
 
 
