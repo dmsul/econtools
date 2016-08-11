@@ -82,3 +82,11 @@ def group_id(df, cols=None, name='group_id', merge=False):
         unique_df.index = df.index
 
     return unique_df
+
+
+def df_to_list(df):
+    """ Turn rows of DataFrame to list of Series objects """
+    if type(df) is list:
+        return df
+    else:
+        return [b for a, b in df.iterrows()]

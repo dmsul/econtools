@@ -4,7 +4,7 @@ import numpy as np
 from nose import runmodule
 from pandas.util.testing import assert_frame_equal
 
-from metrics.core import add_cons
+from econtools.metrics.regutil import add_cons
 
 
 class TestCheckCons(object):

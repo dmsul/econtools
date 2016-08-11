@@ -80,9 +80,8 @@ def flag_nonsingletons(df, avar, sample):
     return non_single
 
 
-def windsorize(df, by, p=(.01, .99)):
+def winsorize(df, by, p=(.01, .99)):
     """Drop variables in `by' outside quantiles `p`."""
-    # TODO: Move to utils? Mysci?
     # TODO: Some kind of warning/error if too fine of quantiles are
     #       requested for the number of rows, e.g. .99 with 5 rows.
     df = df.copy()
@@ -95,14 +94,14 @@ def windsorize(df, by, p=(.01, .99)):
     else:
         p = [p] * len(by)
 
-    survive_windsor = np.array([True] * df.shape[0])
+    survive_winsor = np.array([True] * df.shape[0])
 
     for idx, col in enumerate(by):
         cuts = df[col].quantile(p[idx]).values
         survive_this = np.logical_and(df[col] >= cuts[0], df[col] <= cuts[1])
-        survive_windsor = np.minimum(survive_windsor, survive_this)
+        survive_winsor = np.minimum(survive_winsor, survive_this)
 
-    df = df[survive_windsor]
+    df = df[survive_winsor]
 
     return df
 

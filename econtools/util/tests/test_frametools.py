@@ -86,7 +86,7 @@ class TestGroupid(object):
         tmpdf['group_id'] = [0, 0, 1, 2, 1]
         self.df_with_id = tmpdf[['group_id', 'x', 'y']]
 
-        tmpdf = self.df_with_id.drop_duplicates().sort('group_id')
+        tmpdf = self.df_with_id.drop_duplicates().sort_values('group_id')
         tmpdf = tmpdf.reset_index(drop=True)
         self.dfs_id_xwalk = tmpdf
 
