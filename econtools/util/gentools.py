@@ -1,3 +1,6 @@
+from __future__ import division
+
+import string
 import pandas as pd
 
 
@@ -45,3 +48,51 @@ def generate_chunks(iterable, chunk_size):
         else:
             pass  # Don't return an empty last list
         runs += 1
+
+
+def int2base(x, base):
+    """
+    Convert decimal x >= 0 to base <= 62
+
+    Alpha values are case sensitive, with lowercase being higher value than
+    upper case.
+    """
+    base_alphabet = _base62_alphabet()
+    if base > len(base_alphabet):
+        raise ValueError("Max base is 62. Passed base was {}".format(base))
+
+    new_base = ''
+
+    while x > 0:
+        x, i = divmod(x, base)
+        new_base = base_alphabet[i] + new_base
+
+    return new_base
+
+
+def base2int(x, base):
+    """
+    Convert x >= 0 of base `base` to decimal.
+
+    Alpha values are case sensitive, with lowercase being higher value than
+    upper case.
+    """
+    base62_alphabet = _base62_alphabet()
+    if base > len(base62_alphabet):
+        raise ValueError("Max base is 62. Passed base was {}".format(base))
+    base_alphabet = base62_alphabet[:base]
+
+    base10 = 0
+
+    for place, value in enumerate(x[::-1]):
+        values_base10 = string.find(base_alphabet, value)
+        if values_base10 < 0:
+            err_str = "Value `{}` is not a valid digit for base {}"
+            raise ValueError(err_str.format(value, base))
+        base10 += values_base10 * base ** place
+
+    return base10
+
+
+def _base62_alphabet():
+    return string.digits + string.uppercase + string.lowercase

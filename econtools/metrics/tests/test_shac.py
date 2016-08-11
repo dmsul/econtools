@@ -1,3 +1,10 @@
+"""
+Note: Doing SHAC with a trivially small bandwidth is numerically identical to
+clustering. So the clustering results can be used as the "correct" value of the
+SHAC with trivially small bandwidth (so the only obs that fall in unit i's
+bandwidth are unit i's). However, the degress of freedom corrections may be
+different, so this must be adjusted for.
+"""
 from __future__ import division
 
 import pandas as pd
@@ -7,7 +14,7 @@ from numpy.testing import (assert_array_almost_equal,)
 
 from econtools.util import group_id
 
-from econtools.metrics.core import reg, df_cluster, df_shac
+from econtools.metrics.core import reg
 
 
 class SHACRegCompare(object):
@@ -21,15 +28,17 @@ class SHACRegCompare(object):
         p = [(.25, .25), (.5, .5), (.75, .75)]
         d = np.zeros((N, len(p)))
         for i in xrange(len(p)):
-            d[:, i] = np.sqrt((df['lon'] - p[i][0])**2
-                              + (df['lat'] - p[i][1])**2)
+            d[:, i] = np.sqrt(
+                (df['lon'] - p[i][0])**2 +
+                (df['lat'] - p[i][1])**2
+            )
         point_effect = (np.random.rand(len(p)) - .5)*10
         full_point_effect = d.dot(point_effect)
 
         df['y'] = 12 + 4*df['x1'] + full_point_effect + np.random.randn(N)*20
 
-        df['lat_grid'] = np.around(df['lat']*10) / 10
-        df['lon_grid'] = np.around(df['lon']*10) / 10
+        df['lat_grid'] = np.around(df['lat']*10)
+        df['lon_grid'] = np.around(df['lon']*10)
 
         cls.y = 'y'
         cls.x = ['x1']
@@ -40,11 +49,6 @@ class SHACRegCompare(object):
         cls.spatial_hac = dict(x=cls.lon, y=cls.lat, kern='unif', band=0.01)
         df = group_id(df, cols=[cls.lon, cls.lat], name=cls.cluster, merge=True)
         cls.df = df
-        K = df.shape[1]
-        _, df_correct_cluster, cls.g = df_cluster(N, K, df[cls.cluster])
-        _, df_correct_shac = df_shac(N, K)
-        cls.cluster_dof_inv = 1 / df_correct_cluster
-        cls.shac_dof_inv = 1 / df_correct_shac
 
 
 class TestSHAC_reg(SHACRegCompare):
@@ -53,9 +57,8 @@ class TestSHAC_reg(SHACRegCompare):
         std = reg(self.df, self.y, self.x, cluster=self.cluster, addcons=True)
         shac = reg(self.df, self.y, self.x, shac=self.spatial_hac,
                    addcons=True)
-        expected = std.vce * self.cluster_dof_inv
-        result = shac.vce * self.shac_dof_inv
-        # XXX Approach equality as N to \infty. Something lurking somewhere
+        expected = std.vce / std._vce_correct
+        result = shac.vce / shac._vce_correct
         assert_array_almost_equal(expected, result)
 
     def test_reg_tria(self):
@@ -63,8 +66,8 @@ class TestSHAC_reg(SHACRegCompare):
         self.spatial_hac['kern'] = 'tria'
         shac = reg(self.df, self.y, self.x, shac=self.spatial_hac,
                    addcons=True)
-        expected = std.vce * self.cluster_dof_inv
-        result = shac.vce * self.shac_dof_inv
+        expected = std.vce / std._vce_correct
+        result = shac.vce / shac._vce_correct
         assert_array_almost_equal(expected, result)
 
 if __name__ == '__main__':
