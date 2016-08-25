@@ -6,15 +6,25 @@ import pandas as pd
 from econtools.metrics import reg
 
 
-def llr(y, x, h, N=None, degree=1):
-    assert len(y) == len(x)
-    N = _set_N(x, N)
-    x0 = _set_x0(x, N)
-    G = np.zeros(N)
+def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan'):
+    try:
+        assert len(y) == len(x)
+    except AssertionError:
+        raise ValueError("Vectors `y` and `x` must be same size.")
+
+    x0 = _set_x0(x, x0, N)      # TODO check that passed `x0` isn't overwritten
+    G = np.zeros(len(x0))
     for i, this_x0 in enumerate(x0):
-        G[i] = _actual_reg(y, x, this_x0, h, degree)
+        G[i] = ghat_of_x(y, x, this_x0, h, degree, kern_name=kernel)
     return np.stack((x0, G), axis=-1)
 
+def _set_x0(x, x0, N):
+    if x0 is not None:
+        return x0
+    N = _set_N(x, N)
+    x_min = np.min(x)
+    x_max = np.max(x)
+    return np.linspace(x_min, x_max, num=N)
 
 def _set_N(x, N):
     if N is None:
@@ -23,14 +33,8 @@ def _set_N(x, N):
         return N
 
 
-def _set_x0(x, N):
-    x_min = np.min(x)
-    x_max = np.max(x)
-    return np.linspace(x_min, x_max, num=N)
-
-
-def _actual_reg(y, x, x0, h, degree):
-    K = kernel(x - x0, h=h)
+def ghat_of_x(y, x, x0, h, degree, kern_name):
+    K = kernel_func(x - x0, h=h, name=kern_name)
     X = _make_X(x, x0, degree)
     x_name = ['cons'] + ['x{}'.format(i) for i in range(1, degree + 1)]
     df = pd.DataFrame(
@@ -43,24 +47,36 @@ def _actual_reg(y, x, x0, h, degree):
     )
     res = reg(df, 'y', x_name, awt_name='k')
     beta = res.beta
-    # plot_this(y, x, K, X, res)
+    # plot_this(y, x, K, X, res)    # XXX tmp, diagnostic
     return beta['cons']
 
-
 def _make_X(x, x0, degree):
+    centered_x = x - x0
     X = np.vstack(
         [np.ones(len(x))] +
-        [(x - x0) ** i for i in range(1, degree + 1)]
+        [centered_x ** i for i in range(1, degree + 1)]
     ).T
     return X
 
 
-def kernel(u, h):
+def kernel_func(u, h, name='epan'):
     x = u / h
-    K = (np.abs(x) < 1).astype(int)
-    # K = np.maximum((1 - np.abs(x)), 0)
-    # K = np.maximum((1 - x ** 2)*(3 / 4), 0)
+    if name in ('uniform', 'unif', 'rectangle', 'rect'):
+        K = _rectangle(x)
+    elif name in ('tria', 'triangle'):
+        K = _triangle(x)
+    elif name == 'epan':
+        K = _epan(x)
     return K / h
+
+def _rectangle(x):
+    return (np.abs(x) < 1).astype(int)
+
+def _triangle(x):
+    return np.maximum((1 - np.abs(x)), 0)
+
+def _epan(x):
+    return np.maximum((1 - x ** 2)*(3 / 4), 0)
 
 
 def plot_this(y, x, K, X, res):
@@ -78,7 +94,7 @@ if __name__ == '__main__':
     x = np.sort(np.random.rand(N))
     e = np.random.normal(size=N)
     y = 4 + 5 * x + 0.1 * (x ** 2) + e
-    wut = llr(y, x, .2, degree=1)
+    wut = llr(y, x, h=.2, degree=1)
     fig, ax = plt.subplots()
     ax.scatter(x, y)
     ax.plot(wut[:, 0], wut[:, 1], '-r')
