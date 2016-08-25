@@ -13,6 +13,7 @@ def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan'):
         raise ValueError("Vectors `y` and `x` must be same size.")
 
     x0 = _set_x0(x, x0, N)      # TODO check that passed `x0` isn't overwritten
+    h = set_h(y, x, h)
     G = np.zeros(len(x0))
     for i, this_x0 in enumerate(x0):
         G[i] = ghat_of_x(y, x, this_x0, h, degree, kern_name=kernel)
@@ -31,6 +32,21 @@ def _set_N(x, N):
         return np.min([len(x), 50])
     else:
         return N
+
+
+def set_h(y, x, h):
+    if type(h) is float:
+        return h
+    elif type(h) is str:
+        # Check for 'thumb'/silverman or 'cv'
+        pass
+
+def _silverman():
+    pass
+
+def _cross_validation():
+    # Loop over i, then h, so `_make_X` only gets called once per i.
+    pass
 
 
 def ghat_of_x(y, x, x0, h, degree, kern_name):
