@@ -1,5 +1,7 @@
 from __future__ import division
 
+from math import factorial
+
 import numpy as np
 import pandas as pd
 
@@ -12,12 +14,24 @@ def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan'):
     except AssertionError:
         raise ValueError("Vectors `y` and `x` must be same size.")
 
-    x0 = _set_x0(x, x0, N)      # TODO check that passed `x0` isn't overwritten
-    h = set_h(y, x, h)
+    # Set model parameters
+    kernel_obj = kernel_parser(kernel)
+    x0 = _set_x0(x, x0, N)      # TODO passed `x0` overwritten?
+    h_val = set_bandwidth(y, x, h, kernel_obj)
+
+    # Loop over domain values
     G = np.zeros(len(x0))
     for i, this_x0 in enumerate(x0):
-        G[i] = ghat_of_x(y, x, this_x0, h, degree, kern_name=kernel)
-    return np.stack((x0, G), axis=-1)
+        G[i] = ghat_of_x(y, x, this_x0, h_val, degree, kernel_obj)
+    xG = np.stack((x0, G), axis=-1)
+
+    est_stats = {
+        'h': h_val,
+        'kernel': kernel_obj.name,
+        'degree': degree
+    }
+
+    return xG, est_stats
 
 def _set_x0(x, x0, N):
     if x0 is not None:
@@ -34,23 +48,43 @@ def _set_N(x, N):
         return N
 
 
-def set_h(y, x, h):
-    if type(h) is float:
-        return h
-    elif type(h) is str:
-        # Check for 'thumb'/silverman or 'cv'
-        pass
+def set_bandwidth(y, x, h, kernel):
+    if type(h) in (float, int):
+        h_val = h
+    elif type(h) is str or h is None:
+        if h in ('thumb', 'silverman', 'rot') or h is None:
+            h_val = silverman(x, kernel)
+        elif h in ('cv'):
+            pass
+        elif h in ('cv-return'):
+            pass
+    else:
+        raise ValueError
 
-def _silverman():
-    pass
+    return h_val
 
-def _cross_validation():
+
+def silverman(x, kernel):
+    v = kernel.degree
+    roughness = kernel.Rk
+    kernel_moment = kernel.kappa
+    C_v_of_k = 2 * (
+        (np.sqrt(np.pi) * factorial(v) ** 3 * roughness) /
+        (2 * v * factorial(2 * v) * kernel_moment)
+    ) ** (1 / (2 * v + 1))
+    sigma = np.sqrt(np.var(x))
+    n = len(x)
+    h = sigma * C_v_of_k / n ** (1 / (2 * v + 1))
+    return h
+
+
+def cross_validation():
     # Loop over i, then h, so `_make_X` only gets called once per i.
     pass
 
 
-def ghat_of_x(y, x, x0, h, degree, kern_name):
-    K = kernel_func(x - x0, h=h, name=kern_name)
+def ghat_of_x(y, x, x0, h, degree, kernel):
+    K = kernel_func(x - x0, h, kernel)
     X = _make_X(x, x0, degree)
     x_name = ['cons'] + ['x{}'.format(i) for i in range(1, degree + 1)]
     df = pd.DataFrame(
@@ -75,24 +109,72 @@ def _make_X(x, x0, degree):
     return X
 
 
-def kernel_func(u, h, name='epan'):
+def kernel_func(u, h, kernel):
     x = u / h
-    if name in ('uniform', 'unif', 'rectangle', 'rect'):
-        K = _rectangle(x)
-    elif name in ('tria', 'triangle'):
-        K = _triangle(x)
-    elif name == 'epan':
-        K = _epan(x)
+    K = kernel(x)
     return K / h
 
-def _rectangle(x):
-    return (np.abs(x) < 1).astype(int)
 
-def _triangle(x):
-    return np.maximum((1 - np.abs(x)), 0)
+def kernel_parser(name):
+    if name in ('unif', 'uniform', 'rectangle', 'rect'):
+        kern = Uniform_Kernel()
+    elif name in ('tria', 'triangle'):
+        kern = Triangle_Kernel()
+    elif name == 'epan':
+        kern = Epanechnikov_Kernel()
 
-def _epan(x):
-    return np.maximum((1 - x ** 2)*(3 / 4), 0)
+    return kern
+
+
+class Uniform_Kernel(object):
+
+    degree = 2      # Degree (of first non-zero moment)
+    kappa = 1 / 3   # First non-zero moment
+    Rk = 1 / 2      # Roughness
+    name = 'unif'
+
+    def __init__(self):
+        pass
+
+    def kernel(self, x):
+        return (np.abs(x) < 1).astype(int)
+
+    def __call__(self, x):
+        return self.kernel(x)
+
+
+class Triangle_Kernel(object):
+
+    degree = 2      # Degree (of first non-zero moment)
+    kappa = 1 / 6   # First non-zero moment
+    Rk = 2 / 3      # Roughness
+    name = 'tria'
+
+    def __init__(self):
+        pass
+
+    def __call__(self, x):
+        return self.kernel(x)
+
+    def kernel(self, x):
+        return np.maximum((1 - np.abs(x)), 0)
+
+
+class Epanechnikov_Kernel(object):
+
+    degree = 2      # Degree (of first non-zero moment)
+    kappa = 1 / 5   # First non-zero moment
+    Rk = 3 / 5      # Roughness
+    name = 'epan'
+
+    def __init__(self):
+        pass
+
+    def __call__(self, x):
+        return self.kernel(x)
+
+    def kernel(self, x):
+        return np.maximum((1 - x ** 2)*(3 / 4), 0)
 
 
 def plot_this(y, x, K, X, res):
@@ -110,7 +192,7 @@ if __name__ == '__main__':
     x = np.sort(np.random.rand(N))
     e = np.random.normal(size=N)
     y = 4 + 5 * x + 0.1 * (x ** 2) + e
-    wut = llr(y, x, h=.2, degree=1)
+    wut, h = llr(y, x, h=None, degree=1)
     fig, ax = plt.subplots()
     ax.scatter(x, y)
     ax.plot(wut[:, 0], wut[:, 1], '-r')
