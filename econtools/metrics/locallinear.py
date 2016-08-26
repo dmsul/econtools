@@ -8,6 +8,30 @@ import pandas as pd
 from econtools.metrics import reg
 
 
+def kdensity(x, x0=None, h=None, kernel='epan'):
+    kernel_obj = kernel_parser(kernel)
+    x0 = _set_x0(x, x0, N)      # TODO passed `x0` overwritten?
+    h_val = set_bandwidth(None, x, h, None, kernel_obj)
+
+    est_stats = {
+        'h': h_val,
+        'kernel': kernel_obj.name,
+    }
+
+    if hasattr(x0, '__iter__'):
+        f_hat = np.zeros(len(x0))
+        for idx, this_x0 in enumerate(x0):
+            f_hat[idx] = _kdensity_core(x, this_x0, h_val, kernel_obj)
+    else:
+        f_hat = _kdensity_core(x, x0, h_val, kernel_obj)
+
+    return x0, f_hat, est_stats
+
+def _kdensity_core(x, x0, h, kernel_obj):
+    f_hat = kernel_func(x - x0, h, kernel_obj).mean()
+    return f_hat
+
+
 def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan', ci=False):
     try:
         assert len(y) == len(x)
