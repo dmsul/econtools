@@ -219,10 +219,10 @@ def plot_this(y, x, K, X, res):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     np.random.seed(seed=12345)
-    N = 100
-    x = np.sort(np.random.rand(N))
-    e = np.random.normal(size=N)
-    y = 4 + 5 * x + 0.1 * (x ** 2) + e
+    N = 1000
+    x = np.sort(np.random.rand(N)) * 8
+    e = np.random.normal(size=N) * 7
+    y = 4 - 5 * x - .4 * (x ** 2) + 0.2 * (x ** 3) + e
     wut, h = llr(y, x, h='rot', degree=1)
     fig, ax = plt.subplots()
     if 1:
