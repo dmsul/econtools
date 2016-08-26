@@ -8,7 +8,7 @@ import pandas as pd
 from econtools.metrics import reg
 
 
-def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan'):
+def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan', ci=False):
     try:
         assert len(y) == len(x)
     except AssertionError:
@@ -35,7 +35,10 @@ def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan'):
         'degree': degree
     }
 
-    return xG, est_stats
+    if ci:
+        raise NotImplementedError   # TODO, see `NonParametrics2`, sec 3.11
+    else:
+        return xG, est_stats
 
 def _set_x0(x, x0, N):
     if x0 is not None:
