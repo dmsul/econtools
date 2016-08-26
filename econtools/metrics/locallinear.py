@@ -17,13 +17,17 @@ def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan'):
     # Set model parameters
     kernel_obj = kernel_parser(kernel)
     x0 = _set_x0(x, x0, N)      # TODO passed `x0` overwritten?
-    h_val = set_bandwidth(y, x, h, kernel_obj)
+
+    try:
+        return_only = 'return' in h
+    except TypeError:
+        return_only = False
+    h_val = set_bandwidth(y, x, h, degree, kernel_obj, return_only=return_only)
+    if return_only:
+        return h_val
 
     # Loop over domain values
-    G = np.zeros(len(x0))
-    for i, this_x0 in enumerate(x0):
-        G[i] = ghat_of_x(y, x, this_x0, h_val, degree, kernel_obj)
-    xG = np.stack((x0, G), axis=-1)
+    xG = model_loop(y, x, x0, h_val, degree, kernel_obj)
 
     est_stats = {
         'h': h_val,
@@ -48,21 +52,35 @@ def _set_N(x, N):
         return N
 
 
-def set_bandwidth(y, x, h, kernel):
+def model_loop(y, x, x0, h, degree, kernel):
+    G = np.zeros(len(x0))
+    for i, this_x0 in enumerate(x0):
+        G[i] = ghat_of_x(y, x, this_x0, h, degree, kernel)
+    xG = np.stack((x0, G), axis=-1)
+    return xG
+
+
+def set_bandwidth(y, x, h, degree, kernel, return_only=False):
     if type(h) in (float, int):
         h_val = h
     elif type(h) is str or h is None:
         if h in ('thumb', 'silverman', 'rot') or h is None:
             h_val = silverman(x, kernel)
-        elif h in ('cv'):
-            pass
+        elif 'cv' in h:
+            h_set, CV_h = cross_validation(y, x, degree, kernel)
+            if return_only:
+                return h_set, CV_h
+            else:
+                argmin = np.argmin(CV_h)
+                if argmin in (0, len(CV_h) - 1):
+                    raise ValueError("Bandwidth at edge of range")
+                h_val = h_set[argmin]
         elif h in ('cv-return'):
             pass
     else:
         raise ValueError
 
     return h_val
-
 
 def silverman(x, kernel):
     v = kernel.degree
@@ -77,10 +95,24 @@ def silverman(x, kernel):
     h = sigma * C_v_of_k / n ** (1 / (2 * v + 1))
     return h
 
+def cross_validation(y, x, degree, kernel):
+    h_set = _set_hset_for_cv(x, kernel)
+    CV_h = np.zeros(len(h_set))
+    for h_idx, h in enumerate(h_set):
+        this_CV_h = 0
+        for xi_idx, x_i in enumerate(x):
+            y_no_i = np.delete(y, xi_idx)
+            x_no_i = np.delete(x, xi_idx)
+            y_hat = ghat_of_x(y_no_i, x_no_i, x_i, h, degree, kernel)
+            resid2 = (y[xi_idx] - y_hat) ** 2
+            this_CV_h += resid2
+        CV_h[h_idx] = this_CV_h
+    return h_set, CV_h
 
-def cross_validation():
-    # Loop over i, then h, so `_make_X` only gets called once per i.
-    pass
+def _set_hset_for_cv(x, kernel):
+    hs = silverman(x, kernel)
+    h_set = np.linspace(.2 * hs, 2 * hs, num=50)
+    return h_set
 
 
 def ghat_of_x(y, x, x0, h, degree, kernel):
@@ -114,7 +146,6 @@ def kernel_func(u, h, kernel):
     K = kernel(x)
     return K / h
 
-
 def kernel_parser(name):
     if name in ('unif', 'uniform', 'rectangle', 'rect'):
         kern = Uniform_Kernel()
@@ -124,7 +155,6 @@ def kernel_parser(name):
         kern = Epanechnikov_Kernel()
 
     return kern
-
 
 class Uniform_Kernel(object):
 
@@ -142,7 +172,6 @@ class Uniform_Kernel(object):
     def __call__(self, x):
         return self.kernel(x)
 
-
 class Triangle_Kernel(object):
 
     degree = 2      # Degree (of first non-zero moment)
@@ -158,7 +187,6 @@ class Triangle_Kernel(object):
 
     def kernel(self, x):
         return np.maximum((1 - np.abs(x)), 0)
-
 
 class Epanechnikov_Kernel(object):
 
@@ -188,12 +216,16 @@ def plot_this(y, x, K, X, res):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     np.random.seed(seed=12345)
-    N = 1000
+    N = 100
     x = np.sort(np.random.rand(N))
     e = np.random.normal(size=N)
     y = 4 + 5 * x + 0.1 * (x ** 2) + e
-    wut, h = llr(y, x, h=None, degree=1)
+    wut, h = llr(y, x, h='rot', degree=1)
     fig, ax = plt.subplots()
-    ax.scatter(x, y)
-    ax.plot(wut[:, 0], wut[:, 1], '-r')
+    if 1:
+        ax.scatter(x, y)
+        ax.plot(wut[:, 0], wut[:, 1], '-r')
+        print h
+    else:
+        ax.plot(wut, h)
     plt.show()
