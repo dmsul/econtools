@@ -83,12 +83,13 @@ def check_variogram(X, y, maxd=None, scat=False,
     # Plot everything
     x0 = xG[:, 0]                               # Kernel reg x's
     llr = xG[:, 1]                              # Kernel reg y's
-    g_model = est[0] - model(x0, est)           # Model fit y's
     fig, ax = plt.subplots()
     if scat:
         ax.scatter(h, sqdiff)                   # Scatter actual (y, sqdiffs)
     ax.plot(x0, llr, '-og')                     # Plot kernel reg
-    ax.plot(x0, g_model, '-b')                  # Plot model fit
+    fullx = np.linspace(0, x0.max(), 100)
+    g_model = est[0] - model(fullx, est)           # Model fit y's
+    ax.plot(fullx, g_model, '-b')                  # Plot model fit
     plt.show()
 
 
