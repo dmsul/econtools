@@ -144,6 +144,9 @@ def _set_hset_for_cv(x, kernel):
 
 def ghat_of_x(y, x, x0, h, degree, kernel):
     K = kernel_func(x - x0, h, kernel)
+    if _sparse_data(K, degree):
+        return np.nan
+
     X = _make_X(x, x0, degree)
     x_name = ['cons'] + ['x{}'.format(i) for i in range(1, degree + 1)]
     df = pd.DataFrame(
@@ -158,6 +161,10 @@ def ghat_of_x(y, x, x0, h, degree, kernel):
     beta = res.beta
     # plot_this(y, x, K, X, res)    # XXX tmp, diagnostic
     return beta['cons']
+
+def _sparse_data(K, degree):
+    count_nonzero = (K != 0).sum()
+    return count_nonzero < degree * 2
 
 def _make_X(x, x0, degree):
     centered_x = x - x0
