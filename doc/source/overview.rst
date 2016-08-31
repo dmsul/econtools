@@ -6,9 +6,13 @@
 Package overview
 ****************
 
-:mod:`econtools` consists of two sets of tools commonly used by economists:
-#. Econometrics tools.
-#. Data manipulation tools.
+:mod:`econtools` consists of several sets of tools commonly used for
+econometrics and data manipulation.
+
+#. :ref:`overview.econometrics`
+#. :ref:`overview.io`
+
+.. _overview.econometrics:
 
 Econometric Tools
 -----------------
@@ -66,7 +70,9 @@ And that's it.
 Advanced Usage
 ~~~~~~~~~~~~~~
 
+See :ref:`metricsadv`.
 
+.. _overview.io:
 
 Input/Output
 ------------
@@ -83,10 +89,8 @@ time you run a new regression.
 
 .. code-block:: python
 
-    import numpy as np
     import pandas as pd
-    from econtools import load_or_build 
-
+    from econtools import load_or_build
 
     @load_or_build('reg_ready_data.pkl')
     def prep_for_regs():
@@ -94,7 +98,7 @@ time you run a new regression.
 
         df = pd.read_csv('my_data.csv')
         # Create 'ln_wage' from 'wage'
-        df['ln_wage'] = np.log(df['wage'])
+        df['wage_sq'] = df['wage'] ** 2
         # Manipulate data in other ways...
 
         return df

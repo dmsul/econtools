@@ -9,9 +9,10 @@ Welcome to econtools's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    overview.rst
+   metrics_advanced.rst
 
 
 
