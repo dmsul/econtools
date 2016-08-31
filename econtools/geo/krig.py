@@ -78,7 +78,8 @@ def check_variogram(X, y, maxd=None, scat=False,
     print mle
 
     # Get empirical variogram data
-    xG, h, sqdiff, __ = llr_gamma(X, y, maxd=maxd, plot=False, ret_raw=True)
+    xG, h, sqdiff, est_stats = llr_gamma(X, y, maxd=maxd, plot=False,
+                                         ret_raw=True)
 
     # Plot everything
     x0 = xG[:, 0]                               # Kernel reg x's
@@ -91,6 +92,8 @@ def check_variogram(X, y, maxd=None, scat=False,
     g_model = est[0] - model(fullx, est)           # Model fit y's
     ax.plot(fullx, g_model, '-b')                  # Plot model fit
     plt.show()
+
+    return xG, h, sqdiff, est_stats
 
 
 # MLE Driver
