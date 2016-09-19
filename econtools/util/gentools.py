@@ -4,6 +4,16 @@ import string
 import pandas as pd
 
 
+def binscatter(x, y, n=20, data=None):
+    if type(data) is pd.DataFrame and type(x) is str and type(y) is str:
+        x = data[x]
+        y = data[y]
+    x_bin_id = pd.qcut(x, n)
+    x_bin_value = pd.DataFrame(x).groupby(x_bin_id).mean()
+    y_bin_value = pd.DataFrame(y).groupby(x_bin_id).mean()
+    return x_bin_value, y_bin_value
+
+
 def force_df(s, name=None):
     """
     Forces a Series to a DataFrame. DataFrames are returned unaffected. Other
