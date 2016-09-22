@@ -274,7 +274,8 @@ def write(df, path, **kwargs):
     elif file_type in PICKLE_EXT:
         df.to_pickle(path, **kwargs)
     elif file_type in HDF5_EXT:
-        df.to_hdf(path, 'df', **kwargs)
+        mode = kwargs.pop('mode', 'w')
+        df.to_hdf(path, 'df', mode=mode, **kwargs)
     elif file_type == 'dta':
         df.to_stata(path, **kwargs)
     else:
