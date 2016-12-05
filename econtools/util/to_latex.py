@@ -32,6 +32,31 @@ class table(object):
         return table_mainrow(*args, **kwargs)
 
 
+def outreg(regs, var_names, var_labels, digits=4, sig_label='*',
+           options=False):
+    opt_dict = _set_options(var_labels, digits, sig_label)
+    table_str = ''
+    for var_idx, varname in enumerate(var_names):
+        table_str += table_mainrow(var_labels[var_idx], varname, regs,
+                                   **opt_dict)
+
+    if options:
+        return table_str, opt_dict
+    else:
+        return table_str
+
+def _set_options(var_labels, digits, sig_label):
+    label_lens = [len(label) for label in var_labels]
+    name_just = max(label_lens) + 2
+    stat_just = (
+        digits +
+        3 +     # Leading zero, decimal, negative sign
+        3 +     # Stars
+        4       # Extra buffer
+    )
+    return {'name_just': name_just, 'stat_just': stat_just, 'digits': digits}
+
+
 def table_mainrow(rowname, varname, regs,
                   name_just=24, stat_just=12, digits=3):
 
@@ -42,8 +67,8 @@ def table_mainrow(rowname, varname, regs,
     ----
     `rowname`, str: First cell of table row, i.e., the row's name.
     `varname`, str: Name of variable to pull from metrics `Results`.
-    `regs`, `Results` object or iterable of `Results`: Regressions from which to
-      pull coefficients named `varname`.
+    `regs`, `Results` object or iterable of `Results`: Regressions from which
+      to pull coefficients named `varname`.
 
     Kwargs
     ----
