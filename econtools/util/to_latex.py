@@ -169,9 +169,11 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
     cell = "& " + cell
 
     if digits is None:
-        def_printval = lambda x: x      #noqa
+        def def_printval(x):
+            return x
     else:
-        def_printval = lambda x: _format_nums(x, digits=digits)     #noqa
+        def def_printval(x):
+            return _format_nums(x, digits=digits)
 
     for val in vals:
         if type(val) is str and len(val) == 0:
