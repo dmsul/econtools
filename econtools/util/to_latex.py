@@ -32,9 +32,9 @@ class table(object):
         return table_mainrow(*args, **kwargs)
 
 
-def outreg(regs, var_names, var_labels, digits=4, sig_label='*',
+def outreg(regs, var_names, var_labels, digits=4, stars=True,
            options=False):
-    opt_dict = _set_options(var_labels, digits, sig_label)
+    opt_dict = _set_options(var_labels, digits, stars)
     table_str = ''
     for var_idx, varname in enumerate(var_names):
         table_str += table_mainrow(var_labels[var_idx], varname, regs,
@@ -45,7 +45,7 @@ def outreg(regs, var_names, var_labels, digits=4, sig_label='*',
     else:
         return table_str
 
-def _set_options(var_labels, digits, sig_label):
+def _set_options(var_labels, digits, stars):
     label_lens = [len(label) for label in var_labels]
     name_just = max(label_lens) + 2
     stat_just = (
@@ -54,11 +54,18 @@ def _set_options(var_labels, digits, sig_label):
         3 +     # Stars
         4       # Extra buffer
     )
-    return {'name_just': name_just, 'stat_just': stat_just, 'digits': digits}
+    opt_dict = {
+        'name_just': name_just,
+        'stat_just': stat_just,
+        'digits': digits,
+        'stars': stars,
+    }
+    return opt_dict
 
 
 def table_mainrow(rowname, varname, regs,
-                  name_just=24, stat_just=12, digits=3):
+                  name_just=24, stat_just=12, digits=3, se="[",
+                  stars=True):
 
     """
     Add a table row of regression coefficients with standard errors.
@@ -92,7 +99,10 @@ def table_mainrow(rowname, varname, regs,
         else:
             # Beta and stars
             this_beta = _format_nums(reg.beta[varname], digits=digits)
-            this_sig = _sig_level(reg.pt[varname])
+            if stars:
+                this_sig = _sig_level(reg.pt[varname])
+            else:
+                this_sig = ''
             beta_vals.append(this_beta + this_sig)
             # Standard Error
             this_se = _format_nums(reg.se[varname], digits=digits)
@@ -101,7 +111,7 @@ def table_mainrow(rowname, varname, regs,
     beta_row = table_statrow(rowname, beta_vals, name_just=name_just,
                              stat_just=stat_just)
     se_row = table_statrow('', se_vals, name_just=name_just,
-                           stat_just=stat_just)
+                           stat_just=stat_just, sd=se)
 
     full_row = beta_row + se_row
 
@@ -110,7 +120,7 @@ def table_mainrow(rowname, varname, regs,
 
 def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
                   sd=False,
-                  digits=None):
+                  digits=None, **kwargs):
     """
     Add a table row without standard errors.
 
@@ -164,8 +174,11 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
         def_printval = lambda x: _format_nums(x, digits=digits)     #noqa
 
     for val in vals:
-        printval = def_printval(val)
-        outstr += cell.format(printval).ljust(stat_just)
+        if type(val) is str and len(val) == 0:
+            outstr += "& ".ljust(stat_just)
+        else:
+            printval = def_printval(val)
+            outstr += cell.format(printval).ljust(stat_just)
 
     outstr += eol
 
