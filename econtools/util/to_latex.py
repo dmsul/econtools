@@ -64,7 +64,7 @@ def _set_options(var_labels, digits, stars):
 
 
 def table_mainrow(rowname, varname, regs,
-                  name_just=24, stat_just=12, digits=3, se="[",
+                  name_just=24, stat_just=12, digits=3, se="(",
                   stars=True):
 
     """
