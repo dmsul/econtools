@@ -125,6 +125,7 @@ def table_mainrow(rowname, varname, regs,
 
 def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
                   sd=False, digits=None,
+                  empty_left=0, empty_right=0, empty_slots=[],
                   **kwargs):
     """
     Add a table row without standard errors.
@@ -145,6 +146,14 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
       convention. May also set `sd="["` to wrap in brackets.
     `digits`, int or None (None): How many digits after decimal to print. If
       `None`, prints contents of `vals` exactly as is.
+    `empty_left`, int (0): Adds `empty_left` empty cells to left side of row.
+      Is mutually exclusive with `empty_slots`.
+    `empty_right`, int (0): See `empty_left`.
+    `empty_slots`, list ([]): Make table row have empty cells at index values
+      in `empty_slots` (zero-indexed). Mutually exclusive with `empty_left` and
+      `empty_right`. For example, passing `vals=(1, 2, 3)` and
+      `empty_slots=(1, 3, 5)` is the same as passing
+      `vals=(1, '', 2, '', 3, '')`.
 
     Return
     ------
@@ -157,6 +166,8 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
     cell = "\\num{{{}}}" if wrapnum else "{}"
     cell = _add_sd_parens(sd, cell)
     cell = "& " + cell
+
+    vals = _add_filler_empty_cells(vals, empty_left, empty_right, empty_slots)
 
     for val in vals:
         # If empty string, add empty cell here (can't pass to `_format_nums` or
@@ -195,6 +206,32 @@ def _add_sd_parens(sd, cell):
         raise ValueError("Value `sd={}` invalid.".format(sd))
 
     return cell
+
+def _add_filler_empty_cells(vals, empty_left, empty_right, empty_slots):
+    # Convert left/right empty counts to list of empty slots
+    if not (empty_left or empty_right or empty_slots):
+        return vals
+    elif (empty_left or empty_right) and empty_slots:
+        raise ValueError("Cannot specify left/right empty and `empty_slots`.")
+    elif not empty_slots:
+        len_vals = len(vals)
+        empty_slots = (
+            list(range(empty_left)) +
+            list(range(empty_left + len_vals,
+                       empty_left + len_vals + empty_right))
+        )
+
+    # Add empty string to `vals` where appropriate
+    new_vals = []
+    nonempty_col = 0
+    for i in range(len(vals) + len(empty_slots)):
+        if i in empty_slots:
+            new_vals.append('')
+        else:
+            new_vals.append(vals[nonempty_col])
+            nonempty_col += 1
+
+    return tuple(new_vals)
 
 
 def _format_nums(x, digits=3):
