@@ -5,35 +5,6 @@ eol = " \\\\ \n"
 sig_labels = {1: '', .1: '*', .05: '**', .01: '***'}
 
 
-class table(object):
-    """
-    Wrapper for table row functions that stores justification and `digits`
-      values so you don't have to repeat them every tiime.
-    """
-
-    def __init__(self, name_just=24, stat_just=12, digits=3):
-        self.name_just = name_just
-        self.stat_just = stat_just
-        self.digits = digits
-        self.check_val = ('name_just', 'stat_just', 'digits')
-
-    def statrow(self, *args, **kwargs):
-        # If a `kwarg` not passed, use value from `__init__`
-        for val in self.check_val:
-            if val not in kwargs:
-                kwargs[val] = self.__dict__[val]
-
-        return table_statrow(*args, **kwargs)
-
-    def mainrow(self, *args, **kwargs):
-        # If a `kwarg` not passed, use value from `__init__`
-        for val in self.check_val:
-            if val not in kwargs:
-                kwargs[val] = self.__dict__[val]
-
-        return table_mainrow(*args, **kwargs)
-
-
 # TODO: Add options for basic statrow (r2, N)? (how to handle 2sls r2?)
 def outreg(regs, var_names, var_labels, digits=4, stars=True, se="(",
            options=False):
@@ -251,17 +222,6 @@ def _sig_level(p):
         p_level = .01
 
     return sig_labels[p_level]
-
-
-# XXX: Unused
-def join_latex_rows(row1, row2):
-    """
-    Assumes both end with `eol` and first column is label.
-    """
-    row1_noend = row1.replace(eol, "")
-    row2_guts = row2.split("&", 1)[1:].replace(eol, "")
-    joined = row1_noend + row2_guts
-    return joined
 
 
 def write_notes(notes, table_path):
