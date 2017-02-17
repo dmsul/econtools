@@ -11,6 +11,7 @@ from .gentools import force_df
 from .frametools import df_to_list
 
 PICKLE_EXT = ('pkl', 'p')   # First is default for writing to pickle
+HDF5_EXT = ('h5', 'hdf5')
 
 
 # TODO: lob tests
@@ -244,7 +245,7 @@ def read(path, **kwargs):
         read_f = pd.read_csv
     elif file_type in PICKLE_EXT:
         read_f = pd.read_pickle
-    elif file_type == 'hdf':
+    elif file_type in HDF5_EXT:
         read_f = pd.read_hdf
     elif file_type == 'dta':
         read_f = pd.read_stata
@@ -272,8 +273,9 @@ def write(df, path, **kwargs):
         df.to_csv(path, **kwargs)
     elif file_type in PICKLE_EXT:
         df.to_pickle(path, **kwargs)
-    elif file_type == 'hdf':
-        df.to_hdf(path, 'frame', **kwargs)
+    elif file_type in HDF5_EXT:
+        mode = kwargs.pop('mode', 'w')
+        df.to_hdf(path, 'df', mode=mode, **kwargs)
     elif file_type == 'dta':
         df.to_stata(path, **kwargs)
     else:
