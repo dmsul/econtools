@@ -45,7 +45,7 @@ equality_F = result.Ftest(['x1', 'x2'], equal=True)  # Test for coeff. equality
 - `write_notes` makes it easy to save table notes that depend on your data.
 
 ```python
-from econtools import outreg, table_statrow, read
+from econtools import read, outreg, table_statrow, write_notes
 import econtools.metrics as mt
 
 # Load data
