@@ -34,7 +34,7 @@ class table(object):
         return table_mainrow(*args, **kwargs)
 
 
-# TODO: Add options for basic statrow (r2, N)?
+# TODO: Add options for basic statrow (r2, N)? (how to handle 2sls r2?)
 def outreg(regs, var_names, var_labels, digits=4, stars=True, se="(",
            options=False):
     opt_dict = _set_options(var_labels, digits, stars)
@@ -100,8 +100,6 @@ def table_mainrow(rowname, varname, regs,
             beta_vals.append('')
             se_vals.append('')
         else:
-            # TODO: Could these `_format_nums` be handled once, within
-                # `statrow`?
             # Beta and stars
             this_beta = _format_nums(reg.beta[varname], digits=digits)
             if stars:
@@ -110,13 +108,13 @@ def table_mainrow(rowname, varname, regs,
                 this_sig = ''
             beta_vals.append(this_beta + this_sig)
             # Standard Error
-            this_se = _format_nums(reg.se[varname], digits=digits)
+            this_se = reg.se[varname]
             se_vals.append(this_se)
 
     beta_row = table_statrow(rowname, beta_vals, name_just=name_just,
                              stat_just=stat_just)
     se_row = table_statrow('', se_vals, name_just=name_just,
-                           stat_just=stat_just, sd=se)
+                           stat_just=stat_just, sd=se, digits=digits)
 
     full_row = beta_row + se_row
 
