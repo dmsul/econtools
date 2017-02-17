@@ -18,6 +18,7 @@ class table(object):
         self.check_val = ('name_just', 'stat_just', 'digits')
 
     def statrow(self, *args, **kwargs):
+        # If a `kwarg` not passed, use value from `__init__`
         for val in self.check_val:
             if val not in kwargs:
                 kwargs[val] = self.__dict__[val]
@@ -25,6 +26,7 @@ class table(object):
         return table_statrow(*args, **kwargs)
 
     def mainrow(self, *args, **kwargs):
+        # If a `kwarg` not passed, use value from `__init__`
         for val in self.check_val:
             if val not in kwargs:
                 kwargs[val] = self.__dict__[val]
@@ -32,7 +34,8 @@ class table(object):
         return table_mainrow(*args, **kwargs)
 
 
-def outreg(regs, var_names, var_labels, digits=4, stars=True,
+# TODO: Add options for basic statrow (r2, N)?
+def outreg(regs, var_names, var_labels, digits=4, stars=True, se="(",
            options=False):
     opt_dict = _set_options(var_labels, digits, stars)
     table_str = ''
@@ -97,6 +100,8 @@ def table_mainrow(rowname, varname, regs,
             beta_vals.append('')
             se_vals.append('')
         else:
+            # TODO: Could these `_format_nums` be handled once, within
+                # `statrow`?
             # Beta and stars
             this_beta = _format_nums(reg.beta[varname], digits=digits)
             if stars:
@@ -119,8 +124,8 @@ def table_mainrow(rowname, varname, regs,
 
 
 def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
-                  sd=False,
-                  digits=None, **kwargs):
+                  sd=False, digits=None,
+                  **kwargs):
     """
     Add a table row without standard errors.
 
@@ -135,9 +140,9 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
     `stat_just`, int (12): Same.
     `wrapnum`, bool (False): If True, wrap cell values in LaTeX function `num`,
       which automatically adds commas as needed. Requires LaTex package
-      `siunitx` to use in LaTeX.
-    `sd`, bool (False): If True, wrap cell value in parentheses, as is often
-      done when the value is a standard deviation.
+      `siunitx` in LaTeX document.
+    `sd`, bool/str (False): If True, wrap cell value in parentheses as per
+      convention. May also set `sd="["` to wrap in brackets.
     `digits`, int or None (None): How many digits after decimal to print. If
       `None`, prints contents of `vals` exactly as is.
 
@@ -149,42 +154,47 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
 
     outstr = rowname.ljust(name_just)
 
-    if wrapnum:
-        cell = "\\num{{{}}}"
-    else:
-        cell = "{}"
-
-    if sd is not False:
-        if type(sd) is not str:
-            sd = '('
-        if sd in ('(', '['):
-            leftp = sd
-            rightp = ")" if leftp == '(' else ']'
-        else:
-            err_str = "Input '{}' invalid".format(sd)
-            raise ValueError(err_str)
-
-        cell = leftp + cell + rightp
-
+    cell = "\\num{{{}}}" if wrapnum else "{}"
+    cell = _add_sd_parens(sd, cell)
     cell = "& " + cell
 
-    if digits is None:
-        def def_printval(x):
-            return x
-    else:
-        def def_printval(x):
-            return _format_nums(x, digits=digits)
-
     for val in vals:
+        # If empty string, add empty cell here (can't pass to `_format_nums` or
+        # will get empty parens instead).
         if type(val) is str and len(val) == 0:
             outstr += "& ".ljust(stat_just)
         else:
-            printval = def_printval(val)
-            outstr += cell.format(printval).ljust(stat_just)
+            val_to_digits = (
+                val if digits is None else _format_nums(val, digits=digits)
+            )
+            outstr += cell.format(val_to_digits).ljust(stat_just)
 
     outstr += eol
 
     return outstr
+
+def _add_sd_parens(sd, cell):
+    """ Wrap table cell in parens/brackets if needed """
+    # Make `sd=True` same as `sd='('`
+    if sd is True:
+        sd = "("
+
+    if type(sd) is str:
+        # If `sd` is str, check if valid, then wrap `cell`
+        if sd in ('(', '['):
+            leftp = sd
+            rightp = ")" if leftp == '(' else ']'
+            cell = leftp + cell + rightp
+        else:
+            err_str = "Input '{}' invalid".format(sd)
+            raise ValueError(err_str)
+    elif sd is False:
+        # If `sd` False, do nothing
+        pass
+    else:
+        raise ValueError("Value `sd={}` invalid.".format(sd))
+
+    return cell
 
 
 def _format_nums(x, digits=3):
@@ -194,6 +204,7 @@ def _format_nums(x, digits=3):
         return '{{:.{}f}}'.format(digits).format(x)
 
 
+# TODO: Make this adaptive
 def _sig_level(p):
     if p > .1:
         p_level = 1
@@ -207,6 +218,7 @@ def _sig_level(p):
     return sig_labels[p_level]
 
 
+# XXX: Unused
 def join_latex_rows(row1, row2):
     """
     Assumes both end with `eol` and first column is label.
