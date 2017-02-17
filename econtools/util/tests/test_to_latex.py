@@ -4,7 +4,7 @@ from nose.tools import assert_equal, raises
 import pandas as pd
 
 from econtools.metrics.core import Results
-from econtools.util.to_latex import (table_mainrow, table_statrow,
+from econtools.util.to_latex import (outreg, table_mainrow, table_statrow,
                                      _add_filler_empty_cells)
 
 
@@ -14,6 +14,68 @@ def results_factory(varnames, beta, se, pt, **kwargs):
         pt_s = pd.Series(pt, index=varnames)
 
         return Results(beta=beta_s, se=se_s, pt=pt_s)
+
+
+class Test_outreg(object):
+
+    def test_basic(self):
+        reg1 = results_factory(['x1', 'x2'],
+                               [3.14159, 1.59],
+                               [1.41343, 2.02],
+                               [0.035, 0.123])
+        reg2 = results_factory(['x1', 'x2'],
+                               [3.1111, 1.39],
+                               [1.4134, 2.02],
+                               [0.005, 0.123])
+        table_str = outreg((reg1, reg2),
+                           ['x1'], ['Coeff 1'], digits=3)
+        expected = (
+            "Coeff 1  & 3.142**    & 3.111***    \\\\ \n"
+            "         & (1.413)    & (1.413)     \\\\ \n"
+        )
+        assert_equal(table_str, expected)
+
+    def test_2vars(self):
+        reg1 = results_factory(['x1', 'x2'],
+                               [3.14159, 1.59],
+                               [1.41343, 2.02],
+                               [0.035, 0.123])
+        reg2 = results_factory(['x1', 'x2'],
+                               [3.1111, 1.39],
+                               [1.4134, 4.024],
+                               [0.005, 0.123])
+        table_str = outreg((reg1, reg2),
+                           ['x1', 'x2'], ['Coeff 1', 'Coeff 2'], digits=3)
+        expected = (
+            "Coeff 1  & 3.142**    & 3.111***    \\\\ \n"
+            "         & (1.413)    & (1.413)     \\\\ \n"
+            "Coeff 2  & 1.590      & 1.390       \\\\ \n"
+            "         & (2.020)    & (4.024)     \\\\ \n"
+        )
+        assert_equal(table_str, expected)
+
+    def test_3vars_1offset(self):
+        reg1 = results_factory(['x1', 'x2'],
+                               [3.14159, 1.59],
+                               [1.41343, 2.02],
+                               [0.035, 0.123])
+        reg2 = results_factory(['x1', 'x3'],
+                               [3.1111, 1.39],
+                               [1.4134, 4.024],
+                               [0.005, 0.123])
+        table_str = outreg((reg1, reg2),
+                           ['x1', 'x2', 'x3'],
+                           ['Coeff 1', 'Coeff 2', 'Coeff 3'],
+                           digits=3)
+        expected = (
+            "Coeff 1  & 3.142**    & 3.111***    \\\\ \n"
+            "         & (1.413)    & (1.413)     \\\\ \n"
+            "Coeff 2  & 1.590      &             \\\\ \n"
+            "         & (2.020)    &             \\\\ \n"
+            "Coeff 3  &            & 1.390       \\\\ \n"
+            "         &            & (4.024)     \\\\ \n"
+        )
+        assert_equal(table_str, expected)
 
 
 class Test_table_mainrow(object):
