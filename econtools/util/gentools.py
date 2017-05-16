@@ -2,30 +2,7 @@ from __future__ import division
 
 import string
 
-import numpy as np
 import pandas as pd
-
-
-def binscatter(x, y, n=20, data=None, discrete=False, median=False):
-
-    # If no data is passed, assume arrays
-    if type(data) is pd.DataFrame and type(x) is str and type(y) is str:
-        x = data[x]
-        y = data[y]
-
-    if discrete:
-        x_bin_id = x
-        x_bin_value = np.unique(x_bin_id)
-    else:
-        x_bin_id = pd.qcut(x, n)
-        x_bin_value = pd.DataFrame(x).groupby(x_bin_id).mean()
-
-    if median:
-        y_bin_value = pd.DataFrame(y).groupby(x_bin_id).median()
-    else:
-        y_bin_value = pd.DataFrame(y).groupby(x_bin_id).mean()
-
-    return x_bin_value, y_bin_value
 
 
 def force_df(s, name=None):
