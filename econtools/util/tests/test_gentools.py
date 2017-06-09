@@ -6,7 +6,7 @@ from nose.tools import assert_equal, raises
 from numpy.testing import assert_array_equal
 from pandas.util.testing import assert_frame_equal
 
-from econtools.util import (int2base, base2int, force_df, force_list,           #noqa
+from econtools.util import (int2base, base2int, force_df, force_list,
                             force_iterable)
 
 

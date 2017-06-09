@@ -27,7 +27,7 @@ class SHACRegCompare(object):
         df['lon'] = np.random.rand(N)
         p = [(.25, .25), (.5, .5), (.75, .75)]
         d = np.zeros((N, len(p)))
-        for i in xrange(len(p)):
+        for i in range(len(p)):
             d[:, i] = np.sqrt(
                 (df['lon'] - p[i][0])**2 +
                 (df['lat'] - p[i][1])**2
@@ -47,7 +47,8 @@ class SHACRegCompare(object):
         cls.lat = 'lat_grid'
         cls.lon = 'lon_grid'
         cls.spatial_hac = dict(x=cls.lon, y=cls.lat, kern='unif', band=0.01)
-        df = group_id(df, cols=[cls.lon, cls.lat], name=cls.cluster, merge=True)
+        df = group_id(df, cols=[cls.lon, cls.lat], name=cls.cluster,
+                      merge=True)
         cls.df = df
 
 
