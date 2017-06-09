@@ -1,3 +1,5 @@
+from __future__ import division
+
 import pandas as pd
 
 
@@ -44,13 +46,13 @@ def stata_merge(left, right, assertval=None, gen='_m', **kwargs):
         try:
             assert (new[gen] == assertval).min()
         except AssertionError:
-            print "Merge assertion is false!"
-            print new.groupby(gen).size() / new.shape[0]
+            print("Merge assertion is false!")
+            print(new.groupby(gen).size() / new.shape[0])
             raise
         else:
             del new[gen]
     else:
-        print new.groupby(gen).size() / new.shape[0]
+        print(new.groupby(gen).size() / new.shape[0])
 
     return new
 

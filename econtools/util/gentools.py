@@ -28,7 +28,7 @@ def force_list(x):
 
 def force_iterable(x):
     """If not iterable, wrap in tuple"""
-    if hasattr(x, '__iter__'):
+    if hasattr(x, '__iter__') and type(x) is not str:
         return x
     else:
         return (x,)
@@ -85,7 +85,7 @@ def base2int(x, base):
     base10 = 0
 
     for place, value in enumerate(x[::-1]):
-        values_base10 = string.find(base_alphabet, value)
+        values_base10 = base_alphabet.find(value)
         if values_base10 < 0:
             err_str = "Value `{}` is not a valid digit for base {}"
             raise ValueError(err_str.format(value, base))
@@ -95,4 +95,4 @@ def base2int(x, base):
 
 
 def _base62_alphabet():
-    return string.digits + string.uppercase + string.lowercase
+    return string.digits + string.ascii_uppercase + string.ascii_lowercase

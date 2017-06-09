@@ -4,7 +4,7 @@ import pandas as pd
 
 from econtools.metrics.util.testing import RegCompare
 from econtools.metrics.core import ivreg
-from data.src_atsls import atsls_std
+from econtools.metrics.tests.data.src_atsls import atsls_std
 
 
 class AtslsCompare(RegCompare):

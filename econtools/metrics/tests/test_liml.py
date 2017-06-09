@@ -5,8 +5,9 @@ import pandas as pd
 from econtools.metrics.util.testing import RegCompare
 
 from econtools.metrics.core import ivreg
-from data.src_liml import liml_std, liml_robust, liml_cluster
-from data.src_tsls import tsls_cluster
+from econtools.metrics.tests.data.src_liml import (liml_std, liml_robust,
+                                                   liml_cluster)
+from econtools.metrics.tests.data.src_tsls import tsls_cluster
 
 
 class LimlCompare(RegCompare):

@@ -6,7 +6,7 @@ from nose.tools import assert_equal, raises
 from numpy.testing import assert_array_equal
 from pandas.util.testing import assert_frame_equal
 
-from econtools.util import (int2base, base2int, force_df, force_list,           #noqa
+from econtools.util import (int2base, base2int, force_df, force_list,
                             force_iterable)
 
 
@@ -133,6 +133,12 @@ class Test_force_list(object):
         result = force_list(a_series)
         assert_equal(expected, result)
 
+    def test_string(self):
+        a_string = 'abcd'
+        expected = [a_string]
+        result = force_list(a_string)
+        assert_equal(expected, result)
+
 
 class Test_force_iterable(object):
 
@@ -156,6 +162,12 @@ class Test_force_iterable(object):
         expected = np.arange(3)
         result = force_iterable(expected)
         assert_array_equal(expected, result)
+
+    def test_string(self):
+        a_string = 'abcd'
+        expected = (a_string,)
+        result = force_iterable(a_string)
+        assert_equal(expected, result)
 
 
 if __name__ == '__main__':

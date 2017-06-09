@@ -38,8 +38,8 @@ class TestStata_merge(object):
             np.array([[0, 1, 2], [1, 1, 1], [9, 10, np.nan], [3, 3, 1]]).T,
             columns=['a', 'b', 'c', '_m'],
             dtype=np.float64)
-        print result
-        print expected
+        print(result)
+        print(expected)
         assert_frame_equal(result, expected)
 
     def test_part_outer(self):
@@ -49,8 +49,8 @@ class TestStata_merge(object):
                      [3, 3, 1, 2]]).T,
             columns=['a', 'b', 'c', '_m'],
             dtype=np.float64)
-        print result
-        print expected
+        print(result)
+        print(expected)
         assert_frame_equal(result, expected)
 
     @raises(AssertionError)
@@ -108,9 +108,9 @@ class TestGroupid(object):
     def test_automerge(self):
         expected = self.df_with_id[['x', 'y', 'group_id']]
         result = group_id(self.df, merge=True)
-        print '\n'
-        print expected
-        print result
+        print('\n')
+        print(expected)
+        print(result)
         assert_frame_equal(expected, result)
 
 

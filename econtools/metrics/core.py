@@ -30,10 +30,11 @@ def reg(df, y_name, x_name,
     Kwargs
     ------
     `a_name`, str - Variable name in `df` to demean (within transformation)
-    `nosingles`, bool - (True) Drop observations that are obsorbed by the within
-        transformation. Has no effect if `a_name = None`.
-    `vce_type`, str - Type of estimator to use for variance-covariance matrix of
-        estimated coefficients. Default is standard OLS. Possible choices are:
+    `nosingles`, bool - (True) Drop observations that are obsorbed by the
+        within transformation. Has no effect if `a_name = None`.
+    `vce_type`, str - Type of estimator to use for variance-covariance matrix
+        of estimated coefficients. Default is standard OLS. Possible choices
+        are:
         'robust' or 'hc1'
         'hc2'
         'hc3'
@@ -158,14 +159,17 @@ class RegBase(object):
         return self.results
 
     def set_sample(self):
-        sample_cols = tuple([self.__dict__[x] for x in self.sample_cols_labels])
+        sample_cols = tuple(
+            [self.__dict__[x] for x in self.sample_cols_labels])
         self.sample = flag_sample(self.df, *sample_cols)
         if self.nosingles and self.a_name:
-            self.sample &= flag_nonsingletons(self.df, self.a_name, self.sample)
+            self.sample &= flag_nonsingletons(self.df, self.a_name,
+                                              self.sample)
 
         sample_vars = set_sample(self.df, self.sample, sample_cols)
         self.__dict__.update(dict(zip(self.sample_store_labels, sample_vars)))
         self.x = force_df(self.x)
+        self.y = self.y.squeeze()
 
         # Force regression variables to float64
         for var in self.vars_in_reg:
@@ -251,8 +255,8 @@ class RegBase(object):
 
     def set_dof(self):
         """
-        Set degrees of freedom used in hypothesis tests and do DoF correction on
-        VCE matrix.
+        Set degrees of freedom used in hypothesis tests and do DoF correction
+        on VCE matrix.
         """
         N, K = self._set_NK()
         vce_type = self.vce_type
@@ -315,7 +319,7 @@ class RegBase(object):
         self.results._add_stat('ci_lo', ci_lo)
         self.results._add_stat('ci_hi', ci_hi)
 
-def _set_vce_type(vce_type, cluster, shac):     #noqa
+def _set_vce_type(vce_type, cluster, shac):
     """ Check for argument conflicts, then set `vce_type` if needed.  """
     # Check for valid arg
     valid_vce = (None, 'robust', 'hc1', 'hc2', 'hc3', 'cluster', 'shac')
@@ -336,7 +340,7 @@ def _set_vce_type(vce_type, cluster, shac):     #noqa
 
     return new_vce
 
-def _demean(A, df):                             #noqa
+def _demean(A, df):
     """ Demean a matrix/DataFrame within group `A` """
     # Ignore empty `df` (e.g. empty list of exogenous included regressors)
     if df is None or df.empty:
@@ -351,12 +355,12 @@ def _demean(A, df):                             #noqa
         demeaned = df - large_mean
         return demeaned
 
-def _calc_aweights(aw):                         #noqa
+def _calc_aweights(aw):
     scaled_total = aw.sum() / len(aw)
     row_weights = np.sqrt(aw / scaled_total)
     return row_weights
 
-def _fe_nested_in_cluster(cluster_id, A):       #noqa
+def _fe_nested_in_cluster(cluster_id, A):
     """ Check if FE's are nested within clusters (affects DOF correction). """
     if (cluster_id is None) or (A is None):
         return False
@@ -369,7 +373,7 @@ def _fe_nested_in_cluster(cluster_id, A):       #noqa
         num_of_clusters = pair_counts.groupby(level=A.name).count()
         return num_of_clusters.max() == 1
 
-def _wrapSigma(Sigma, cols):                    #noqa
+def _wrapSigma(Sigma, cols):
     return pd.DataFrame(Sigma, index=cols, columns=cols)
 
 
@@ -412,7 +416,8 @@ class IVReg(RegBase):
             )
 
         else:
-            raise ValueError("IV method '{}' not supported".format(self.method))
+            raise ValueError(
+                "IV method '{}' not supported".format(self.method))
 
         self.results = Results(beta=beta, xpx_inv=xpx_inv)
         self.results.sst = self.y
@@ -463,7 +468,7 @@ class IVReg(RegBase):
 
         return beta, se_xpx_inv, Z, X, kappa
 
-    def _liml_kappa(self, y, x, w, Z):        #noqa
+    def _liml_kappa(self, y, x, w, Z):
         Y = pd.concat((y, x), axis=1).astype(np.float64)
         YY = Y.T.dot(Y)
         YZ = Y.T.dot(Z)
@@ -526,7 +531,7 @@ class Results(object):
 
     @property
     def summary(self):
-        if hasattr(self, 'summary'):
+        if hasattr(self, '_summary'):
             return self._summary
         else:
             out = pd.concat((self.beta, self.se, self.t_stat, self.pt,
@@ -603,7 +608,7 @@ class Results(object):
         if equal:
             q -= 1
             R = np.zeros((q, q+1))
-            for i in xrange(q):
+            for i in range(q):
                 R[i, i] = 1
                 R[i, i+1] = -1
         else:
@@ -679,10 +684,10 @@ def vce_hc23(xpx_inv, resid, x, hctype='hc2'):
     vce = sandwich(xpx_inv, B, xpx_inv.T)
     return vce
 
-def _get_h(x, xpx_inv):         #noqa
+def _get_h(x, xpx_inv):
     n = x.shape[0]
     h = np.zeros(n)
-    for i in xrange(n):
+    for i in range(n):
         x_row = x.iloc[i, :]
         h[i] = x_row.dot(xpx_inv).dot(x_row)
     return h
@@ -708,21 +713,21 @@ def vce_shac(xpx_inv, resid, x, shac_x, shac_y, shac_kern, shac_band):
     vce = sandwich(xpx_inv, B, xpx_inv.T)
     return vce
 
-def _shac_weights(xu, lon, lat, kernel, band):      #noqa
+def _shac_weights(xu, lon, lat, kernel, band):
     N, K = xu.shape
     Wxu = np.zeros((N, K))
 
     lon_arr = lon.squeeze().values.astype(float)
     lat_arr = lat.squeeze().values.astype(float)
     kern_func = _shac_kernels(kernel, band)
-    for i in xrange(N):
+    for i in range(N):
         dist = np.sqrt((lon_arr[i] - lon_arr)**2 + (lat_arr[i] - lat_arr)**2)
         w_i = kern_func(dist).astype(np.float64)
         Wxu[i, :] = w_i.dot(xu)
 
     return Wxu
 
-def _shac_kernels(kernel, band):                    #noqa
+def _shac_kernels(kernel, band):
 
     def unif(x):
         return x <= band
@@ -778,4 +783,4 @@ if __name__ == '__main__':
                   a_name=cluster,
                   cluster=cluster
                   )
-    print results.summary
+    print(results.summary)

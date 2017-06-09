@@ -74,9 +74,9 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
                 df = builder(*args, **kwargs)
             else:
                 # If it's just not on disk, build it, save it, and copy it
-                print "****** Building *******\n\tfile: {}".format(filepath)
-                print "\tfunc: {}".format(builder.__name__)
-                print "*************"
+                print("****** Building *******\n\tfile: {}".format(filepath))
+                print("\tfunc: {}".format(builder.__name__))
+                print("*************")
                 df = builder(*args, **kwargs)
                 write(df, filepath)
                 # Copy to Stata DTA if needed
@@ -88,7 +88,7 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
         return wrapper
     return actualDecorator
 
-def _set_filepath(raw_path, path_args, args, kwargs, argspec):                  #noqa
+def _set_filepath(raw_path, path_args, args, kwargs, argspec):
     """
     Parse `args` and `kwargs` as directed by `path_args` and insert them
     into `raw_path`.
@@ -105,7 +105,7 @@ def _set_filepath(raw_path, path_args, args, kwargs, argspec):                  
         raise ValueError(err_str)
     return filepath
 
-def _parse_pathargs(path_args, args, kwargs, argspec):                          #noqa
+def _parse_pathargs(path_args, args, kwargs, argspec):
     """
     `path_args`, iterable: Which args/kwargs to use, in order. Numbers are
         args, strings are kwargs.
@@ -148,15 +148,15 @@ def load_or_build_direct(filepath, force=False,
 
     Kwargs
     -----
-    `force`, bool (False): Build the DataFrame and save it to `filepath` even if
-      `filepath` already exists.
+    `force`, bool (False): Build the DataFrame and save it to `filepath` even
+      if `filepath` already exists.
     `build`, function (None): Function that returns a DataFrame to be saved at
       `filepath`
     `bargs`, list ([]): args to pass to `build` function.
     `bkwargs`, dict: kwargs to pass to `build` function.
-    `copydta`, bool (False): If `filepath` is not a Stata file (.dta), also save
-      the DataFrame as a Stata file by changing the extension of `filepath` to
-      `.dta`
+    `copydta`, bool (False): If `filepath` is not a Stata file (.dta), also
+    save the DataFrame as a Stata file by changing the extension of `filepath`
+      to `.dta`
 
     Notes
     ------
@@ -169,9 +169,9 @@ def load_or_build_direct(filepath, force=False,
     elif build is None:
         raise IOError("File doesn't exist:\n{}".format(filepath))
     else:
-        print "****** Building *******\n\tfile: {}".format(filepath)
-        print "\tfunc: {}".format(build.__name__)
-        print "*************"
+        print("****** Building *******\n\tfile: {}".format(filepath))
+        print("\tfunc: {}".format(build.__name__))
+        print("*************")
         df = build(*bargs, **bkwargs)
         write(df, filepath)
 
@@ -328,7 +328,7 @@ def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
         good = ans in good_answers
 
     if not good and _count < 4:
-        print "Invalid Response '{}'!".format(ans)
+        print("Invalid Response '{}'!".format(ans))
         _count += 1
         output = force_valid_response(prompt_str, good_answers, listin=listin,
                                       dtype=dtype, _count=_count)
@@ -337,7 +337,7 @@ def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
 
     return output
 
-def _parse_list_input(inp, dtype):     #noqa
+def _parse_list_input(inp, dtype):
     inp = re.sub('\s\s+', ' ', inp)
     list_inp = inp.split(' ')
     if dtype:

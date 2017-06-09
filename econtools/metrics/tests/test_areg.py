@@ -4,7 +4,8 @@ import pandas as pd
 
 from econtools.metrics.util.testing import RegCompare
 from econtools.metrics.core import reg
-from data.src_areg import areg_std, areg_robust, areg_cluster
+from econtools.metrics.tests.data.src_areg import (areg_std, areg_robust,
+                                                   areg_cluster)
 
 
 class AregCompare(RegCompare):
