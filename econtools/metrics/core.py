@@ -169,6 +169,7 @@ class RegBase(object):
         sample_vars = set_sample(self.df, self.sample, sample_cols)
         self.__dict__.update(dict(zip(self.sample_store_labels, sample_vars)))
         self.x = force_df(self.x)
+        self.y = self.y.squeeze()
 
         # Force regression variables to float64
         for var in self.vars_in_reg:
@@ -530,7 +531,7 @@ class Results(object):
 
     @property
     def summary(self):
-        if hasattr(self, 'summary'):
+        if hasattr(self, '_summary'):
             return self._summary
         else:
             out = pd.concat((self.beta, self.se, self.t_stat, self.pt,
