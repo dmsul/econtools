@@ -317,7 +317,11 @@ def confirmer(prompt_str, default_no=True):
 def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
                          _count=0):
 
-    ans = raw_input(prompt_str)
+    # Py2/Py3 compat check
+    if hasattr(__builtins__, 'raw_input'):
+        ans = raw_input(prompt_str)
+    else:
+        ans = input(prompt_str)
 
     if listin:
         output = _parse_list_input(ans, dtype)
