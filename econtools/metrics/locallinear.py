@@ -259,7 +259,7 @@ if __name__ == '__main__':
     if 1:
         ax.scatter(x, y)
         ax.plot(wut[:, 0], wut[:, 1], '-r')
-        print h
+        print(h)
     else:
         ax.plot(wut, h)
     plt.show()

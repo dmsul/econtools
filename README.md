@@ -29,7 +29,7 @@ result = mt.reg(df,                     # DataFrame to use
 )
 
 # Results
-print result.summary                                 # Print regression results
+print(result.summary)                                # Print regression results
 beta_x1 = result.beta['x1']                          # Get coefficient by variable name
 r_squared = result.r2a                               # Get adjusted R-squared
 joint_F = result.Ftest(['x1', 'x2'])                 # Test for joint significance

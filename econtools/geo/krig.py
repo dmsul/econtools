@@ -75,7 +75,7 @@ def check_variogram(X, y, maxd=None, scat=False,
     model = model_factory(model_name)
     mle, __ = variogram_mle(X, y, model, mle_args)
     est = mle['x']
-    print mle
+    print(mle)
 
     # Get empirical variogram data
     xG, h, sqdiff, est_stats = llr_gamma(X, y, maxd=maxd, plot=False,
