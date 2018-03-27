@@ -9,6 +9,27 @@ from econtools.metrics import reg
 
 
 def kdensity(x, x0=None, h=None, kernel='epan'):
+    """
+    Kernel density estimation.
+
+    Args
+    ----
+    x - (list/array-like) Variable over which to estimate density.
+
+    x0 - (float or list/array-like; default `None`) Values at which to
+        caluculate density. If `None`, these values will be calculated
+        automatically. Length of `x0` is min([len(x), 50]).
+    h - (float) Bandwidth for kernel.
+    kernel - (str; default 'epan') Type of kernel to be used. Default is
+        Epanechnikov.
+
+    Returns
+    -------
+    x0
+    f_hat - Estimated kernel density at point(s) `x0`.
+    est_stats (dict) - Contains bandwidth and kernel name.
+    """
+
     kernel_obj = kernel_parser(kernel)
     x0 = _set_x0(x, x0, N)      # TODO passed `x0` overwritten?
     h_val = set_bandwidth(None, x, h, None, kernel_obj)
