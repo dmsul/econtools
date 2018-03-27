@@ -8,7 +8,7 @@ import pandas as pd
 from econtools.metrics import reg
 
 
-def kdensity(x, x0=None, h=None, kernel='epan'):
+def kdensity(x, x0=None, h=None, wt=None, kernel='epan'):
     """
     Kernel density estimation.
 
@@ -20,6 +20,7 @@ def kdensity(x, x0=None, h=None, kernel='epan'):
         caluculate density. If `None`, these values will be calculated
         automatically. Length of `x0` is min([len(x), 50]).
     h - (float) Bandwidth for kernel.
+    wt - (list/array-like) Weights. Must be same length as `x`.
     kernel - (str; default 'epan') Type of kernel to be used. Default is
         Epanechnikov.
 
@@ -29,6 +30,9 @@ def kdensity(x, x0=None, h=None, kernel='epan'):
     f_hat - Estimated kernel density at point(s) `x0`.
     est_stats (dict) - Contains bandwidth and kernel name.
     """
+
+    if wt is not None:
+        assert len(wt) == len(x)
 
     kernel_obj = kernel_parser(kernel)
     x0 = _set_x0(x, x0, N)      # TODO passed `x0` overwritten?
@@ -40,16 +44,22 @@ def kdensity(x, x0=None, h=None, kernel='epan'):
     }
 
     if hasattr(x0, '__iter__'):
-        f_hat = np.zeros(len(x0))
-        for idx, this_x0 in enumerate(x0):
-            f_hat[idx] = _kdensity_core(x, this_x0, h_val, kernel_obj)
+        f_hat = np.array(
+            [_kdensity_core(x, this_x0, h_val, kernel_obj, wt=wt)
+             for this_x0 in x0]
+        )
     else:
         f_hat = _kdensity_core(x, x0, h_val, kernel_obj)
 
     return x0, f_hat, est_stats
 
-def _kdensity_core(x, x0, h, kernel_obj):
-    f_hat = kernel_func(x - x0, h, kernel_obj).mean()
+def _kdensity_core(x, x0, h, kernel_obj, wt=None):
+    k_vals = kernel_func(x - x0, h, kernel_obj)
+    if wt is None:
+        f_hat = k_vals.mean()
+    else:
+        f_hat = wt.dot(k_vals) / wt.sum()
+
     return f_hat
 
 
