@@ -8,7 +8,7 @@ import pandas as pd
 from econtools.metrics import reg
 
 
-def kdensity(x, x0=None, h=None, wt=None, kernel='epan'):
+def kdensity(x, x0=None, N=None, h=None, wt=None, kernel='epan'):
     """
     Kernel density estimation.
 
@@ -19,6 +19,8 @@ def kdensity(x, x0=None, h=None, wt=None, kernel='epan'):
     x0 - (float or list/array-like; default `None`) Values at which to
         caluculate density. If `None`, these values will be calculated
         automatically. Length of `x0` is min([len(x), 50]).
+    N - (int; default `None`) Number of `x0` values to calculate if `x0` is not
+        specified. At least one of `x0` and `N` must be `None`.
     h - (float) Bandwidth for kernel.
     wt - (list/array-like) Weights. Must be same length as `x`.
     kernel - (str; default 'epan') Type of kernel to be used. Default is
@@ -33,6 +35,10 @@ def kdensity(x, x0=None, h=None, wt=None, kernel='epan'):
 
     if wt is not None:
         assert len(wt) == len(x)
+
+    # Check inputs
+    if not ((x0 is None or N is None)):
+        raise ValueError("Cannot specificy `x0` and `N` at the same time.")
 
     kernel_obj = kernel_parser(kernel)
     x0 = _set_x0(x, x0, N)      # TODO passed `x0` overwritten?
