@@ -7,3 +7,4 @@ from .io import (save_cli, read, write, load_or_build, loadbuild_cli, try_pickle
                  DataInteractModel)
 from .to_latex import outreg, table_statrow, table_mainrow, write_notes
 from .plot import (binscatter, legend_below, shrink_axes_for_legend)
+from .reference import *
