@@ -2,7 +2,7 @@ import re
 from os.path import isfile, splitext
 from functools import wraps
 import argparse
-from inspect import getargspec
+from inspect import getfullargspec
 
 import numpy as np
 import pandas as pd
@@ -63,7 +63,7 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
             load = kwargs.pop('_load', True)
             rebuild = kwargs.pop('_rebuild', False)
             # Format the file path
-            argspec = getargspec(builder)
+            argspec = getfullargspec(builder)
             filepath = _set_filepath(raw_filepath, path_args, args, kwargs,
                                      argspec)
             if load and isfile(filepath) and not rebuild:
@@ -115,7 +115,8 @@ def _parse_pathargs(path_args, args, kwargs, argspec):
     """
     patharg_values = []
     # Handle default kwargs
-    argnames, __, __, defaults = argspec
+    argnames = argspec.args
+    defaults = argspec.defaults
 
     for arg in path_args:
         arg_type = type(arg)
