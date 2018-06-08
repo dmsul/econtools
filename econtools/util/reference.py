@@ -18,6 +18,7 @@ def state_name_to_abbr(x):
 
 _fips_to_name_xwalk = {
     1: 'Alabama',
+    2: 'Alaska',
     4: 'Arizona',
     5: 'Arkansas',
     6: 'California',
@@ -27,6 +28,7 @@ _fips_to_name_xwalk = {
     11: 'District of Columbia',
     12: 'Florida',
     13: 'Georgia',
+    15: 'Hawaii',
     16: 'Idaho',
     17: 'Illinois',
     18: 'Indiana',
