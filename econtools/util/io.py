@@ -2,7 +2,7 @@ import re
 from os.path import isfile, splitext
 from functools import wraps
 import argparse
-from inspect import getargspec
+from inspect import getfullargspec
 
 import numpy as np
 import pandas as pd
@@ -17,21 +17,35 @@ HDF5_EXT = ('h5', 'hdf5')
 # TODO: lob tests
 def load_or_build(raw_filepath, copydta=False, path_args=[]):
     """
-    Loads `filepath` as a DataFrame if it exists, otherwise builds the data and
-    saves it to `filepath`.
+    Loads `raw_filepath` as a DataFrame if it exists, otherwise builds the data
+    and saves it to `raw_filepath`.
 
     Decorator Args
     ---------------
-    `filepath`, str: path to saved DataFrame
+    `raw_filepath`, str: path to saved DataFrame. If `filepath` includes named
+        replacement fields (e.g., "{arg_name}") with the same name as function
+        arguments, passed values will be inserted into the file path.
+
+        Example:
+
+        ```
+        @load_or_build('data_for_{year}.pkl')
+        def make_data(year):
+            <Make the data>
+
+        df = make_data(2018)    # Saves to 'data_for_2018.pkl'
+        ```
 
     Decorator Kwargs
     ---------------
     `copydta`, bool (default False): if true, save a copy of the data in Stata
         DTA format if `filepath` is not already a DTA file.
 
-    `path_args`, list-like ([]): A list of `int`s or `str`s that point to args
-        or kwargs of the build function, respectively. The value of these
-        arguments will then be use to format `filepath`.
+    `path_args`, list-like ([]): [DEPRECATED: Use named replacement fields
+        instead]. A list of `int`s or `str`s that point to args or kwargs of
+        the build function, respectively. The value of these arguments will
+        then be use to format `filepath`.
+
         Example:
         ```
         from econtools import load_or_build
@@ -62,10 +76,14 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
             # Filter the kwargs from `builder` meant for `load_or_build`
             load = kwargs.pop('_load', True)
             rebuild = kwargs.pop('_rebuild', False)
+
             # Format the file path
-            argspec = getargspec(builder)
-            filepath = _set_filepath(raw_filepath, path_args, args, kwargs,
-                                     argspec)
+            if not path_args:   # XXX this is preferred/keep old for compat
+                filepath = _set_filepath(raw_filepath, args, kwargs, builder)
+            else:
+                filepath = _set_filepath_old(raw_filepath, path_args, args,
+                                             kwargs, builder)
+
             if load and isfile(filepath) and not rebuild:
                 # If it's on disk and there are no objections, read it
                 df = read(filepath)
@@ -88,11 +106,35 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
         return wrapper
     return actualDecorator
 
-def _set_filepath(raw_path, path_args, args, kwargs, argspec):
+
+def _set_filepath(raw_filepath, args, kwargs, builder):
+    argspec = getfullargspec(builder)
+    if re.search('{.*}', raw_filepath):
+        argspec = getfullargspec(builder)
+        arg_names = argspec.args
+        arg_dict = dict()
+        if argspec.defaults:
+            kwarg_defaults = list(argspec.defaults)
+            while kwarg_defaults:
+                arg_dict[arg_names.pop()] = kwarg_defaults.pop()
+
+        for idx, arg in enumerate(args):
+            arg_dict[argspec.args[idx]] = arg
+        for k, v in kwargs.items():
+            arg_dict[k] = v
+        new_filepath = raw_filepath.format(**arg_dict)
+    else:
+        new_filepath = raw_filepath
+
+    return new_filepath
+
+
+def _set_filepath_old(raw_path, path_args, args, kwargs, builder):
     """
     Parse `args` and `kwargs` as directed by `path_args` and insert them
     into `raw_path`.
     """
+    argspec = getfullargspec(builder)
     format_filepath = _parse_pathargs(path_args, args, kwargs, argspec)
     try:
         filepath = raw_path.format(*format_filepath)
@@ -115,7 +157,8 @@ def _parse_pathargs(path_args, args, kwargs, argspec):
     """
     patharg_values = []
     # Handle default kwargs
-    argnames, __, __, defaults = argspec
+    argnames = argspec.args
+    defaults = argspec.defaults
 
     for arg in path_args:
         arg_type = type(arg)
