@@ -2,6 +2,15 @@
 
 .. _io:
 
+.. toctree::
+    :hidden:
+
+    io.rst
+    metrics_advanced.rst
+    to_latex.rst
+    plot.rst
+    reference.rst
+
 *******************
 Input/Output Tools
 *******************
