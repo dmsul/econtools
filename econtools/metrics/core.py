@@ -650,7 +650,7 @@ class Results(object):
 
         r = np.zeros(q)
 
-        return f_stat(V, R, beta, r, self.df_r)
+        return f_test(V, R, beta, r, self.df_r)
 
     @property
     def F(self):
@@ -672,7 +672,7 @@ class Results(object):
             return self._pF
 
 
-def f_stat(V, R, beta, r, df_d):
+def f_test(V, R, beta, r, df_d):
     """
     Standard F test.
     """

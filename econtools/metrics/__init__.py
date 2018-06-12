@@ -1,2 +1,2 @@
 # flake8: noqa
-from .core import reg, ivreg
+from .core import reg, ivreg, f_test
