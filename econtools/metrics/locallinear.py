@@ -22,7 +22,9 @@ def kdensity(x, x0=None, N=None, h=None, wt=None, kernel='epan'):
         N (int): Default ``None``. Number of ``x0`` values to calculate if
             ``x0`` is not specified. At least one of ``x0`` and ``N`` must be
             ``None``.
-        h (float): Bandwidth for kernel.
+        h (str or float): Defaults to None (Silverman's rule of thumb).
+            Bandwidth for kernel. May pass a float or any of the following for
+            Silverman's rule of thumb: ``'silverman'``, ``'thumb'``, ``'rot'``.
         kernel (str): Default ``'epan'``. Type of kernel to be used. Options
             are:
                 - ``'epan'``, Epanechnikov
@@ -75,7 +77,35 @@ def _kdensity_core(x, x0, h, kernel_obj, wt=None):
     return f_hat
 
 
-def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan', ci=False):
+def llr(y, x, x0=None, N=None, h=None, degree=1, kernel='epan', ci=False):
+    """Local-linear Regression
+
+    Args:
+        y (array):
+        x (array):
+
+    Keyword Args:
+        x0 (float or array-like): Default ``None``. Values at which to
+            caluculate density. If ``None`, these values will be calculated
+            automatically. Default length of `x0` is min([len(x), 50]).
+            At least one of ``x0`` and ``N`` must be ``None``.
+        N (int): Default ``None``. Number of ``x0`` values to calculate if
+            ``x0`` is not specified. At least one of ``x0`` and ``N`` must be
+            ``None``.
+        h (str or float): Defaults to None (Silverman's rule of thumb).
+            Bandwidth for kernel. May pass a float or any of the following for
+            Silverman's rule of thumb: ``'silverman'``, ``'thumb'``, ``'rot'``.
+        kernel (str): Default ``'epan'``. Type of kernel to be used. Options
+            are:
+                - ``'epan'``, Epanechnikov
+                - ``'unif'``, Uniform
+                - ``'tria'``, Triangle
+        degree (int): Defaults to 1. Degree of polynomial to use in local
+            regression.
+
+    Returns:
+        Stuff.
+    """
     try:
         assert len(y) == len(x)
     except AssertionError:
