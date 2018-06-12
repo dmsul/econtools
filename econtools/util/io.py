@@ -106,7 +106,6 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
         return wrapper
     return actualDecorator
 
-
 def _set_filepath(raw_filepath, args, kwargs, builder):
     argspec = getfullargspec(builder)
     if re.search('{.*}', raw_filepath):
@@ -127,7 +126,6 @@ def _set_filepath(raw_filepath, args, kwargs, builder):
         new_filepath = raw_filepath
 
     return new_filepath
-
 
 def _set_filepath_old(raw_path, path_args, args, kwargs, builder):
     """
