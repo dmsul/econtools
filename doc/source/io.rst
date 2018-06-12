@@ -3,7 +3,7 @@
 .. _io:
 
 *******************
-Input/Output Tools
+Data (I/O) Tools
 *******************
 
 .. contents::
@@ -119,11 +119,11 @@ Special Keyword Switches
 :py:func:`~econtools.load_or_build` adds two special keyword arguments to
 functions it decorates.
 
-* ``_rebuild`` (default ``False``): If ``_rebuild==True``,
+* ``_rebuild`` (default ``False``): If ``_rebuild=True``,
   :py:func:`~econtools.load_or_build` will re-build the data output by the
   function and overwrite any saved version on disk.
 
-* ``_load`` (default ``True``): If ``_load==False``,
+* ``_load`` (default ``True``): If ``_load=False``,
   :py:func:`~econtools.load_or_build` will not look for saved data on disk and
   will only run the function as though you didn't use
   :py:func:`~econtools.load_or_build` in the first place.
@@ -174,9 +174,7 @@ disk and avoid commenting/uncommenting lines of code that do the saving.
         # Code to only display the figure
 
 
-Then ``save`` switch is invoked on the command line using  
-
-.. code-block:: bash
+Then ``save`` switch is invoked on the command line using::
 
     $ python make_figure.py --save      # Saves figure
     $ python make_figure.py             # Does not save
@@ -206,14 +204,12 @@ the question if an invalid response is given.
         # Action for no response
 
 
-On the command line
-
-
-.. code-block:: bash
+On the command line::
 
     $ python thermonuclear_war.py
     Shall we play a game? (y,[n]) >>> Y
     # Code executed for 'yes' response
+
 
 ``read`` and ``write``
 ----------------------

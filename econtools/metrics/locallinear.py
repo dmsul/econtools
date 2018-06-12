@@ -16,7 +16,7 @@ def kdensity(x, x0=None, N=None, h=None, wt=None, kernel='epan'):
 
     Keyword Args:
         x0 (float or array-like): Default ``None``. Values at which to
-            caluculate density. If ``None`, these values will be calculated
+            caluculate density. If ``None``, these values will be calculated
             automatically. Default length of `x0` is min([len(x), 50]).
             At least one of ``x0`` and ``N`` must be ``None``.
         N (int): Default ``None``. Number of ``x0`` values to calculate if
@@ -33,12 +33,13 @@ def kdensity(x, x0=None, N=None, h=None, wt=None, kernel='epan'):
         wt (array-like): Weights. Must be same length as ``x``.
 
     Returns:
-        tuple: Tuple containing
-            - **x0** (*float or array*): Points are which kernel is estimated.
-                If ``x0`` is passed explicitly, this will be the same.
-            - **f_hat** (*float or array*): Estimated kernel density at
+        Tuple containing
+            * **x0** (*float or array*) - Points are which kernel is
+                estimated. If ``x0`` is passed explicitly, this will be the
+                same.
+            * **f_hat** (*float or array*) - Estimated kernel density at
                 point(s) ``x0``.
-            - **est_stats** (*dict*): Contains bandwidth and kernel name.
+            * **est_stats** (*dict*) - Contains bandwidth and kernel name.
     """
 
     if wt is not None:
@@ -86,9 +87,9 @@ def llr(y, x, x0=None, N=None, h=None, degree=1, kernel='epan', ci=False):
 
     Keyword Args:
         x0 (float or array-like): Default ``None``. Values at which to
-            caluculate density. If ``None`, these values will be calculated
-            automatically. Default length of `x0` is min([len(x), 50]).
-            At least one of ``x0`` and ``N`` must be ``None``.
+            caluculate regression. If ``None``, these values will be calculated
+            automatically. Default length of `x0` is min([len(x), 50]).  At
+            least one of ``x0`` and ``N`` must be ``None``.
         N (int): Default ``None``. Number of ``x0`` values to calculate if
             ``x0`` is not specified. At least one of ``x0`` and ``N`` must be
             ``None``.
@@ -102,6 +103,8 @@ def llr(y, x, x0=None, N=None, h=None, degree=1, kernel='epan', ci=False):
                 - ``'tria'``, Triangle
         degree (int): Defaults to 1. Degree of polynomial to use in local
             regression.
+        ci (bool): Defaults to False. If True, also return confidence interval
+            for each point.
 
     Returns:
         Stuff.

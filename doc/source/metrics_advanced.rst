@@ -92,9 +92,91 @@ estimate the model. Currently supported values are `2sls` (the default) and
 Returned Results
 ----------------
 
+The regression functions :py:func:`~econtools.metrics.reg` and
+:py:func:`~econtools.metrics.ivreg` return a custom
+:py:class:`~econtools.metrics.core.Results` object that contains beta
+estimates, variance-covariance matrix, and other relevant info.
 
-Conley Errors (SHAC)
---------------------
+The easiest way to see regression results is the ``summary`` attribute. But
+direct access to estimates is also possible.
+
+.. code-block:: python
+
+    import pandas as pd
+    import econtools.metrics as mt
+
+    df = pd.read_stata('some_data.dta')
+    results = mt.reg(df, 'ln_wage', ['educ', 'age'], addcons=True)
+
+    # Print DataFrame w/ betas, se's, t-stats, etc.
+    print(results.summary)
+
+    # Print only betas
+    print(results.beta)
+
+    # Print std. err. for `educ` coefficient
+    print(results.se['educ'])
+
+    # Print full variance-covariance matrix
+    print(results.vce)
+
+
+The full list of attributes is listed :py:class:`here <econtools.metrics.core.Results>`.
+
+F tests
+~~~~~~~
+
+:py:mod:`econtools.metrics` contains two functions for conducting F tests.
+
+The first, :py:meth:`~econtools.metrics.core.Results.Ftest`, is for simple,
+Stata-like tests for joint significance or equality. It is a method on the
+:py:class:`~econtools.metrics.core.Results` object.
+
+.. code-block:: python
+
+    results = mt.reg(df, 'ln_wage', ['educ', 'age'], addcons=True)
+
+    # Test for joint significance
+    F1, pF1 = results.Ftest(['educ', 'age'])
+    # Test for equality
+    F2, pF2 = results.Ftest(['educ', 'age'], equal=True)
+
+The second, :py:func:`~econtools.metrics.f_test`, is for F tests of arbitrary
+linear combinations of coefficients. The tests are defined by an ``R``
+matrix and an ``r`` vector such that the null hypothesis is :math:`R\beta = r`.
+
+
+Spatial HAC (Conley errors)
+---------------------------
+
+Spatial HAC standard errors (as in
+`Conley (1999)
+<https://www.sciencedirect.com/science/article/pii/S0304407698000840>`_, 
+`Kelejian and Prucha (2007)
+<https://www.sciencedirect.com/science/article/pii/S0304407606002260>`_,
+etc.) can be calculated by passing a dictionary with the relevant fields to the
+``shac`` keyword:
+
+.. code-block:: python
+
+    shac_params = {
+        'x': 'longitude',   # Column in `df`
+        'y': 'latitude',    # Column in `df`
+        'kern': 'unif',     # Kernel name
+        'band': 2,          # Kernel bandwidth
+    }
+    df = pd.read_stata('reg_data.dta')
+    results = mt.reg(df, 'lnp', ['sqft', 'rooms'],
+                     a_name='state',
+                     shac=shac_params)
+
+
+.. Important::
+
+    The ``band`` parameter is assumed to be in the same units as ``x`` and
+    ``y``. If ``x`` and ``y`` are degrees latitude/longitude, ``band`` should
+    also be in degrees. ``econtools`` does not do any advanced geographic
+    distance calculations here, just simple euclidean distance.
 
 
 Local Linear Regression

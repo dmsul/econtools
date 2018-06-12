@@ -535,16 +535,20 @@ class Results(object):
         r2_a (float): Adjusted R-squared.
         K (int): Number of regressors
         N (int): Number of observations
+        vce (DataFrame): K-by-K variance-covariance matrix.
         F (float): F-stat of joint significance of beta coefficients.
         pF (float): p-score for F-stat.
         df_m (int): Model degrees of freedom (excluding constant).
         df_r (int): Residual degrees of freedom.
         ssr (float): Sum of squared residuals.
         sst (float): Total sum of squares.
-        vce (array): K-by-K variance-covariance matrix.
-        yhat (array):
-        sample (array):
-        resid (array):
+        yhat (array): Fit values (:math:`X\\hat{\\beta}`)
+        resid (array): Regression residuals (:math:`\\hat{\\varepsilon}`)
+        sample (array): Boolean array the same length of DataFrame passed to
+            original regression function. Row is `True` is the observation is
+            included in the regression, `False` otherwise. Regression function
+            will automatically drop observations where the outcome, regressor,
+            weights, etc., are missing/null.
     """
 
     def __init__(self, **kwargs):

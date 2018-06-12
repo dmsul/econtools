@@ -48,8 +48,6 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
 
         .. code-block:: python
 
-            from econtools import load_or_build
-
             @load_or_build('file_{}_{}.csv', path_args=[0, 'b'])
             def foo(a, b=None):
                 return pd.DataFrame([a, b])

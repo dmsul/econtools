@@ -10,6 +10,7 @@
     to_latex.rst
     plot.rst
     reference.rst
+    api.rst
 
 
 ****************
