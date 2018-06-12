@@ -619,6 +619,21 @@ class Results(object):
             return self._r2_a
 
     def Ftest(self, col_names, equal=False):
+        """F test using regression results.
+
+        Args:
+            col_names (str or list): Regressor name(s) to test.
+
+        Keyword Args:
+            equal (bool): Defaults to False. If True, test if all coefficients
+                in ``col_names`` are equal. If False, test if ``col_names`` are
+                jointly significant.
+
+        Returns:
+            tuple: A tuple containing:
+                - **F** (float): F-stat.
+                - **pF** (float): p-score for ``F``.
+        """
         cols = force_list(col_names)
         V = self.vce.loc[cols, cols]
         q = len(cols)
