@@ -12,14 +12,8 @@ Contents:
    :maxdepth: 1
 
    overview.rst
+   io.rst
    metrics_advanced.rst
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   to_latex.rst
+   plot.rst
+   reference.rst

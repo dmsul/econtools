@@ -4,8 +4,10 @@
 .. _metricsadv:
 
 ****************************
-Econometrics: Advanced Usage
+Econometrics
 ****************************
+
+.. contents:: :local:
 
 OLS
 ---
@@ -21,7 +23,7 @@ function at least three arguments
 Following these arguments, there are a number of keyword arguments for various
 other options. For example, the following code estimates a basic wage
 regression with state-level clustering and fixed effects, weighting by the
-variable `sample_wt`.
+variable ``sample_wt``.
 
 .. code-block:: python
 
@@ -49,7 +51,7 @@ variable `sample_wt`.
 
 Note that :py:meth:`~econtools.metrics.reg` does *not* automatically estimate a
 constant term. In order to have a constant/intercept in your model, you can (a)
-add a column of ones to your DataFrame, or (b) use the `addcons` keyword arg:
+add a column of ones to your DataFrame, or (b) use the ``addcons`` keyword arg:
 
 .. code-block:: python
 
@@ -68,7 +70,7 @@ Estimating an instrumental variables model is very similar, but is done using
 the :py:meth:`~econtools.metrics.ivreg` function. The order of arguments is
 also slightly different in order to differentiate between the instruments,
 endogenous regressors, and exogenous regressors. Other keyword options, such as
-`addcons`, `cluster`, and so forth, are exactly the same as with
+``addcons``, ``cluster``, and so forth, are exactly the same as with
 :py:meth:`~econtools.metrics.reg`.
 
 One additional keyword argument is `method`, which sets the IV method used to
