@@ -68,3 +68,9 @@ Plotting Tools
 
 Reference Tools
 ---------------
+
+Installation
+------------
+Download or clone the ``econtools`` repo and run the ``setup.py`` script::
+
+$ python setup.py install

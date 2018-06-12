@@ -4,7 +4,7 @@
 .. _metricsadv:
 
 ****************************
-Econometrics
+Econometrics Tools
 ****************************
 
 .. contents:: :local:
@@ -89,13 +89,13 @@ estimate the model. Currently supported values are `2sls` (the default) and
     results = mt.ivreg(df, y, X, Z, W)
 
 
-Local Linear Regression
------------------------
+Returned Results
+----------------
 
 
 Conley Errors (SHAC)
 --------------------
 
 
-Returned Results
-----------------
+Local Linear Regression
+-----------------------
