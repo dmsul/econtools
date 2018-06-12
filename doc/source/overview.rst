@@ -32,7 +32,6 @@ Econometric Tools
 The econometrics tools in :mod:`econtools` include
 
 * Common regression techniques (OLS, 2SLS, LIML)
-* Local linear regression
 * Option to absorb any variable via within transformation. This is similar to
   the ``areg, absorb`` command in Stata but it can be used with any relevant
   regression command. This consolidates ``reg``, ``areg``, ``xtreg``, etc., and
@@ -45,6 +44,8 @@ The econometrics tools in :mod:`econtools` include
     kernel
 
 * F-tests by variable name or arbitrary ``R`` matrix.
+* Kernel density estimation
+* Local linear regression
 
 
 LaTeX Tools
