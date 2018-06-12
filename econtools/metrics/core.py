@@ -533,12 +533,18 @@ class Results(object):
         ci_hi (Series): Confidence interval, upper bound.
         r2 (float): R-squared
         r2_a (float): Adjusted R-squared.
+        K (int): Number of regressors
+        N (int): Number of observations
         F (float): F-stat of joint significance of beta coefficients.
         pF (float): p-score for F-stat.
         df_m (int): Model degrees of freedom (excluding constant).
         df_r (int): Residual degrees of freedom.
         ssr (float): Sum of squared residuals.
         sst (float): Total sum of squares.
+        vce (array): K-by-K variance-covariance matrix.
+        yhat (array):
+        sample (array):
+        resid (array):
     """
 
     def __init__(self, **kwargs):
