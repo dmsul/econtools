@@ -23,8 +23,8 @@ def reg(df, y_name, x_name,
 
     Args:
         df (DataFrame): Data with any relevant variables.
-        y_name (str): Variable name in ``df`` of the dependent variable.
-        x_name (str or list): Variable name(s) in ``df`` of the independent
+        y_name (str): Column name in ``df`` of the dependent variable.
+        x_name (str or list): Column name(s) in ``df`` of the independent
                 variables/regressors
 
     Keyword Args:
@@ -39,8 +39,8 @@ def reg(df, y_name, x_name,
         cluster (str): Column name in ``df`` used to cluster standard errors.
         shac (dict): Arguments to pass to spatial HAC estimator.
             Requires:
-                - **x** (*str*): Variable name in df to serve as longitude.
-                - **y** (*str*): Variable name in df to serve as latitude.
+                - **x** (*str*): Column name in ``df`` to serve as longitude.
+                - **y** (*str*): Column name in ``df`` to serve as latitude.
                 - **kern** (*str*): Kernel to use in estimation. May be
                     triangle (``tria``) or uniform (``unif``).
                 - **band** (float): Bandwidth for kernel.
@@ -78,32 +78,31 @@ def ivreg(df, y_name, x_name, z_name, w_name,
           addcons=None, nocons=False,
           awt_name=None,
           ):
-    """
-    Args
-    -----
-    `df`, DataFrame - Data with any relevant variables.
-    `y_name`, str - Variable name in `df` of the dependent variable.
-    `x_name`, str or list - Variable name(s) in `df` of the endogenous
-        regressor(s)
-    `z_name`, str or list - Variable name(s) in `df` of the excluded
-        instrument(s)
-    `w_name`, str or list - Variable name(s) in `df` of the included
-        instruments/exogenous regressors
+    """Instrumental Variables Regression
 
-    Kwargs
-    ------
-    `iv_method`, str - Instrumental variables method to use. May be '2sls' for
-        two-stage least squares (default) or 'liml' for limited-information
-        maximum likelihood.
-    Else, see `reg`.
+    Args:
+        df (DataFrame): Data with any relevant variables.
+        y_name (str): Column name in ``df`` of the dependent variable.
+        x_name (str or list): Column name(s) in ``df`` of the endogenous
+            regressor(s).
+        z_name (str or list): Column name(s) in ``df`` of the excluded
+            instrument(s)
+        w_name (str or list): Column name(s) in ``df`` of the included
+            instruments/exogenous regressors
 
-    Returns
-    -------
-    `Results` object.
-    The object returned by `ivreg` differs from `reg` in the following
-    ways:
-        - No r-squared (`r2` or `r2_a`)
-        - `kappa` parameter (always 1 if `iv_method = 2sls`)
+    Keyword Args:
+        a_name (str) - Column name in ``df`` that defines groups for within
+            transformation (demeaning). **All other keyword args in
+            :py:func:`~econtools.reg` may also be used.
+        iv_method (str): Instrumental variables method to use.
+            Options are:
+                - ``'2sls'``, two-stage least squares (default)
+                - ``'liml'``, limited-information maximum likelihood.
+
+    Returns:
+        A modified :py:class:`~econtools.metrics.core.Results` object:
+            - No r-squared (`r2` or `r2_a`)
+            - ``kappa`` attribute (always 1 if ``iv_method='2sls'``)
     """
 
     IVRegWorker = IVReg(
@@ -522,6 +521,25 @@ def fitguts(y, x):
 
 # Results class
 class Results(object):
+    """Regression Results container.
+
+    Attributes:
+        summary (DataFrame): Summary of regression results.
+        beta (Series): All beta coefficients. Index is regressor names.
+        se (Series): Standard errors.
+        t_stat (Series): t-stats.
+        pt (Series): p-scores for t-stats.
+        ci_lo (Series): Confidence interval, lower bound.
+        ci_hi (Series): Confidence interval, upper bound.
+        r2 (float): R-squared
+        r2_a (float): Adjusted R-squared.
+        F (float): F-stat of joint significance of beta coefficients.
+        pF (float): p-score for F-stat.
+        df_m (int): Model degrees of freedom (excluding constant).
+        df_r (int): Residual degrees of freedom.
+        ssr (float): Sum of squared residuals.
+        sst (float): Total sum of squares.
+    """
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
