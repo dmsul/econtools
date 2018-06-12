@@ -12,7 +12,7 @@ Econometrics
 OLS
 ---
 
-To estimate an OLS regression, you pass the :py:meth:`~econtools.metrics.reg`
+To estimate an OLS regression, you pass the :py:func:`~econtools.metrics.reg`
 function at least three arguments
 
 #. The DataFrame that contains the data.
@@ -49,7 +49,7 @@ variable ``sample_wt``.
     )
 
 
-Note that :py:meth:`~econtools.metrics.reg` does *not* automatically estimate a
+Note that :py:func:`~econtools.metrics.reg` does *not* automatically estimate a
 constant term. In order to have a constant/intercept in your model, you can (a)
 add a column of ones to your DataFrame, or (b) use the ``addcons`` keyword arg:
 
@@ -67,11 +67,11 @@ Instrumental Variables
 ----------------------
 
 Estimating an instrumental variables model is very similar, but is done using
-the :py:meth:`~econtools.metrics.ivreg` function. The order of arguments is
+the :py:func:`~econtools.metrics.ivreg` function. The order of arguments is
 also slightly different in order to differentiate between the instruments,
 endogenous regressors, and exogenous regressors. Other keyword options, such as
 ``addcons``, ``cluster``, and so forth, are exactly the same as with
-:py:meth:`~econtools.metrics.reg`.
+:py:func:`~econtools.metrics.reg`.
 
 One additional keyword argument is `method`, which sets the IV method used to
 estimate the model. Currently supported values are `2sls` (the default) and

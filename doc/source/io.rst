@@ -28,7 +28,7 @@ are invoked using ``@`` like so:
         print("I'm not sure I trust that instrument.")
 
 
-:py:meth:`~econtools.load_or_build` is a decorator that is used on functions that return
+:py:func:`~econtools.load_or_build` is a decorator that is used on functions that return
 data (either a pandas Series or DataFrame) to cache that data to disk.
 
 Let's say that you have function ``prep_data`` that preps a dataset for
@@ -52,7 +52,7 @@ regressions.
 Maybe this function takes a long time to run and you'd like to save it to your
 hard drive so you don't have to re-process it every time. Instead of
 copy/pasting the filepath associated with this function, you can just use
-:py:meth:`~econtools.load_or_build`:
+:py:func:`~econtools.load_or_build`:
 
 
 .. code-block:: python
@@ -94,7 +94,7 @@ Let's say your data function takes an argument, like ``year``:
 
 
 In this case, you'll need a different file name on disk for each year.
-:py:meth:`~econtools.load_or_build` handles this using Python's named string
+:py:func:`~econtools.load_or_build` handles this using Python's named string
 insertion using curly brackets like so:
 
 .. code-block:: python
@@ -116,17 +116,17 @@ This works for both positional arguments and keywork arguments.
 Special Keyword Switches
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:meth:`~econtools.load_or_build` adds two special keyword arguments to
+:py:func:`~econtools.load_or_build` adds two special keyword arguments to
 functions it decorates.
 
 * ``_rebuild`` (default ``False``): If ``_rebuild==True``,
-  :py:meth:`~econtools.load_or_build` will re-build the data output by the
+  :py:func:`~econtools.load_or_build` will re-build the data output by the
   function and overwrite any saved version on disk.
 
 * ``_load`` (default ``True``): If ``_load==False``,
-  :py:meth:`~econtools.load_or_build` will not look for saved data on disk and
+  :py:func:`~econtools.load_or_build` will not look for saved data on disk and
   will only run the function as though you didn't use
-  :py:meth:`~econtools.load_or_build` in the first place.
+  :py:func:`~econtools.load_or_build` in the first place.
 
 Examples:
 
@@ -153,9 +153,9 @@ Examples:
 ``save_cli``
 ------------
 
-The function :py:meth:`~econtools.save_cli` adds a ``--save`` flag to the
+The function :py:func:`~econtools.save_cli` adds a ``--save`` flag to the
 command line. When ``--save`` is included on the command line,
-:py:meth:`~econtools.save_cli` returns ``True``, and ``False`` otherwise.
+:py:func:`~econtools.save_cli` returns ``True``, and ``False`` otherwise.
 This allows you to run a script without overwriting any tables or figures on
 disk and avoid commenting/uncommenting lines of code that do the saving.
 
@@ -185,7 +185,7 @@ Then ``save`` switch is invoked on the command line using
 ``confirmer``
 -------------
 
-:py:meth:`~econtools.confirmer` is a drop-in function to quickly allow a script
+:py:func:`~econtools.confirmer` is a drop-in function to quickly allow a script
 to get yes/no input from the user. It accepts a number of variations of
 ``yes``, ``Y``, ``YES``, etc., and will force a correct response by re-asking
 the question if an invalid response is given.
@@ -219,9 +219,9 @@ On the command line
 ----------------------
 
 These function are primarily auxiliary functions used by
-:py:meth:`~econtools.load_or_build`, but they can be used directly if needed.
+:py:func:`~econtools.load_or_build`, but they can be used directly if needed.
 
-:py:meth:`~econtools.read` will use the suffix of the passed filename to use
+:py:func:`~econtools.read` will use the suffix of the passed filename to use
 the correct ``pandas`` method to read the data.
 
 .. code-block:: python
@@ -232,4 +232,4 @@ the correct ``pandas`` method to read the data.
     df = read('my_data.dta')    # uses pandas.read_stata
     df = read('my_data.pkl')    # uses pandas.read_pickle
 
-:py:meth:`~econtools.write` does the same, but with writing.
+:py:func:`~econtools.write` does the same, but with writing.
