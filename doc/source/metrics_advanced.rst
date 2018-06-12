@@ -89,6 +89,10 @@ estimate the model. Currently supported values are `2sls` (the default) and
     results = mt.ivreg(df, y, X, Z, W)
 
 
+Local Linear Regression
+-----------------------
+
+
 Conley Errors (SHAC)
 --------------------
 
