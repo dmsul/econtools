@@ -673,8 +673,19 @@ class Results(object):
 
 
 def f_test(V, R, beta, r, df_d):
-    """
-    Standard F test.
+    """Arbitrary F test.
+
+    Args:
+        V (array): K-by-K variance-covariance matrix.
+        R (array): K-by-K Test matrix.
+        beta (array): Length-K vector of coefficient estimates.
+        r (array): Length-K vector of null hypotheses.
+        df_d (int): Denominator degrees of freedom.
+
+    Returns:
+        tuple: A tuple containing:
+            - **F** (float): F-stat.
+            - **pF** (float): p-score for ``F``.
     """
     Rbr = (R.dot(beta) - r)
     if Rbr.ndim == 1:
