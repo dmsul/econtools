@@ -9,28 +9,37 @@ from econtools.metrics import reg
 
 
 def kdensity(x, x0=None, N=None, h=None, wt=None, kernel='epan'):
-    """
-    Kernel density estimation.
+    """Kernel density estimation.
 
-    Args
-    ----
-    x - (list/array-like) Variable over which to estimate density.
+    Args:
+        x (array-like): Variable over which to estimate density.
 
-    x0 - (float or list/array-like; default `None`) Values at which to
-        caluculate density. If `None`, these values will be calculated
-        automatically. Length of `x0` is min([len(x), 50]).
-    N - (int; default `None`) Number of `x0` values to calculate if `x0` is not
-        specified. At least one of `x0` and `N` must be `None`.
-    h - (float) Bandwidth for kernel.
-    wt - (list/array-like) Weights. Must be same length as `x`.
-    kernel - (str; default 'epan') Type of kernel to be used. Default is
-        Epanechnikov.
+    Keyword Args:
+        x0 (float or array-like): Default ``None``. Values at which to
+            caluculate density. If ``None``, these values will be calculated
+            automatically. Default length of `x0` is min([len(x), 50]).
+            At least one of ``x0`` and ``N`` must be ``None``.
+        N (int): Default ``None``. Number of ``x0`` values to calculate if
+            ``x0`` is not specified. At least one of ``x0`` and ``N`` must be
+            ``None``.
+        h (str or float): Defaults to None (Silverman's rule of thumb).
+            Bandwidth for kernel. May pass a float or any of the following for
+            Silverman's rule of thumb: ``'silverman'``, ``'thumb'``, ``'rot'``.
+        kernel (str): Default ``'epan'``. Type of kernel to be used. Options
+            are:
+                - ``'epan'``, Epanechnikov
+                - ``'unif'``, Uniform
+                - ``'tria'``, Triangle
+        wt (array-like): Weights. Must be same length as ``x``.
 
-    Returns
-    -------
-    x0
-    f_hat - Estimated kernel density at point(s) `x0`.
-    est_stats (dict) - Contains bandwidth and kernel name.
+    Returns:
+        Tuple containing
+            * **x0** (*float or array*) - Points are which kernel is
+                estimated. If ``x0`` is passed explicitly, this will be the
+                same.
+            * **f_hat** (*float or array*) - Estimated kernel density at
+                point(s) ``x0``.
+            * **est_stats** (*dict*) - Contains bandwidth and kernel name.
     """
 
     if wt is not None:
@@ -69,7 +78,37 @@ def _kdensity_core(x, x0, h, kernel_obj, wt=None):
     return f_hat
 
 
-def llr(y, x, x0=None, h=None, N=None, degree=1, kernel='epan', ci=False):
+def llr(y, x, x0=None, N=None, h=None, degree=1, kernel='epan', ci=False):
+    """Local-linear Regression
+
+    Args:
+        y (array):
+        x (array):
+
+    Keyword Args:
+        x0 (float or array-like): Default ``None``. Values at which to
+            caluculate regression. If ``None``, these values will be calculated
+            automatically. Default length of `x0` is min([len(x), 50]).  At
+            least one of ``x0`` and ``N`` must be ``None``.
+        N (int): Default ``None``. Number of ``x0`` values to calculate if
+            ``x0`` is not specified. At least one of ``x0`` and ``N`` must be
+            ``None``.
+        h (str or float): Defaults to None (Silverman's rule of thumb).
+            Bandwidth for kernel. May pass a float or any of the following for
+            Silverman's rule of thumb: ``'silverman'``, ``'thumb'``, ``'rot'``.
+        kernel (str): Default ``'epan'``. Type of kernel to be used. Options
+            are:
+                - ``'epan'``, Epanechnikov
+                - ``'unif'``, Uniform
+                - ``'tria'``, Triangle
+        degree (int): Defaults to 1. Degree of polynomial to use in local
+            regression.
+        ci (bool): Defaults to False. If True, also return confidence interval
+            for each point.
+
+    Returns:
+        Stuff.
+    """
     try:
         assert len(y) == len(x)
     except AssertionError:

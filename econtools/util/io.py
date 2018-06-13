@@ -16,59 +16,55 @@ HDF5_EXT = ('h5', 'hdf5')
 
 # TODO: lob tests
 def load_or_build(raw_filepath, copydta=False, path_args=[]):
-    """
-    Loads `raw_filepath` as a DataFrame if it exists, otherwise builds the data
-    and saves it to `raw_filepath`.
+    """Loads `raw_filepath` as a DataFrame if it exists, otherwise builds the
+    data and saves it to `raw_filepath`.
 
-    Decorator Args
-    ---------------
-    `raw_filepath`, str: path to saved DataFrame. If `filepath` includes named
-        replacement fields (e.g., "{arg_name}") with the same name as function
-        arguments, passed values will be inserted into the file path.
+    Args:
+        raw_filepath (str): Path to saved DataFrame. If ``raw_filepath``
+            includes named replacement fields (e.g., "``'{arg_name}'``") with
+            the same name as function arguments, passed values will be inserted
+            into the file path.
 
-        Example:
+    Example:
 
-        ```
-        @load_or_build('data_for_{year}.pkl')
-        def make_data(year):
-            <Make the data>
+        .. code-block:: python
 
-        df = make_data(2018)    # Saves to 'data_for_2018.pkl'
-        ```
+            @load_or_build('data_for_{year}.pkl')
+            def make_data(year):
+                <Make the data>
 
-    Decorator Kwargs
-    ---------------
-    `copydta`, bool (default False): if true, save a copy of the data in Stata
-        DTA format if `filepath` is not already a DTA file.
+            df = make_data(2018)    # Saves to 'data_for_2018.pkl'
 
-    `path_args`, list-like ([]): [DEPRECATED: Use named replacement fields
-        instead]. A list of `int`s or `str`s that point to args or kwargs of
-        the build function, respectively. The value of these arguments will
-        then be use to format `filepath`.
+    Keyword Args:
+        copydta (bool): Defaults to False. If true, save a copy of the data in
+            Stata DTA format if ``raw_filepath`` is not already a DTA file.
 
-        Example:
-        ```
-        from econtools import load_or_build
+        path_args (list-like): DEPRECATED: Use named replacement fields
+            instead. A list of ints or strs that point to args or
+            kwargs of the build function, respectively. The value of these
+            arguments will then be use to format ``raw_filepath``.
 
-        @load_or_build('file_{}_{}.csv', path_args=[0, 'b'])
-        def foo(a, b=None):
-            return pd.DataFrame([a, b])
+    Example:
 
-        if __name__ == '__main__':
-            # Saves `df` to `file_infix_suffix.csv`
-            foo('infix', 'suffix')
-        ```
+        .. code-block:: python
 
-    Build Function Kwargs
-    ---------------------
-    This are additional kwargs that can be passed to the wrapped function that
-        affect the behavior of `load_or_build`.
+            @load_or_build('file_{}_{}.csv', path_args=[0, 'b'])
+            def foo(a, b=None):
+                return pd.DataFrame([a, b])
 
-    `_rebuild`, bool (default False): Build the DataFrame and save it to
-        `filepath` even if `filepath` already exists.
-    `_load`, bool (default True): Try loading the data before building it. If
-        False, the building function is called and the result returned with no
-        data written to disk.
+            if __name__ == '__main__':
+                # Saves `df` to `file_infix_suffix.csv`
+                foo('infix', 'suffix')
+
+    Other Parameters:
+        These are additional kwargs that can be passed to the wrapped function
+            that affect the behavior of ``load_or_build``.
+
+        _rebuild (bool): Defaults to False. If True, build the DataFrame and
+            save it to `filepath` even if `filepath` already exists.
+        _load (bool): Defaults to True. If True, try loading the data before
+            building it. If False, the building function is called and the
+            result returned with no data written to disk.
     """
     def actualDecorator(builder):
         @wraps(builder)
@@ -243,7 +239,11 @@ def loadbuild_cli():
 
 
 def save_cli():
-    """ CLI option to `--save` """
+    """Add CLI boolean flag ``--save``
+
+    Returns:
+        bool: `True` if ``--save`` was entered on command line, else `False`.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--save', action='store_true')
     args = parser.parse_args()
@@ -270,14 +270,18 @@ def try_pickle(filepath):
 
 
 def read(path, **kwargs):
-    """
-    Read file to DataFrame by file's extension.
+    """Read file to DataFrame by file's extension.
 
-    Supported:
-        csv
-        p (pickle)
-        hdf (HDF5)
-        dta (Stata)
+    Args:
+        path (str): Path to read the file from. Supported file suffixes are:
+            - csv
+            - pkl (pickle)
+            - hdf (HDF5)
+            - dta (Stata)
+        **kwargs: Arbitrary keyword arguments to pass to the ``pandas`` read
+            method.
+    Returns:
+        DataFrame:
     """
 
     file_type = path.split('.')[-1]
@@ -298,14 +302,19 @@ def read(path, **kwargs):
 
 
 def write(df, path, **kwargs):
-    """
-    Write DataFrame to file by file's extension.
+    """Read file to DataFrame by file's extension.
 
-    Supported:
-        csv
-        p (pickle)
-        hdf (HDF5)
-        dta (Stata)
+    Args:
+        df (DataFrame): DataFrame to write to disk.
+        path (str): Path to write the file to. Supported file suffixes are:
+            - csv
+            - pkl (pickle)
+            - hdf (HDF5)
+            - dta (Stata)
+        **kwargs: Arbitrary keyword arguments to pass to the ``pandas`` write
+            method.
+    Returns:
+        None:
     """
 
     file_type = path.split('.')[-1]
@@ -326,17 +335,15 @@ def write(df, path, **kwargs):
 
 # Iteractive stuff
 def confirmer(prompt_str, default_no=True):
-    """
-    Prompt user for yes/no answer.
+    """Prompt user for yes/no answer.
 
-    Args
-    ----
-    `prompt_str`, str: Actual question/additional info.
-    `default_no`, bool (True): The default response is 'No'.
+    Args:
+        prompt_str (str): Prompt to show user.
+        default_no (bool): Defaults to True. If True, the default response is
+            'No'.
 
-    Returns
-    ----
-    `ans`, bool: User responded 'Yes'.
+    returns:
+        bool: `True` if user responded 'Yes', else `False`.
     """
     yes_opts = ('Y', 'y', 'yes', 'Yes', 'YES')
     no_opts = ('N', 'n', 'no', 'No', 'NO')

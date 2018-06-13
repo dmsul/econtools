@@ -19,44 +19,45 @@ def reg(df, y_name, x_name,
         addcons=None, nocons=False,
         awt_name=None
         ):
-    """
-    Args
-    -----
-    `df`, DataFrame - Data with any relevant variables.
-    `y_name`, str - Variable name in `df` of the dependent variable.
-    `x_name`, str or list - Variable name(s) in `df` of the independent
-        variables/regressors
+    """OLS Regression.
 
-    Kwargs
-    ------
-    `a_name`, str - Variable name in `df` to demean (within transformation)
-    `nosingles`, bool - (True) Drop observations that are obsorbed by the
-        within transformation. Has no effect if `a_name = None`.
-    `vce_type`, str - Type of estimator to use for variance-covariance matrix
-        of estimated coefficients. Default is standard OLS. Possible choices
-        are:
-        'robust' or 'hc1'
-        'hc2'
-        'hc3'
-        'cluster' (requires kwarg `cluster`)
-        'shac' (requires kwarg `shac')
-    `cluster`, str - Variable name in `df` used to cluster standard errors.
-    `shac`, dict - Arguments to pass to spatial HAC estimator. Requires:
-        `x`, str - Variable name in `df` to serve as longitude.
-        `y`, str - Variable name in `df` to serve as latitude.
-        `kern`, str - Kernel to use in estimation. May be 'tria' for triangle
-            kernel, or 'unif' for uniform kernel.
-        `band`, float - Bandwidth for kernel.
-    `addcons`, bool - (False) Add a constant to independent variables. Has no
-        effect if `a_name` is passed.
-    `nocons`, bool - (False) Flag so estimators know that independent variables
-        `df` do not include a constant. Only affects degrees of freedom.
-    `awt_name`, str - Variable name in `df` to use for analytic weights in
-        regression.
+    Args:
+        df (DataFrame): Data with any relevant variables.
+        y_name (str): Column name in ``df`` of the dependent variable.
+        x_name (str or list): Column name(s) in ``df`` of the independent
+                variables/regressors
 
-    Returns
-    -------
-    `Results` object
+    Keyword Args:
+        vce_type (str): Type of estimator to use for variance-covariance matrix
+            of estimated coefficients. Default is standard OLS. Possible
+            choices are:
+                - 'robust' or 'hc1'
+                - 'hc2'
+                - 'hc3'
+                - 'cluster' (requires kwarg ``cluster``)
+                - 'shac' (requires kwarg ``shac``)
+        cluster (str): Column name in ``df`` used to cluster standard errors.
+        shac (dict): Arguments to pass to spatial HAC estimator.
+            Requires:
+                - **x** (*str*): Column name in ``df`` to serve as longitude.
+                - **y** (*str*): Column name in ``df`` to serve as latitude.
+                - **kern** (*str*): Kernel to use in estimation. May be
+                    triangle (``tria``) or uniform (``unif``).
+                - **band** (float): Bandwidth for kernel.
+        a_name (str) - Column name in ``df`` that defines groups for within
+            transformation (demeaning).
+        awt_name (str): Column name in ``df`` to use for analytic weights in
+            regression.
+        addcons (bool): Defaults to False. Add a constant to independent
+            variables. Has no effect if ``a_name`` is passed.
+        nocons (bool): Defaults to False. Flag so estimators know that
+            independent variables ``df`` do not include a constant. Only
+            affects degrees of freedom.
+        nosingles (bool): Defaults to True. Drop observations that are obsorbed
+            by the within transformation. Has no effect if ``a_name=None``.
+
+    Returns:
+        A :py:class:`~econtools.metrics.core.Results` object
     """
 
     RegWorker = Regression(
@@ -77,32 +78,31 @@ def ivreg(df, y_name, x_name, z_name, w_name,
           addcons=None, nocons=False,
           awt_name=None,
           ):
-    """
-    Args
-    -----
-    `df`, DataFrame - Data with any relevant variables.
-    `y_name`, str - Variable name in `df` of the dependent variable.
-    `x_name`, str or list - Variable name(s) in `df` of the endogenous
-        regressor(s)
-    `z_name`, str or list - Variable name(s) in `df` of the excluded
-        instrument(s)
-    `w_name`, str or list - Variable name(s) in `df` of the included
-        instruments/exogenous regressors
+    """Instrumental Variables Regression
 
-    Kwargs
-    ------
-    `iv_method`, str - Instrumental variables method to use. May be '2sls' for
-        two-stage least squares (default) or 'liml' for limited-information
-        maximum likelihood.
-    Else, see `reg`.
+    Args:
+        df (DataFrame): Data with any relevant variables.
+        y_name (str): Column name in ``df`` of the dependent variable.
+        x_name (str or list): Column name(s) in ``df`` of the endogenous
+            regressor(s).
+        z_name (str or list): Column name(s) in ``df`` of the excluded
+            instrument(s)
+        w_name (str or list): Column name(s) in ``df`` of the included
+            instruments/exogenous regressors
 
-    Returns
-    -------
-    `Results` object.
-    The object returned by `ivreg` differs from `reg` in the following
-    ways:
-        - No r-squared (`r2` or `r2_a`)
-        - `kappa` parameter (always 1 if `iv_method = 2sls`)
+    Keyword Args:
+        a_name (str) - Column name in ``df`` that defines groups for within
+            transformation (demeaning). **All other keyword args in
+            :py:func:`~econtools.reg` may also be used.
+        iv_method (str): Instrumental variables method to use.
+            Options are:
+                - ``'2sls'``, two-stage least squares (default)
+                - ``'liml'``, limited-information maximum likelihood.
+
+    Returns:
+        A modified :py:class:`~econtools.metrics.core.Results` object:
+            - No r-squared (`r2` or `r2_a`)
+            - ``kappa`` attribute (always 1 if ``iv_method='2sls'``)
     """
 
     IVRegWorker = IVReg(
@@ -521,6 +521,35 @@ def fitguts(y, x):
 
 # Results class
 class Results(object):
+    """Regression Results container.
+
+    Attributes:
+        summary (DataFrame): Summary of regression results.
+        beta (Series): All beta coefficients. Index is regressor names.
+        se (Series): Standard errors.
+        t_stat (Series): t-stats.
+        pt (Series): p-scores for t-stats.
+        ci_lo (Series): Confidence interval, lower bound.
+        ci_hi (Series): Confidence interval, upper bound.
+        r2 (float): R-squared
+        r2_a (float): Adjusted R-squared.
+        K (int): Number of regressors
+        N (int): Number of observations
+        vce (DataFrame): K-by-K variance-covariance matrix.
+        F (float): F-stat of joint significance of beta coefficients.
+        pF (float): p-score for F-stat.
+        df_m (int): Model degrees of freedom (excluding constant).
+        df_r (int): Residual degrees of freedom.
+        ssr (float): Sum of squared residuals.
+        sst (float): Total sum of squares.
+        yhat (array): Fit values (:math:`X\\hat{\\beta}`)
+        resid (array): Regression residuals (:math:`\\hat{\\varepsilon}`)
+        sample (array): Boolean array the same length of DataFrame passed to
+            original regression function. Row is `True` is the observation is
+            included in the regression, `False` otherwise. Regression function
+            will automatically drop observations where the outcome, regressor,
+            weights, etc., are missing/null.
+    """
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -600,6 +629,21 @@ class Results(object):
             return self._r2_a
 
     def Ftest(self, col_names, equal=False):
+        """F test using regression results.
+
+        Args:
+            col_names (str or list): Regressor name(s) to test.
+
+        Keyword Args:
+            equal (bool): Defaults to False. If True, test if all coefficients
+                in ``col_names`` are equal. If False, test if ``col_names`` are
+                jointly significant.
+
+        Returns:
+            tuple: A tuple containing:
+                - **F** (float): F-stat.
+                - **pF** (float): p-score for ``F``.
+        """
         cols = force_list(col_names)
         V = self.vce.loc[cols, cols]
         q = len(cols)
@@ -616,7 +660,7 @@ class Results(object):
 
         r = np.zeros(q)
 
-        return f_stat(V, R, beta, r, self.df_r)
+        return f_test(V, R, beta, r, self.df_r)
 
     @property
     def F(self):
@@ -638,9 +682,20 @@ class Results(object):
             return self._pF
 
 
-def f_stat(V, R, beta, r, df_d):
-    """
-    Standard F test.
+def f_test(V, R, beta, r, df_d):
+    """Arbitrary F test.
+
+    Args:
+        V (array): K-by-K variance-covariance matrix.
+        R (array): K-by-K Test matrix.
+        beta (array): Length-K vector of coefficient estimates.
+        r (array): Length-K vector of null hypotheses.
+        df_d (int): Denominator degrees of freedom.
+
+    Returns:
+        tuple: A tuple containing:
+            - **F** (float): F-stat.
+            - **pF** (float): p-score for ``F``.
     """
     Rbr = (R.dot(beta) - r)
     if Rbr.ndim == 1:
