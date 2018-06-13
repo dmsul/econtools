@@ -40,70 +40,11 @@ equality_F = result.Ftest(['x1', 'x2'], equal=True)  # Test for coeff. equality
 
 ## Regression and Summary Stat Tables
 
-- `outreg` takes a regression results and creates a LaTeX-formatted tabular
+- `outreg` takes regression results and creates a LaTeX-formatted tabular
   fragment.
 - `table_statrow` can be used to add arbitrary statistics, notes, etc. to a
   table. Can also be used to create a table of summary statistics.
 - `write_notes` makes it easy to save table notes that depend on your data.
-
-```python
-from econtools import read, outreg, table_statrow, write_notes
-import econtools.metrics as mt
-
-# Load data
-df = read('my_data.dta')
-
-# Run Regressions
-reg1 = mt.reg(df, 'ln_wage', ['ed'], addcons=True)
-reg2 = mt.reg(df, 'ln_wage', ['age', 'age2'], addcons=True)
-
-# Put coefficients and standard errors in a table
-regs = (reg1, reg2)
-table_string = outreg(regs,
-                      ['ed', 'age', 'age2', '_cons'],     # Add these coefficients to the table
-                      ['Years Education',                 # Use these label for the coeffs
-                       'Age',
-                       'Age$^2$',
-                       'Constant']
-                      digits=3                            # Round to 3 decimal digits.
-                      )
-
-# Add R^2 to the table
-table_string += "\\\\ \n"                           # Empty line between betas and r2
-table_string += table_statrow("R^2",                # Add a row with this label
-                              [x.r2 for x in regs], # Fill the row with these values
-                              digits=3)
-
-# Save the table string to a file
-results_path = 'my_results.tex'
-with open(results_path) as f:
-    f.write(table_string)
-
-# Save separate file with table notes
-notes = "Sample size is {}.".format(reg1.N)
-write_notes(notes, results_path)
-```
-The above snippet of code saves two files to disk, `my_results.tex`:
-```latex
-Years Education  & 3.142**    &             \\
-                 & (1.413)    &             \\
-Age              &            & 1.590       \\
-                 &            & (2.020)     \\
-Age$^2$          &            & 1.390       \\
-                 &            & (4.024)     \\
-Constant         & 11.132***  & 10.324***   \\
-                 & (1.324)    & (2.720)     \\
-\\
-R^2              & 0.129      & 0.132       \\
-```
-
-and `my_results_notes.tex`:
-```latex
-Sample size is 934.
-```
-These files can be incorporated into a LaTeX document using the `include`
-command.
-
 
 ## Data I/O
 

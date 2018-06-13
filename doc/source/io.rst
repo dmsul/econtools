@@ -62,6 +62,7 @@ copy/pasting the filepath associated with this function, you can just use
 
     from econtools import load_or_build
 
+    @load_or_build('reg_data.pkl')
     def prep_data():
         df = pd.read_csv('my_data.csv')
         df['wage_sq'] = df['wage'] ** 2

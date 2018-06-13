@@ -9,8 +9,8 @@ def binscatter(x, y, n=20, data=None, discrete=False, median=False):
 
     Args:
         x (array or str): x-axis values. If type ``str``, column in ``data``.
-        y (array): y-axis values, same length as ``x``. If type ``str``, column
-            in ``data``.
+        y (array or str): y-axis values, same length as ``x``. If type ``str``,
+            column in ``data``.
 
     Keyword Args:
         n (int): Default 20. Number of bins.
@@ -20,7 +20,7 @@ def binscatter(x, y, n=20, data=None, discrete=False, median=False):
             of the mean. Only applies to y-axis values.
 
     Returns:
-        tuple: Tuple of arrays:
+        tuple: Tuple of arrays
             * **x_bin_value** (*array*) - Array of x bin values.
             * **y_bin_value** (*array*) - Array of y bin values.
     """

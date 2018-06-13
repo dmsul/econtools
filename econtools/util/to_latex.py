@@ -119,7 +119,8 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
                   sd=False, digits=None,
                   empty_left=0, empty_right=0, empty_slots=[],
                   **kwargs):
-    """Make a table row.
+    """Make a table row. Useful for bottom rows of regression tables
+    (e.g., R-squared) or tables of summary statistics.
 
     Args:
         rowname (str): Row's name.
@@ -127,14 +128,14 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
             ``''``.
 
     Keyword Args:
-        name_just (int): Number of characters to align rowname to.
-        stat_just (int): Number of characters to align rowname to.
+        name_just (int): Width/justification of the ``rowname`` column.
+        stat_just (int): Width/justification of the ``vals`` columns.
         wrapnum (bool): If True, wrap cell values in LaTeX function ``num``,
-            which automatically adds commas as needed. Requires LaTex package
+            which automatically adds commas as needed. Requires LaTeX package
             ``siunitx`` in LaTeX document.
         sd (bool or str): If True, wrap cell value in parentheses as per
             convention. May also set ``sd="["`` to wrap in brackets.
-        digits (int): How many digits after decimal to print. If ``None``,
+        digits (int): How many digits to print after decimal. If ``None``,
             prints contents of ``vals`` exactly as is.
         empty_left (int): Adds `empty_left` empty cells to left side of row.
           Is mutually exclusive with ``empty_slots``.
@@ -146,8 +147,17 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
             ``vals=(1, '', 2, '', 3, '')``.
 
     Returns:
-        str: String of LaTeX tabular row with ``rowname`` and ``vals`` with the
+        str: LaTeX tabular row with ``rowname`` and ``vals`` with the
         specified formatting.
+
+    Example:
+        .. code-block:: python
+
+            >>> table_str = table_statrow("Method", ['OLS', '2SLS', 'LIML'])
+            >>> table_str += table_statrow("N", [100, 200, 300])
+            >>> print(table_str)
+            Method      & OLS   & 2SLS   & LIML  \\\\
+            N           & 100   & 200    & 300   \\\\
     """
 
     outstr = rowname.ljust(name_just)
@@ -255,6 +265,14 @@ def write_notes(notes, table_path):
         None: Writes ``notes`` to ``<table_path_root>_notes.tex``. So if
         ``table_path=table_1.tex``, ``notes`` will be written to
         ``table_1_notes.tex``.
+
+    Example:
+        .. code-block:: python
+
+            table_path = 'table_1.tex'
+            notes = "Sample size is 277."
+            write_notes(notes, table_path)
+            # str ``notes`` written to ``table_1_notes.tex``
     """
     split_path = os.path.splitext(table_path)
     notes_path = split_path[0] + '_notes.tex'

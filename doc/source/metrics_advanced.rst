@@ -1,7 +1,7 @@
 
 .. currentmodule: econtools
 
-.. _metricsadv:
+.. _metrics:
 
 ****************************
 Econometrics Tools
