@@ -44,6 +44,14 @@ LaTeX
 Plotting
 ~~~~~~~~
 
+.. autofunction:: econtools.binscatter
+.. autofunction:: econtools.legend_below
+
 
 Reference
 ~~~~~~~~~
+
+.. autofunction:: econtools.state_name_to_fips
+.. autofunction:: econtools.state_fips_to_name
+.. autofunction:: econtools.state_name_to_abbr
+.. autofunction:: econtools.state_abbr_to_name

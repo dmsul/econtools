@@ -1,18 +1,48 @@
 def state_name_to_fips(x):
-    """ Take state name and return fips as int """
+    """Take state name and return fips as int
+
+    Args:
+        x (str): State name (e.g., Arizona).
+
+    Returns:
+        int: FIPS code.
+    """
     return _name_to_fips_xwalk[x]
 
 
 def state_fips_to_name(x):
-    """ Take fips as int and return state name """
+    """Take fips as int and return state name
+
+    Args:
+        x (int): State FIPS.
+
+    Returns:
+        str: State name (e.g., Colorado)
+    """
     return _fips_to_name_xwalk[x]
 
 
 def state_abbr_to_name(x):
+    """Take 2-letter state abbreviation, return name
+
+    Args:
+        x (str): 2-letter state abbreviation (e.g., CA)
+
+    Returns:
+        str: State name (e.g., California)
+    """
     return _state_abbr_to_name[x]
 
 
 def state_name_to_abbr(x):
+    """Take state name, return 2-letter state abbreviation
+
+    Args:
+        x (str): State name (e.g., Idaho)
+
+    Returns:
+        str: 2-letter state abbreviation (e.g., ID)
+    """
     return _state_name_to_abbr[x]
 
 

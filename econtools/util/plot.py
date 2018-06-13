@@ -5,6 +5,25 @@ import numpy as np
 
 
 def binscatter(x, y, n=20, data=None, discrete=False, median=False):
+    """Binscatter.
+
+    Args:
+        x (array or str): x-axis values. If type ``str``, column in ``data``.
+        y (array): y-axis values, same length as ``x``. If type ``str``, column
+            in ``data``.
+
+    Keyword Args:
+        n (int): Default 20. Number of bins.
+        discrete (bool): Default False. If True, every unique value in ``x`` is
+            given its own bin.
+        median (bool): Default False. Calculate the median for each bin instead
+            of the mean. Only applies to y-axis values.
+
+    Returns:
+        tuple: Tuple of arrays:
+            * **x_bin_value** (*array*) - Array of x bin values.
+            * **y_bin_value** (*array*) - Array of y bin values.
+    """
 
     # If no data is passed, assume arrays
     if type(data) is pd.DataFrame and type(x) is str and type(y) is str:
@@ -27,6 +46,19 @@ def binscatter(x, y, n=20, data=None, discrete=False, median=False):
 
 
 def legend_below(ax, shrink=False, *args, **kwargs):
+    """Create a legend below and outside the main axis object.
+
+    Args:
+        ax (Axis): The main ``Axis`` object.
+        *args: other args to pass to ``ax.legend``
+        **kwargs: other keyword args to pass to ``ax.legend``
+
+    Keyword Args:
+        shrink (bool): Default False. Should be True.
+
+    Returns:
+        None:
+    """
     if shrink:
         shrink_axes_for_legend(ax)
     # Put legend centered, just below axes

@@ -12,5 +12,10 @@ Plotting Tools
 ``binscatter``
 --------------
 
+See :py:func:`~econtools.binscatter`.
+
+
 ``legend_below``
 ----------------
+
+See :py:func:`~econtools.legend_below`.
