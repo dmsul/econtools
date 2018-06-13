@@ -1,7 +1,8 @@
 # econtools
 *econtools* is a Python package of econometric functions and convenient
 shortcuts for data work with [pandas](http://github.com/pydata/pandas) and
-[numpy](https://github.com/numpy/numpy).
+[numpy](https://github.com/numpy/numpy). Full documentation
+[here](http://www.danielmsullivan.com/econtools).
 
 ## Econometrics
 - OLS, 2SLS, LIML
@@ -12,6 +13,7 @@ shortcuts for data work with [pandas](http://github.com/pydata/pandas) and
   - Spatial HAC (SHAC, aka Conley standard errors) with uniform and triangle
     kernels
 - F-tests by variable name or `R` matrix.
+- Local linear regression.
 
 ```python
 import econtools
@@ -155,6 +157,4 @@ command.
 ## Coming soon
 
 - Simple Kriging
-- `binscatter`
-- Full HTML documentation
 - Prettier regression output
