@@ -45,7 +45,7 @@ def binscatter(x, y, n=20, data=None, discrete=False, median=False):
     return x_bin_value, y_bin_value
 
 
-def legend_below(ax, shrink=False, *args, **kwargs):
+def legend_below(ax, *args, shrink=False, **kwargs):
     """Create a legend below and outside the main axis object.
 
     Args:
