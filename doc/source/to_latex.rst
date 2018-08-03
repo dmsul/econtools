@@ -14,6 +14,11 @@ LaTeX Tools
 
 See :py:func:`~econtools.outreg`.
 
+``table_mainrow``
+-----------------
+
+See :py:func:`~econtools.table_mainrow`.
+
 ``table_statrow``
 -----------------
 
@@ -23,11 +28,6 @@ See :py:func:`~econtools.table_statrow`.
 ---------------
 
 See :py:func:`~econtools.write_notes`.
-
-``table_mainrow``
------------------
-
-See :py:func:`~econtools.table_mainrow`.
 
 
 Example

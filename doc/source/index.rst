@@ -6,7 +6,7 @@
     :hidden:
 
     io.rst
-    metrics_advanced.rst
+    metrics.rst
     to_latex.rst
     plot.rst
     reference.rst
@@ -17,10 +17,19 @@
 Package overview
 ****************
 
-:mod:`econtools` consists of several sets of tools commonly used for
+:mod:`econtools` is a `Python <https://www.anaconda.com/download/>`_ package for
 econometrics and data manipulation.
 
 .. contents:: :local:
+
+
+Installation
+------------
+Download or clone ``econtools``
+`here <https://github.com/dmsul/econtools>`_ and run the ``setup.py`` script::
+
+$ python setup.py install
+
 
 Data (I/O) Tools
 ----------------
@@ -92,10 +101,3 @@ Reference Tools
 Crosswalks between U.S. state names, abbreviations, and FIPS codes.
 
 Full reference tools documentation :ref:`here <reference>`.
-
-
-Installation
-------------
-Download or clone the ``econtools`` repo and run the ``setup.py`` script::
-
-$ python setup.py install

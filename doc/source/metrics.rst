@@ -181,3 +181,5 @@ etc.) can be calculated by passing a dictionary with the relevant fields to the
 
 Local Linear Regression
 -----------------------
+
+See :py:func:`~econtools.metrics.llr`.
