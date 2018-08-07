@@ -110,7 +110,7 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
     return actualDecorator
 
 def _set_filepath(raw_filepath, args, kwargs, builder):
-    argspec = argspec(builder)
+    argspec = getfullargspec(builder)
     if re.search('{.*}', raw_filepath):
         argspec = getfullargspec(builder)
         arg_names = argspec.args
@@ -376,8 +376,8 @@ def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
                          _count=0):
 
     # Py2/Py3 compat check
-    if hasattr(__builtins__, 'raw_input'):
-        ans = raw_input(prompt_str)
+    if IS_PY2:
+        ans = raw_input(prompt_str)     # noqa
     else:
         ans = input(prompt_str)
 
