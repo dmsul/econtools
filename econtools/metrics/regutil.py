@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from patsy.contrasts import Treatment
 
 from econtools.util import force_list, force_iterable, force_df
 
@@ -104,17 +103,3 @@ def winsorize(df, by, p=(.01, .99)):
     df = df[survive_winsor]
 
     return df
-
-
-class PatsyForceOmit(object):
-
-    """Force patsy to omit a category even if it doesn't want to."""
-
-    def __init__(self):
-        pass
-
-    def code_with_intercept(self, levels):
-        return Treatment(reference=0).code_without_intercept(levels)
-
-    def code_without_intercept(self, levels):
-        return Treatment(reference=0).code_without_intercept(levels)
