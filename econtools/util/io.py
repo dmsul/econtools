@@ -2,13 +2,20 @@ import re
 from os.path import isfile, splitext
 from functools import wraps
 import argparse
-from inspect import getfullargspec
 
+import sys
 import numpy as np
 import pandas as pd
 
 from .gentools import force_df
 from .frametools import df_to_list
+
+IS_PY2 = sys.version_info[0] < 3
+if IS_PY2:
+    from inspect import getargspec as getfullargspec
+else:
+    from inspect import getfullargspec
+
 
 PICKLE_EXT = ('pkl', 'p')   # First is default for writing to pickle
 HDF5_EXT = ('h5', 'hdf5')
@@ -103,7 +110,7 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
     return actualDecorator
 
 def _set_filepath(raw_filepath, args, kwargs, builder):
-    argspec = getfullargspec(builder)
+    argspec = argspec(builder)
     if re.search('{.*}', raw_filepath):
         argspec = getfullargspec(builder)
         arg_names = argspec.args
@@ -151,8 +158,11 @@ def _parse_pathargs(path_args, args, kwargs, argspec):
     """
     patharg_values = []
     # Handle default kwargs
-    argnames = argspec.args
-    defaults = argspec.defaults
+    if IS_PY2:
+        argnames, __, __, defaults = argspec
+    else:
+        argnames = argspec.args
+        defaults = argspec.defaults
 
     for arg in path_args:
         arg_type = type(arg)
