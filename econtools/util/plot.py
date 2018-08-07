@@ -45,7 +45,7 @@ def binscatter(x, y, n=20, data=None, discrete=False, median=False):
     return x_bin_value, y_bin_value
 
 
-def legend_below(ax, *args, shrink=False, **kwargs):
+def legend_below(ax, *args, **kwargs):
     """Create a legend below and outside the main axis object.
 
     Args:
@@ -55,14 +55,21 @@ def legend_below(ax, *args, shrink=False, **kwargs):
 
     Keyword Args:
         shrink (bool): Default False. Should be True.
+        anchor (tuple): 2-tuple to pass to `bbox_to_anchor`. This
+            aligns the legend to the rest of the Axis. If you need more space
+            between the legend and your figure, make the second digit more
+            negative.
 
     Returns:
         None:
     """
+    shrink = kwargs.pop('shrink', False)
+    anchor = kwargs.pop('anchor', (0.5, -0.1))
+
     if shrink:
         shrink_axes_for_legend(ax)
     # Put legend centered, just below axes
-    ax.legend(*args, loc='upper center', bbox_to_anchor=(0.5, -0.1), **kwargs)
+    ax.legend(*args, loc='upper center', bbox_to_anchor=anchor, **kwargs)
 
 
 def shrink_axes_for_legend(*args):
