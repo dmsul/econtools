@@ -74,8 +74,8 @@ endogenous regressors, and exogenous regressors. Other keyword options, such as
 :py:func:`~econtools.metrics.reg`.
 
 One additional keyword argument is `method`, which sets the IV method used to
-estimate the model. Currently supported values are `2sls` (the default) and
-`liml`.
+estimate the model. Currently supported values are ``'2sls'`` (the default) and
+``'liml'``.
 
 .. code-block:: python
 
@@ -179,7 +179,7 @@ etc.) can be calculated by passing a dictionary with the relevant fields to the
     The ``band`` parameter is assumed to be in the same units as ``x`` and
     ``y``. If ``x`` and ``y`` are degrees latitude/longitude, ``band`` should
     also be in degrees. ``econtools`` does not do any advanced geographic
-    distance calculations here, just simple euclidean distance.
+    distance calculations here, just simple Euclidean distance.
 
 
 Local Linear Regression
