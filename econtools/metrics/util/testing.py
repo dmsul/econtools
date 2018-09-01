@@ -15,7 +15,7 @@ class RegCompare(object):
             'p>t': 6,
             'CI_low': 4,
             'CI_high': 5,
-            'ssr': 10,
+            'ssr': 7,
             'sst': 6,
             'mss': 6,
             'r2': 10,
