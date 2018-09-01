@@ -95,7 +95,7 @@ class test_readwrite(object):
         assert_frame_equal(self.df, result)
 
     def test_hdf(self):
-        self.aux_tempfile('hdf')
+        self.aux_tempfile('hdf5')
         write(self.df, self.tempfile)
         result = read(self.tempfile)
         assert_frame_equal(self.df, result)
