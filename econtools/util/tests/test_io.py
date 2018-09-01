@@ -10,56 +10,54 @@ import nose
 from nose.tools import assert_raises
 from pandas.util.testing import assert_frame_equal
 
-from econtools.util.io import _set_filepath, read, write, try_pickle
+from econtools.util.io import _set_filepath_old, read, write, try_pickle
 
 # TODO 'dec_load_or_build` (can this even be done?)
 # TODO `load_or_build` (can this even be done?)
 
 
-class test_set_filepath(object):
+def builder(year, model, base='house'):
+    pass
+
+
+class test_set_filepath_old(object):
 
     def setup(self):
         self.args = (1990, 'tria')
         self.kwargs = {'base': 'house'}
-        self.argspec = (
-            ['year', 'model', 'base'],
-            None,
-            None,
-            ['grid']
-        )
 
     def test_args1(self):
         template = 'file_{}_{}'
         expected = 'file_1990_tria'
         path_args = [0, 1]
-        result = _set_filepath(template, path_args, self.args, self.kwargs,
-                               self.argspec)
+        result = _set_filepath_old(template, path_args, self.args, self.kwargs,
+                                   builder)
         assert expected == result
 
     def test_args2(self):
         template = 'file_{}_{}'
         expected = 'file_house_1990'
         path_args = ['base', 0]
-        result = _set_filepath(template, path_args, self.args, self.kwargs,
-                               self.argspec)
+        result = _set_filepath_old(template, path_args, self.args, self.kwargs,
+                                   builder)
         assert expected == result
 
     def test_noargs(self):
         expected = 'file'
         path_args = []
-        result = _set_filepath(expected, path_args, self.args, self.kwargs,
-                               self.argspec)
+        result = _set_filepath_old(expected, path_args, self.args, self.kwargs,
+                                   builder)
         assert expected == result
 
     def test_too_few_args(self):
         path_args = []
-        assert_raises(ValueError, _set_filepath, 'file{}', path_args, self.args,
-                      self.kwargs, self.argspec)
+        assert_raises(ValueError, _set_filepath_old, 'file{}', path_args,
+                      self.args, self.kwargs, builder)
 
     def test_badarg_float(self):
         path_args = [1.0]
-        assert_raises(ValueError, _set_filepath, '', path_args, self.args,
-                      self.kwargs, self.argspec)
+        assert_raises(ValueError, _set_filepath_old, '', path_args, self.args,
+                      self.kwargs, builder)
 
 
 class test_readwrite(object):
