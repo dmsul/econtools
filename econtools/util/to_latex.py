@@ -33,7 +33,6 @@ def outreg(regs, var_names=None, var_labels=None, digits=4, stars=True, se="(",
         str: LaTeX fragment meant to be wrapped in a tabular environment.
     """
 
-<<<<<<< HEAD
     regs = force_iterable(regs)
 
     if var_names is None:
