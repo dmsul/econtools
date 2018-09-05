@@ -1,5 +1,6 @@
 import os
 from econtools.metrics.core import Results
+from econtools.util.gentools import force_iterable
 
 eol = " \\\\ \n"
 sig_labels = {1: '', .1: '*', .05: '**', .01: '***'}
@@ -33,6 +34,7 @@ def outreg(regs, var_names, var_labels, digits=4, stars=True, se="(",
         str: LaTeX fragment meant to be wrapped in a tabular environment.
     """
 
+    regs = force_iterable(regs)
     opt_dict = _set_options(var_labels, digits, stars)
     table_str = ''
     for var_idx, varname in enumerate(var_names):
@@ -89,7 +91,7 @@ def table_mainrow(rowname, varname, regs,
     beta_vals = []
     se_vals = []
     # Extract beta/sig and se values to pass to `table_statrow`
-    for reg in regs:
+    for reg in force_iterable(regs):
         if type(reg) is not Results or varname not in reg.beta:
             beta_vals.append('')
             se_vals.append('')
