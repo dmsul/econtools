@@ -12,8 +12,8 @@ from econtools.metrics.tests.data.src_tsls import tsls_cluster
 
 class LimlCompare(RegCompare):
 
-    def __init__(self):
-        super(LimlCompare, self).__init__()
+    def init(self):
+        super(LimlCompare, self).init(self)
         self.precision['coeff'] = 2
         self.precision['vce'] = 6
         self.precision['se'] = 1
@@ -43,12 +43,10 @@ class LimlCompare(RegCompare):
 
 class TestLIML_std(LimlCompare):
 
-    def __init__(self):
-        super(TestLIML_std, self).__init__()
-
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
@@ -66,15 +64,13 @@ class TestLIML_std(LimlCompare):
 
 class TestLIML_robust(LimlCompare):
 
-    def __init__(self):
-        super(TestLIML_robust, self).__init__()
-        self.precision['se'] = 0
-        self.precision['CI_low'] = 0
-        self.precision['CI_high'] = -1
-
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
+        cls.precision['se'] = 0
+        cls.precision['CI_low'] = 0
+        cls.precision['CI_high'] = -1
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
@@ -93,15 +89,13 @@ class TestLIML_robust(LimlCompare):
 
 class TestLIML_cluster(LimlCompare):
 
-    def __init__(self):
-        super(TestLIML_cluster, self).__init__()
-        self.precision['se'] = 0
-        self.precision['CI_low'] = 0
-        self.precision['CI_high'] = 0
-
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
+        cls.precision['se'] = 0
+        cls.precision['CI_low'] = 0
+        cls.precision['CI_high'] = 0
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
@@ -120,18 +114,13 @@ class TestLIML_cluster(LimlCompare):
 
 class TestLIML_tsls(LimlCompare):
 
-    def __init__(self):
-        super(TestLIML_tsls, self).__init__()
-        # self.precision['se'] = 0
-        # self.precision['CI_low'] = 0
-        # self.precision['CI_high'] = 0
-
     def test_kappa(self):
         pass
 
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
@@ -148,7 +137,5 @@ class TestLIML_tsls(LimlCompare):
 
 
 if __name__ == '__main__':
-    import sys
-    from nose import runmodule
-    argv = [__file__, '-vs'] + sys.argv[1:]
-    runmodule(argv=argv, exit=False)
+    import pytest
+    pytest.main()

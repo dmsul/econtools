@@ -10,8 +10,8 @@ from econtools.metrics.tests.data.src_areg import (areg_std, areg_robust,
 
 class AregCompare(RegCompare):
 
-    def __init__(self):
-        super(AregCompare, self).__init__()
+    def init(self):
+        super(AregCompare, self).init(self)
         self.precision['ssr'] = 6
 
     def test_r2(self):
@@ -29,6 +29,7 @@ class TestAreg_std(AregCompare):
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
@@ -44,6 +45,7 @@ class TestAreg_hc1(AregCompare):
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
@@ -59,6 +61,7 @@ class TestAreg_cluster(AregCompare):
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
@@ -70,7 +73,5 @@ class TestAreg_cluster(AregCompare):
 
 
 if __name__ == '__main__':
-    import sys
-    from nose import runmodule
-    argv = [__file__, '-vs'] + sys.argv[1:]
-    runmodule(argv=argv, exit=False)
+    import pytest
+    pytest.main()

@@ -4,10 +4,9 @@ import numpy as np
 
 from numpy.testing import (assert_array_equal, assert_array_almost_equal,)
 
-
 class RegCompare(object):
 
-    def __init__(self):
+    def init(self):
         self.precision = {
             'coeff': 6,
             'se': 6,

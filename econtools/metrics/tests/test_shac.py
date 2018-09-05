@@ -71,8 +71,7 @@ class TestSHAC_reg(SHACRegCompare):
         result = shac.vce / shac._vce_correct
         assert_array_almost_equal(expected, result)
 
+
 if __name__ == '__main__':
-    import sys
-    from nose import runmodule
-    argv = [__file__, '-vs'] + sys.argv[1:]
-    runmodule(argv=argv, exit=False)
+    import pytest
+    pytest.main()
