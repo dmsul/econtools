@@ -36,8 +36,11 @@ def outreg(regs, var_names=None, var_labels=None, digits=4, stars=True, se="(",
     regs = force_iterable(regs)
 
     if var_names is None:
-        var_names = [var if type(var) is str else str(var) for reg in regs for var in list(reg.beta.index)]
-
+        var_names = regs[0].beta.index.tolist()
+        if len(regs) > 1:
+            for reg in regs[1:]:
+                var_names += [x for x in reg.beta.index.tolist() if x not in var_names]
+                
     if var_labels is None:
         var_labels = [x if type(x) is str else str(x) for x in var_names]
     
