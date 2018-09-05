@@ -12,11 +12,13 @@ sig_labels = {1: '', .1: '*', .05: '**', .01: '***'}
 def outreg(regs, var_names=None, var_labels=None, digits=4, stars=True, se="(",
            options=False):
     """Create the guts of a Latex tabular enviornment from regression results.
+
     Args:
         regs (Results or iterable of Results): Regressions to output to table.
         var_names (str or iterable of str): Variable names to pull from regs.
+            If none specified, by default uses the pandas dataframe colum names.
         var_labels (str or iterable of str): Pretty names for variables in
-            table.
+            table. If none specified, will use var_names
     Keyword Args:
         digits (int): Defaults to 4. How many digits to include past decimal.
         stars (bool): Defaults to True. If True, adds stars to mark statistical
