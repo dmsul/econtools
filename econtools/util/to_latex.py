@@ -39,7 +39,7 @@ def outreg(regs, var_names=None, var_labels=None, digits=4, stars=True, se="(",
         var_names = [var if type(var) is str else str(var) for reg in regs for var in list(reg.beta.index)]
 
     if var_labels is None:
-        var_labels = [x for x in var_names if type(x) is str else str(x)]
+        var_labels = [x if type(x) is str else str(x) for x in var_names]
     
     opt_dict = _set_options(var_labels, digits, stars)
     table_str = ''
