@@ -89,9 +89,9 @@ class Test_outreg(object):
         table_str = outreg((reg1, reg2), digits=3)
         expected = (
             "x1  & 3.142**    & 3.111***    \\\\ \n"
-            "         & (1.413)    & (1.413)     \\\\ \n"
+            "    & (1.413)    & (1.413)     \\\\ \n"
             "x2  & 1.590      & 1.390       \\\\ \n"
-            "         & (2.020)    & (4.024)     \\\\ \n"
+            "    & (2.020)    & (4.024)     \\\\ \n"
         )
         assert_equal(table_str, expected)
 
