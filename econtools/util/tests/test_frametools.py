@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
 
-import nose
-from nose.tools import raises, assert_raises
+import pytest
 
 from pandas.util.testing import assert_frame_equal
 
@@ -53,9 +52,10 @@ class TestStata_merge(object):
         print(expected)
         assert_frame_equal(result, expected)
 
-    @raises(AssertionError)
     def test_fail3(self):
-        stata_merge(self.df1, self.df1_part, on='a', how='left', assertval=3)
+        with pytest.raises(AssertionError):
+            stata_merge(self.df1, self.df1_part, on='a', how='left',
+                        assertval=3)
 
     def test_autonaming(self):
         left = self.df1.rename(columns={'a': 'tmpa'})
@@ -103,7 +103,8 @@ class TestGroupid(object):
         assert_frame_equal(expected, result)
 
     def test_bad_idname_error(self):
-        assert_raises(ValueError, group_id, self.df, name='x')
+        with pytest.raises(ValueError):
+            group_id(self.df, name='x')
 
     def test_automerge(self):
         expected = self.df_with_id[['x', 'y', 'group_id']]
@@ -115,4 +116,4 @@ class TestGroupid(object):
 
 
 if __name__ == '__main__':
-    nose.runmodule(argv=[__file__, '-v'])
+    pytest.main()

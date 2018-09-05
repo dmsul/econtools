@@ -6,8 +6,8 @@ import glob
 import numpy as np
 import pandas as pd
 
-import nose
-from nose.tools import assert_raises
+import pytest
+
 from pandas.util.testing import assert_frame_equal
 
 from econtools.util.io import _set_filepath_old, read, write, try_pickle
@@ -20,7 +20,7 @@ def builder(year, model, base='house'):
     pass
 
 
-class test_set_filepath_old(object):
+class Test_set_filepath_old(object):
 
     def setup(self):
         self.args = (1990, 'tria')
@@ -51,13 +51,14 @@ class test_set_filepath_old(object):
 
     def test_too_few_args(self):
         path_args = []
-        assert_raises(ValueError, _set_filepath_old, 'file{}', path_args,
-                      self.args, self.kwargs, builder)
+        with pytest.raises(ValueError):
+            _set_filepath_old('file{}', path_args, self.args, self.kwargs,
+                              builder)
 
     def test_badarg_float(self):
         path_args = [1.0]
-        assert_raises(ValueError, _set_filepath_old, '', path_args, self.args,
-                      self.kwargs, builder)
+        with pytest.raises(ValueError):
+            _set_filepath_old('', path_args, self.args, self.kwargs, builder)
 
 
 class test_readwrite(object):
@@ -101,7 +102,7 @@ class test_readwrite(object):
         assert_frame_equal(self.df, result)
 
 
-class test_try_pickle(object):
+class Test_try_pickle(object):
 
     def setup(self):
         self.df = pd.DataFrame(np.arange(12).reshape(-1, 3),
@@ -131,4 +132,4 @@ class test_try_pickle(object):
 
 
 if __name__ == '__main__':
-    nose.runmodule(argv=[__file__, '-v'])
+    pass
