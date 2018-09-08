@@ -10,8 +10,8 @@ from econtools.metrics.tests.data.src_tsls import (tsls_std, tsls_robust,
 
 class TslsCompare(RegCompare):
 
-    def __init__(self):
-        super(TslsCompare, self).__init__()
+    def init(self):
+        super(TslsCompare, self).init(self)
         self.precision['F'] = 8
         self.precision['pF'] = 8
         self.precision['CI_high'] = 4
@@ -30,6 +30,7 @@ class TestTsls_std(TslsCompare):
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
@@ -46,6 +47,7 @@ class TestTsls_hc1(TslsCompare):
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)
@@ -63,6 +65,7 @@ class TestTsls_cluster(TslsCompare):
     @classmethod
     def setup_class(cls):
         """Stata reg output from `sysuse auto; reg price mpg`"""
+        cls.init(cls)
         test_path = path.split(path.relpath(__file__))[0]
         auto_path = path.join(test_path, 'data', 'auto.dta')
         autodata = pd.read_stata(auto_path)

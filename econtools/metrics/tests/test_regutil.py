@@ -1,5 +1,3 @@
-import nose
-
 import pandas as pd
 import numpy as np
 
@@ -46,4 +44,5 @@ class TestWinsorize(object):
 
 
 if __name__ == '__main__':
-        nose.runmodule(argv=[__file__, '-v', '--pdb'], exit=False)
+    import pytest
+    pytest.main()

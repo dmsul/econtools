@@ -6,21 +6,212 @@ import glob
 import numpy as np
 import pandas as pd
 
-import nose
-from nose.tools import assert_raises
+import pytest
+
 from pandas.util.testing import assert_frame_equal
 
-from econtools.util.io import _set_filepath_old, read, write, try_pickle
-
+from econtools.util.io import (_set_filepath_old, read, write, try_pickle,
+                               load_or_build)
 # TODO 'dec_load_or_build` (can this even be done?)
-# TODO `load_or_build` (can this even be done?)
 
 
 def builder(year, model, base='house'):
     pass
 
 
-class test_set_filepath_old(object):
+class Test_load_or_build(object):
+
+    def setup(self):
+        self.df = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                               columns=['a', 'b', 'c'])
+        self.df.index.name = 'index'
+        self.tmppath_root = path.join(
+            path.split(path.relpath(__file__))[0],
+            'tmp'
+        )
+
+    def teardown(self):
+        tmppath = path.join(
+            path.split(path.relpath(__file__))[0],
+            'tmp*.pkl'
+        )
+        paths = glob.glob(tmppath)
+        for fpath in paths:
+            remove(fpath)
+
+    def test_basic(self):
+
+        expected = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                                columns=['a', 'b', 'c'])
+        expected.index.name = 'index'
+        tmppath = self.tmppath_root + '.pkl'
+
+        @load_or_build(tmppath)
+        def lob_builder():
+            df = expected.copy()
+
+            return df
+
+        lob_builder()
+        result = pd.read_pickle(tmppath)
+        assert_frame_equal(expected, result)
+
+    def test_arg(self):
+
+        expected = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                                columns=['a', 'b', 'c'])
+        expected.index.name = 'index'
+        tmppath = self.tmppath_root + '_{year}.pkl'
+
+        @load_or_build(tmppath)
+        def lob_builder(year):
+            df = expected.copy()
+            df = df.rename(columns={'a': year})
+
+            return df
+
+        year = 1999
+        lob_builder(year)
+        expected = expected.rename(columns={'a': year})
+        result = pd.read_pickle(tmppath.format(year=year))
+        assert_frame_equal(expected, result)
+
+    def test_kwarg_default(self):
+
+        expected = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                                columns=['a', 'b', 'c'])
+        expected.index.name = 'index'
+        tmppath = self.tmppath_root + '_{year}.pkl'
+
+        @load_or_build(tmppath)
+        def lob_builder(year=2001):
+            df = expected.copy()
+            df = df.rename(columns={'a': year})
+
+            return df
+
+        lob_builder()
+        expected = expected.rename(columns={'a': 2001})
+        result = pd.read_pickle(tmppath.format(year=2001))
+        assert_frame_equal(expected, result)
+
+    def test_kwarg_passed(self):
+
+        expected = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                                columns=['a', 'b', 'c'])
+        expected.index.name = 'index'
+        tmppath = self.tmppath_root + '_{year}.pkl'
+
+        @load_or_build(tmppath)
+        def lob_builder(year=2001):
+            df = expected.copy()
+            df = df.rename(columns={'a': year})
+
+            return df
+
+        lob_builder(year=2002)
+        expected = expected.rename(columns={'a': 2002})
+        result = pd.read_pickle(tmppath.format(year=2002))
+        assert_frame_equal(expected, result)
+
+    def test_arg_w_kwarg_default(self):
+
+        expected = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                                columns=['a', 'b', 'c'])
+        expected.index.name = 'index'
+        tmppath = self.tmppath_root + '_{base}_{year}.pkl'
+
+        @load_or_build(tmppath)
+        def lob_builder(base, year=2001):
+            df = expected.copy()
+            df = df.rename(columns={'a': year, 'b': base})
+
+            return df
+
+        lob_builder('house')
+        expected = expected.rename(columns={'a': 2001, 'b': 'house'})
+        result = pd.read_pickle(tmppath.format(base='house', year=2001))
+        assert_frame_equal(expected, result)
+
+    def test_arg_w_kwarg_passed(self):
+
+        expected = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                                columns=['a', 'b', 'c'])
+        expected.index.name = 'index'
+        tmppath = self.tmppath_root + '_{base}_{year}.pkl'
+
+        @load_or_build(tmppath)
+        def lob_builder(base, year=2001):
+            df = expected.copy()
+            df = df.rename(columns={'a': year, 'b': base})
+
+            return df
+
+        lob_builder('house', year=1976)
+        expected = expected.rename(columns={'a': 1976, 'b': 'house'})
+        result = pd.read_pickle(tmppath.format(base='house', year='1976'))
+        assert_frame_equal(expected, result)
+
+    def test_load_direct(self):
+        expected = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                                columns=['a', 'b', 'c'])
+        expected.index.name = 'index'
+        tmppath = self.tmppath_root + '.pkl'
+
+        @load_or_build(tmppath)
+        def lob_builder():
+            df = expected.copy()
+
+            return df
+
+        lob_builder(_load=False)
+        assert not path.isfile(tmppath)
+
+    def test_rebuild(self):
+        old = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                           columns=['a', 'b', 'c'])
+        old.index.name = 'index'
+        tmp_path = self.tmppath_root + '_rebuild.pkl'
+
+        old.to_pickle(tmp_path)
+        new = old.copy()
+        new = new.rename(columns={'a': 'DDD'})
+
+        @load_or_build(tmp_path)
+        def lob_builder():
+            df = new.copy()
+
+            return df
+
+        # Check that it reads the old one
+        from_disk = lob_builder()
+        assert_frame_equal(from_disk, old)
+        # Check that it returns the new one w/ `_rebuild=True`
+        rebuilt = lob_builder(_rebuild=True)
+        assert_frame_equal(rebuilt, new)
+        # Check that the new one is on disk after `_rebuild=True`
+        rebuilt_from_disk = pd.read_pickle(tmp_path)
+        assert_frame_equal(rebuilt_from_disk, new)
+
+    def test_load_direct_and_rebuild(self):
+        # If both _load=False and _rebuild=True as switched, _rebuild=True
+        # should be ignored. Add warning?
+        expected = pd.DataFrame(np.arange(12).reshape(-1, 3),
+                                columns=['a', 'b', 'c'])
+        expected.index.name = 'index'
+        tmppath = self.tmppath_root + '.pkl'
+
+        @load_or_build(tmppath)
+        def lob_builder():
+            df = expected.copy()
+
+            return df
+
+        lob_builder(_load=False, _rebuild=True)
+        assert not path.isfile(tmppath)
+
+
+class Test_set_filepath_old(object):
 
     def setup(self):
         self.args = (1990, 'tria')
@@ -51,13 +242,14 @@ class test_set_filepath_old(object):
 
     def test_too_few_args(self):
         path_args = []
-        assert_raises(ValueError, _set_filepath_old, 'file{}', path_args,
-                      self.args, self.kwargs, builder)
+        with pytest.raises(ValueError):
+            _set_filepath_old('file{}', path_args, self.args, self.kwargs,
+                              builder)
 
     def test_badarg_float(self):
         path_args = [1.0]
-        assert_raises(ValueError, _set_filepath_old, '', path_args, self.args,
-                      self.kwargs, builder)
+        with pytest.raises(ValueError):
+            _set_filepath_old('', path_args, self.args, self.kwargs, builder)
 
 
 class test_readwrite(object):
@@ -101,7 +293,7 @@ class test_readwrite(object):
         assert_frame_equal(self.df, result)
 
 
-class test_try_pickle(object):
+class Test_try_pickle(object):
 
     def setup(self):
         self.df = pd.DataFrame(np.arange(12).reshape(-1, 3),
@@ -131,4 +323,4 @@ class test_try_pickle(object):
 
 
 if __name__ == '__main__':
-    nose.runmodule(argv=[__file__, '-v'])
+    pass

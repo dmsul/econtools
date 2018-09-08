@@ -6,16 +6,16 @@ eol = " \\\\ \n"
 sig_labels = {1: '', .1: '*', .05: '**', .01: '***'}
 
 
-# TODO: Allow empty `var_names` to mean 'grab all'
-# TODO: Allow empty `var_labels` to mean 'just use default gross var_names'
 # TODO: Add options for basic statrow (r2, N)? (how to handle 2sls r2?)
 def outreg(regs, var_names=None, var_labels=None, digits=4, stars=True, se="(",
            options=False):
     """Create the guts of a Latex tabular enviornment from regression results.
+
     Args:
         regs (Results or iterable of Results): Regressions to output to table.
         var_names (str or iterable of str): Variable names to pull from regs.
-            If none specified, by default uses the pandas dataframe colum names.
+            If none specified, by default uses the pandas dataframe colum
+            names.
         var_labels (str or iterable of str): Pretty names for variables in
             table. If none specified, will use var_names.
 
@@ -39,8 +39,9 @@ def outreg(regs, var_names=None, var_labels=None, digits=4, stars=True, se="(",
         var_names = regs[0].beta.index.tolist()
         if len(regs) > 1:
             for reg in regs[1:]:
-                var_names += [x for x in reg.beta.index.tolist() if x not in var_names]
-                
+                var_names += [x for x in reg.beta.index.tolist()
+                              if x not in var_names]
+
     if var_labels is None:
         var_labels = [x if type(x) is str else str(x) for x in var_names]
 
