@@ -77,6 +77,23 @@ class Test_outreg(object):
         )
         assert_equal(table_str, expected)
 
+    def test_no_vars(self):
+        reg1 = results_factory(['x1', 'x2'],
+                               [3.14159, 1.59],
+                               [1.41343, 2.02],
+                               [0.035, 0.123])
+        reg2 = results_factory(['x1', 'x2'],
+                               [3.1111, 1.39],
+                               [1.4134, 4.024],
+                               [0.005, 0.123])
+        table_str = outreg((reg1, reg2), digits=3)
+        expected = (
+            "x1  & 3.142**    & 3.111***    \\\\ \n"
+            "    & (1.413)    & (1.413)     \\\\ \n"
+            "x2  & 1.590      & 1.390       \\\\ \n"
+            "    & (2.020)    & (4.024)     \\\\ \n"
+        )
+        assert_equal(table_str, expected)
 
 class Test_table_mainrow(object):
 
