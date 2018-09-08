@@ -92,7 +92,7 @@ class Test_outreg(object):
             "x2  & 1.590      & 1.390       \\\\ \n"
             "    & (2.020)    & (4.024)     \\\\ \n"
         )
-        assert_equal(table_str, expected)
+        assert table_str == expected
 
 class Test_table_mainrow(object):
 
