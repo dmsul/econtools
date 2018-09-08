@@ -21,7 +21,6 @@ PICKLE_EXT = ('pkl', 'p')   # First is default for writing to pickle
 HDF5_EXT = ('h5', 'hdf5')
 
 
-# TODO: lob tests
 def load_or_build(raw_filepath, copydta=False, path_args=[]):
     """Loads `raw_filepath` as a DataFrame if it exists, otherwise builds the
     data and saves it to `raw_filepath`.
