@@ -98,6 +98,11 @@ _fips_to_name_xwalk = {
     54: 'West Virginia',
     55: 'Wisconsin',
     56: 'Wyoming',
+    60: 'American Samoa',
+    66: 'Guam',
+    69: 'Northern Mariana',
+    72: 'Puerto Rico',
+    78: 'Virgin Islands',
 }
 
 _name_to_fips_xwalk = {v: k
