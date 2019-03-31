@@ -35,8 +35,8 @@ class TestAreg_std(AregCompare):
         autodata = pd.read_stata(auto_path)
         y = 'price'
         x = ['mpg', 'length']
-        a_name = 'gear_ratio'
-        cls.result = reg(autodata, y, x, a_name=a_name)
+        fe_name = 'gear_ratio'
+        cls.result = reg(autodata, y, x, fe_name=fe_name)
         cls.expected = areg_std
 
 
@@ -51,8 +51,8 @@ class TestAreg_hc1(AregCompare):
         autodata = pd.read_stata(auto_path)
         y = 'price'
         x = ['mpg', 'length']
-        a_name = 'gear_ratio'
-        cls.result = reg(autodata, y, x, a_name=a_name, vce_type='hc1')
+        fe_name = 'gear_ratio'
+        cls.result = reg(autodata, y, x, fe_name=fe_name, vce_type='hc1')
         cls.expected = areg_robust
 
 
@@ -67,8 +67,8 @@ class TestAreg_cluster(AregCompare):
         autodata = pd.read_stata(auto_path)
         y = 'price'
         x = ['mpg', 'length']
-        a_name = 'gear_ratio'
-        cls.result = reg(autodata, y, x, a_name=a_name, cluster=a_name)
+        fe_name = 'gear_ratio'
+        cls.result = reg(autodata, y, x, fe_name=fe_name, cluster=fe_name)
         cls.expected = areg_cluster
 
 

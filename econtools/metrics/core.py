@@ -1,5 +1,7 @@
 from __future__ import division
 
+import warnings
+
 import pandas as pd
 import numpy as np
 import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
@@ -14,7 +16,7 @@ from econtools.metrics.regutil import (unpack_shac_args, flag_sample,
 
 
 def reg(df, y_name, x_name,
-        a_name=None, nosingles=True,
+        fe_name=None, a_name=None, nosingles=True,
         vce_type=None, cluster=None, shac=None,
         addcons=None, nocons=False,
         awt_name=None
@@ -44,8 +46,9 @@ def reg(df, y_name, x_name,
                 - **kern** (*str*): Kernel to use in estimation. May be
                     triangle (``tria``) or uniform (``unif``).
                 - **band** (float): Bandwidth for kernel.
-        a_name (str) - Column name in ``df`` that defines groups for within
+        fe_name (str) - Column name in ``df`` that defines groups for within
             transformation (demeaning).
+        a_name (str) - Deprecated. See ``fe_name``.
         awt_name (str): Column name in ``df`` to use for analytic weights in
             regression.
         addcons (bool): Defaults to False. Add a constant to independent
@@ -60,9 +63,11 @@ def reg(df, y_name, x_name,
         A :py:class:`~econtools.metrics.core.Results` object
     """
 
+    fe_name = _a_name_deprecation_handling(a_name, fe_name)
+
     RegWorker = Regression(
         df, y_name, x_name,
-        a_name=a_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
+        fe_name=fe_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
         vce_type=vce_type, cluster=cluster, shac=shac,
         awt_name=awt_name,
     )
@@ -72,7 +77,7 @@ def reg(df, y_name, x_name,
 
 
 def ivreg(df, y_name, x_name, z_name, w_name,
-          a_name=None, nosingles=True,
+          fe_name=None, a_name=None, nosingles=True,
           iv_method='2sls', _kappa_debug=None,
           vce_type=None, cluster=None, shac=None,
           addcons=None, nocons=False,
@@ -91,7 +96,7 @@ def ivreg(df, y_name, x_name, z_name, w_name,
             instruments/exogenous regressors
 
     Keyword Args:
-        a_name (str) - Column name in ``df`` that defines groups for within
+        fe_name (str) - Column name in ``df`` that defines groups for within
             transformation (demeaning). **All other keyword args in
             :py:func:`~econtools.reg` may also be used.
         iv_method (str): Instrumental variables method to use.
@@ -105,9 +110,11 @@ def ivreg(df, y_name, x_name, z_name, w_name,
             - ``kappa`` attribute (always 1 if ``iv_method='2sls'``)
     """
 
+    fe_name = _a_name_deprecation_handling(a_name, fe_name)
+
     IVRegWorker = IVReg(
         df, y_name, x_name, z_name, w_name,
-        a_name=a_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
+        fe_name=fe_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
         iv_method=iv_method, _kappa_debug=_kappa_debug,
         vce_type=vce_type, cluster=cluster, shac=shac,
         awt_name=awt_name,
@@ -115,6 +122,25 @@ def ivreg(df, y_name, x_name, z_name, w_name,
 
     results = IVRegWorker.main()
     return results
+
+
+def _a_name_deprecation_handling(a_name, fe_name):
+    """
+    Nothing deeper than user-facing `reg` and `ivreg` should ever see
+    `a_name` argument
+    """
+    if a_name is not None:
+        warnings.warn(
+            "Argument `a_name` is deprecated and will be removed in a future "
+            "version. Use `fe_name` instead.",
+            FutureWarning, stacklevel=3)
+
+        if fe_name is not None and fe_name != a_name:
+            raise ValueError("Use only `fe_name`, not `a_name`.")
+        else:
+            return a_name
+    else:
+        return fe_name
 
 
 # Workhorse classes
@@ -126,7 +152,7 @@ class RegBase(object):
         self.__dict__.update(kwargs)
 
         self.sample_cols_labels = (
-            'y_name', 'x_name', 'a_name', 'cluster', 'shac_x', 'shac_y',
+            'y_name', 'x_name', 'fe_name', 'cluster', 'shac_x', 'shac_y',
             'awt_name'
         )
 
@@ -162,8 +188,8 @@ class RegBase(object):
         sample_cols = tuple(
             [self.__dict__[x] for x in self.sample_cols_labels])
         self.sample = flag_sample(self.df, *sample_cols)
-        if self.nosingles and self.a_name:
-            self.sample &= flag_nonsingletons(self.df, self.a_name,
+        if self.nosingles and self.fe_name:
+            self.sample &= flag_nonsingletons(self.df, self.fe_name,
                                               self.sample)
 
         sample_vars = set_sample(self.df, self.sample, sample_cols)
@@ -176,7 +202,7 @@ class RegBase(object):
             self.__dict__[var] = self.__dict__[var].astype(np.float64)
 
         # Demean or add constant
-        if self.a_name is not None:
+        if self.fe_name is not None:
             self._demean_sample()
         elif self.addcons:
             _cons = np.ones(self.y.shape[0])
