@@ -592,6 +592,9 @@ class Results(object):
             self.fe_count = Reg.fe_count
         if Reg.cluster:
             self.cluster_name = Reg.cluster
+        if Reg.shac_kern:
+            self.shac_kernel = Reg.shac_kern
+            self.shac_bandwidth = Reg.shac_band
 
     def __repr__(self):
         border_str = '='*55 + '\n'
@@ -600,23 +603,27 @@ class Results(object):
         out_str += f'N:\t\t\t{self.N}\n'
         out_str += f'R-squared:\t\t{self.r2:.4f}\n'
 
-        try:
+        if hasattr(self, 'fe_name'):
             out_str += f'Fixed effects by:\t{self.fe_name}\n'
-            out_str += f'  No. of Fixed-FX:\t{self.fe_count}\n'
-        except AttributeError:
-            pass
+            out_str += f'  No. of FE:\t\t  {self.fe_count}\n'
 
         out_str += 'VCE method:\t\t'
         if self.vce_type is None:
             out_str += 'Standard (Homosk.)\n'
         else:
-            out_str += f'{self.vce_type}\n'
+            vce = self.vce_type
+            vce = vce.upper() if len(vce) < 5 else vce.title()
+            out_str += f'{vce}\n'
+        if hasattr(self, 'cluster_name'):
+            out_str += f'  Cluster variable:\t  {self.cluster_name}\n'
+            out_str += f'  No. of clusters:\t  {self.g}\n'
+        elif hasattr(self, 'shac_kernel'):
+            out_str += f'  SHAC kernel:\t  {self.shac_kernel}\n'
+            out_str += f'  SHAC bandwidth:\t  {self.shac_bandwidth}\n'
 
-        try:
-            out_str += f'  Cluster variable:\t{self.cluster_name}\n'
-            out_str += f'  No. of clusters:\t{self.g}\n'
-        except AttributeError:
-            pass
+        if hasattr(self, 'iv_method'):
+            out_str += f'IV method:\t\t{self.iv_method}\n'
+            out_str += f'  Kappa:\t\t  {self.kappa}\n'
 
         out_str += border_str
 
@@ -916,5 +923,7 @@ if __name__ == '__main__':
     cluster = 'gear_ratio'
     rhv = ['mpg', 'length']
     results = reg(df, y_name, rhv,
+                  cluster=cluster,
+                  fe_name=cluster,
                   )
     print(results)
