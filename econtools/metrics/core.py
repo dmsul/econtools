@@ -181,6 +181,7 @@ class RegBase(object):
         self.get_vce()
         self.set_dof()
         self.inference()
+        self.results.pull_metadata(self)
 
         return self.results
 
@@ -228,7 +229,7 @@ class RegBase(object):
             self.__dict__[var] = self.__dict__[var].multiply(row_wt, axis=0)
 
     def estimate(self):
-        """Defined by Implementation"""
+        """ Defined by Implementation. Initializes self.Results object """
         raise NotImplementedError
 
     def get_vce(self):
@@ -312,8 +313,9 @@ class RegBase(object):
         N, K = self.x.shape
 
         if self.A is not None:
+            self.fe_count = len(self.A.unique())
             if not _fe_nested_in_cluster(self.cluster_id, self.A):
-                K += len(self.A.unique())    # Adjust dof's for group means
+                K += self.fe_count          # Adjust dof's for group means
             self.results.sst = self.y_raw
             self.results._nocons = True
         else:
@@ -544,7 +546,6 @@ def fitguts(y, x):
 
     return beta, xpx_inv
 
-
 # Results class
 class Results(object):
     """Regression Results container.
@@ -579,6 +580,60 @@ class Results(object):
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+    def pull_metadata(self, Reg):
+        # Do NOT store full `reg_object` (contains source data);
+        # only keep meta data/config info
+        self.y_name = Reg.y_name
+        self.x_name = Reg.x_name
+        self.vce_type = Reg.vce_type
+        if Reg.fe_name:
+            self.fe_name = Reg.fe_name
+            self.fe_count = Reg.fe_count
+        if Reg.cluster:
+            self.cluster_name = Reg.cluster
+
+    def __repr__(self):
+        border_str = '='*55 + '\n'
+        out_str = border_str
+        out_str += f'Dependent variable:\t{self.y_name}\n'
+        out_str += f'N:\t\t\t{self.N}\n'
+        out_str += f'R-squared:\t\t{self.r2:.4f}\n'
+
+        try:
+            out_str += f'Fixed effects by:\t{self.fe_name}\n'
+            out_str += f'  No. of Fixed-FX:\t{self.fe_count}\n'
+        except AttributeError:
+            pass
+
+        out_str += 'VCE method:\t\t'
+        if self.vce_type is None:
+            out_str += 'Standard (Homosk.)\n'
+        else:
+            out_str += f'{self.vce_type}\n'
+
+        try:
+            out_str += f'  Cluster variable:\t{self.cluster_name}\n'
+            out_str += f'  No. of clusters:\t{self.g}\n'
+        except AttributeError:
+            pass
+
+        out_str += border_str
+
+        out_str += self.summary.to_string(
+            formatters=[
+                lambda x: f'{x:.3f}',       # Coeff
+                lambda x: f'{x:.3f}',       # std. err.
+                lambda x: f'{x:.3f}',       # t-stat
+                lambda x: f'{x:.3f}',       # p-score
+                lambda x: f'{x:.3f}',       # CI-low
+                lambda x: f'{x:.3f}',       # CI-high
+            ]
+        ) + '\n'
+
+        out_str += border_str
+
+        return out_str
 
     # TODO: Why do I wrap this in a method? Why does `_add_stat` exist?
     def _add_stat(self, stat_name, stat):
@@ -861,7 +916,5 @@ if __name__ == '__main__':
     cluster = 'gear_ratio'
     rhv = ['mpg', 'length']
     results = reg(df, y_name, rhv,
-                  a_name=cluster,
-                  cluster=cluster
                   )
-    print(results.summary)
+    print(results)
