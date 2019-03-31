@@ -603,9 +603,13 @@ class Results(object):
         out_str += f'N:\t\t\t{self.N}\n'
         out_str += f'R-squared:\t\t{self.r2:.4f}\n'
 
-        if hasattr(self, 'fe_name'):
-            out_str += f'Fixed effects by:\t{self.fe_name}\n'
-            out_str += f'  No. of FE:\t\t  {self.fe_count}\n'
+        out_str += 'Estimation method:\t'
+        if hasattr(self, 'iv_method'):
+            out_str += f'{self.iv_method.upper()}\n'
+            if self.iv_method == 'liml':
+                out_str += f'  Kappa:\t\t  {self.kappa}\n'
+        else:
+            out_str += 'OLS\n'
 
         out_str += 'VCE method:\t\t'
         if self.vce_type is None:
@@ -621,9 +625,9 @@ class Results(object):
             out_str += f'  SHAC kernel:\t  {self.shac_kernel}\n'
             out_str += f'  SHAC bandwidth:\t  {self.shac_bandwidth}\n'
 
-        if hasattr(self, 'iv_method'):
-            out_str += f'IV method:\t\t{self.iv_method}\n'
-            out_str += f'  Kappa:\t\t  {self.kappa}\n'
+        if hasattr(self, 'fe_name'):
+            out_str += f'Fixed effects by:\t{self.fe_name}\n'
+            out_str += f'  No. of FE:\t\t  {self.fe_count}\n'
 
         out_str += border_str
 
@@ -770,6 +774,7 @@ class Results(object):
             return self._pF
 
 
+# TODO: Roll this into Results object?
 def f_test(V, R, beta, r, df_d):
     """Arbitrary F test.
 
