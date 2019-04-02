@@ -14,7 +14,7 @@ from numpy.testing import (assert_array_almost_equal,)
 
 from econtools.util import group_id
 
-from econtools.metrics.core import reg
+from econtools.metrics.api import reg
 
 
 class SHACRegCompare(object):
