@@ -219,22 +219,23 @@ class RegBase(object):
 
 def _set_vce_type(vce_type, cluster, shac):
     """ Check for argument conflicts, then set `vce_type` if needed.  """
-    # Check for valid arg
-    valid_vce = (None, 'robust', 'hc1', 'hc2', 'hc3', 'cluster', 'shac')
-    if vce_type not in valid_vce:
+
+    if vce_type not in (None, 'robust', 'hc1', 'hc2', 'hc3', 'cluster',
+                        'shac'):
         raise ValueError("VCE type '{}' is not supported".format(vce_type))
+
     # Check for conflicts
-    cluster_err = cluster and (vce_type != 'cluster' and vce_type is not None)
-    shac_err = shac and (vce_type != 'shac' and vce_type is not None)
-    if (cluster and shac) or cluster_err or shac_err:
-        raise ValueError("VCE type conflict!")
+    if cluster and shac:
+        raise ValueError("Cannot use `cluster` and `shac` together.")
+    elif cluster and vce_type != 'cluster' and vce_type is not None:
+        raise ValueError("Cannot pass argument to `cluster` and set `vce_type`"
+                         " to something other than 'cluster'")
+    elif shac and vce_type != 'shac' and vce_type is not None:
+        raise ValueError("Cannot pass argument to `shac` and set `vce_type`"
+                         " to something other than 'shac'")
+
     # Set `vce_type`
-    if cluster:
-        new_vce = 'cluster'
-    elif shac:
-        new_vce = 'shac'
-    else:
-        new_vce = vce_type
+    new_vce = 'cluster' if cluster else 'shac' if shac else vce_type
 
     return new_vce
 
