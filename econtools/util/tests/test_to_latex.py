@@ -299,7 +299,7 @@ class Test_add_filler_empty_cells(object):
         expected_vals = [1, 2, 3]
         empty_left, empty_right = 0, 0
         empty_slots = (1, 3, 5)
-        new_vals = _add_filler_empty_cells(orig_vals, empty_left, empty_right,  # noqa
+        new_vals = _add_filler_empty_cells(orig_vals, empty_left, empty_right,
                                            empty_slots)
         assert orig_vals == expected_vals
 

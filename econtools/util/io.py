@@ -376,7 +376,7 @@ def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
 
     # Py2/Py3 compat check
     if IS_PY2:
-        ans = raw_input(prompt_str)     # noqa
+        ans = raw_input(prompt_str)
     else:
         ans = input(prompt_str)
 

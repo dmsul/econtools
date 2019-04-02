@@ -230,7 +230,7 @@ class Results(object):
         try:
             return self._pF
         except AttributeError:
-            __ = self.F  # noqa `F` also sets `pF`
+            self.F  # `F` also sets `pF`
             return self._pF
 
 
