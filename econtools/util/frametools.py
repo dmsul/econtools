@@ -1,10 +1,14 @@
+from typing import Optional, Union
+
 import pandas as pd
 import numpy as np
 
 from econtools.util.gentools import force_iterable
 
 
-def stata_merge(left, right, assertval=None, gen='_m', **kwargs):
+def stata_merge(left: pd.DataFrame, right: pd.DataFrame,
+                assertval: Optional[int] = None, gen: str = '_m',
+                **kwargs) -> pd.DataFrame:
     """
     Replicates Stata's generation of a flag for merge status.
         1 = Unmatched row from the left
@@ -113,9 +117,11 @@ def winsorize(df, by, p=(.01, .99)):
     return df
 
 
-def df_to_list(df):
+def df_to_list(df: Union[list, pd.DataFrame]) -> list:
     """ Turn rows of DataFrame to list of Series objects """
     if type(df) is list:
         return df
-    else:
+    elif type(df) is pd.DataFrame:
         return [b for a, b in df.iterrows()]
+    else:
+        raise(ValueError)
