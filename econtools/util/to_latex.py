@@ -1,4 +1,5 @@
 import os
+from typing import Optional, List, Iterable, Union
 from econtools.metrics.core import Results
 from econtools.util.gentools import force_iterable
 
@@ -7,8 +8,13 @@ sig_labels = {1: '', .1: '*', .05: '**', .01: '***'}
 
 
 # TODO: Add options for basic statrow (r2, N)? (how to handle 2sls r2?)
-def outreg(regs, var_names=None, var_labels=None, digits=4, stars=True, se="(",
-           options=False):
+def outreg(regs: Union[Results, Iterable[Results]],
+           var_names: Optional[list] = None,
+           var_labels: Optional[list] = None,
+           digits: int = 4,
+           stars: bool = True,
+           se: str = "(",
+           options: bool=False) -> str:
     """Create the guts of a Latex tabular enviornment from regression results.
 
     Args:
@@ -33,7 +39,7 @@ def outreg(regs, var_names=None, var_labels=None, digits=4, stars=True, se="(",
         str: LaTeX fragment meant to be wrapped in a tabular environment.
     """
 
-    regs = force_iterable(regs)
+    regs: Iterable = force_iterable(regs)
 
     if var_names is None:
         var_names = regs[0].beta.index.tolist()
@@ -56,7 +62,7 @@ def outreg(regs, var_names=None, var_labels=None, digits=4, stars=True, se="(",
     else:
         return table_str
 
-def _set_options(var_labels, digits, stars):
+def _set_options(var_labels, digits, stars) -> dict:
     label_lens = [len(label) for label in var_labels]
     name_just = max(label_lens) + 2
     stat_just = (
@@ -76,7 +82,7 @@ def _set_options(var_labels, digits, stars):
 
 def table_mainrow(rowname, varname, regs,
                   name_just=24, stat_just=12, digits=3, se="(",
-                  stars=True):
+                  stars=True) -> str:
 
     """Add a table row of regression coefficients with standard errors.
 
@@ -130,7 +136,7 @@ def table_mainrow(rowname, varname, regs,
 def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
                   sd=False, digits=None,
                   empty_left=0, empty_right=0, empty_slots=[],
-                  **kwargs):
+                  **kwargs) -> str:
     """Make a table row. Useful for bottom rows of regression tables
     (e.g., R-squared) or tables of summary statistics.
 
@@ -245,7 +251,7 @@ def _add_filler_empty_cells(vals, empty_left, empty_right, empty_slots):
     return tuple(new_vals)
 
 
-def _format_nums(x, digits=3):
+def _format_nums(x, digits=3) -> str:
     if type(x) is str:
         return x
     else:
@@ -253,9 +259,9 @@ def _format_nums(x, digits=3):
 
 
 # TODO: Make this adaptive
-def _sig_level(p):
+def _sig_level(p: float) -> str:
     if p > .1:
-        p_level = 1
+        p_level: float = 1
     elif .05 < p <= .1:
         p_level = .1
     elif .01 < p <= .05:
@@ -266,7 +272,7 @@ def _sig_level(p):
     return sig_labels[p_level]
 
 
-def write_notes(notes, table_path):
+def write_notes(notes: str, table_path: str) -> None:
     """Write notes for a table.
 
     Args:

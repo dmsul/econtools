@@ -1,4 +1,7 @@
-def state_name_to_fips(x):
+from typing import Dict
+
+
+def state_name_to_fips(name: str) -> int:
     """Take state name and return fips as int
 
     Args:
@@ -7,10 +10,10 @@ def state_name_to_fips(x):
     Returns:
         int: FIPS code.
     """
-    return _name_to_fips_xwalk[x]
+    return _name_to_fips_xwalk[name]
 
 
-def state_fips_to_name(x):
+def state_fips_to_name(fips: int) -> str:
     """Take fips as int and return state name
 
     Args:
@@ -19,10 +22,10 @@ def state_fips_to_name(x):
     Returns:
         str: State name (e.g., Colorado)
     """
-    return _fips_to_name_xwalk[x]
+    return _fips_to_name_xwalk[fips]
 
 
-def state_abbr_to_name(x):
+def state_abbr_to_name(abbr: str) -> str:
     """Take 2-letter state abbreviation, return name
 
     Args:
@@ -31,10 +34,10 @@ def state_abbr_to_name(x):
     Returns:
         str: State name (e.g., California)
     """
-    return _state_abbr_to_name[x]
+    return _state_abbr_to_name[abbr]
 
 
-def state_name_to_abbr(x):
+def state_name_to_abbr(name: str) -> str:
     """Take state name, return 2-letter state abbreviation
 
     Args:
@@ -43,10 +46,10 @@ def state_name_to_abbr(x):
     Returns:
         str: 2-letter state abbreviation (e.g., ID)
     """
-    return _state_name_to_abbr[x]
+    return _state_name_to_abbr[name]
 
 
-_fips_to_name_xwalk = {
+_fips_to_name_xwalk: Dict[int, str] = {
     1: 'Alabama',
     2: 'Alaska',
     4: 'Arizona',
@@ -108,7 +111,7 @@ _fips_to_name_xwalk = {
 _name_to_fips_xwalk = {v: k
                        for k, v in _fips_to_name_xwalk.items()}
 
-_state_abbr_to_name = {
+_state_abbr_to_name: Dict[str, str] = {
     'AK': 'Alaska',
     'AL': 'Alabama',
     'AR': 'Arkansas',
