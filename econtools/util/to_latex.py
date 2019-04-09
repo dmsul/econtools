@@ -1,5 +1,5 @@
 import os
-from typing import Optional, List, Iterable, Union
+from typing import Optional, List, Tuple, Union, Iterable
 from econtools.metrics.core import Results
 from econtools.util.gentools import force_iterable
 
@@ -8,7 +8,7 @@ sig_labels = {1: '', .1: '*', .05: '**', .01: '***'}
 
 
 # TODO: Add options for basic statrow (r2, N)? (how to handle 2sls r2?)
-def outreg(regs: Union[Results, Iterable[Results]],
+def outreg(regs: Union[Results, Tuple[Results]],
            var_names: Optional[list] = None,
            var_labels: Optional[list] = None,
            digits: int = 4,
@@ -39,14 +39,10 @@ def outreg(regs: Union[Results, Iterable[Results]],
         str: LaTeX fragment meant to be wrapped in a tabular environment.
     """
 
-    regs: Iterable = force_iterable(regs)
+    regs = force_iterable(regs)
+    assert isinstance(regs, tuple)
 
-    if var_names is None:
-        var_names = regs[0].beta.index.tolist()
-        if len(regs) > 1:
-            for reg in regs[1:]:
-                var_names += [x for x in reg.beta.index.tolist()
-                              if x not in var_names]
+    var_names = _set_var_names(var_names, regs)
 
     if var_labels is None:
         var_labels = [x if type(x) is str else str(x) for x in var_names]
@@ -62,7 +58,24 @@ def outreg(regs: Union[Results, Iterable[Results]],
     else:
         return table_str
 
-def _set_options(var_labels, digits, stars) -> dict:
+def _set_var_names(var_names: Union[None, List[str]],
+                   regs: Tuple[Results]) -> List[str]:
+    """
+    Get a unique, ordered list of variables in `regs` or just return the list
+    that's been passed.
+    """
+    if var_names is None:
+        out_var_names = regs[0].beta.index.tolist()
+        if len(regs) > 1:
+            for reg in regs[1:]:
+                out_var_names += [x for x in reg.beta.index.tolist()
+                                  if x not in out_var_names]
+    else:
+        out_var_names = var_names
+
+    return out_var_names
+
+def _set_options(var_labels: List[str], digits: int, stars) -> dict:
     label_lens = [len(label) for label in var_labels]
     name_just = max(label_lens) + 2
     stat_just = (
@@ -80,9 +93,14 @@ def _set_options(var_labels, digits, stars) -> dict:
     return opt_dict
 
 
-def table_mainrow(rowname, varname, regs,
-                  name_just=24, stat_just=12, digits=3, se="(",
-                  stars=True) -> str:
+def table_mainrow(rowname: str,
+                  varname: Union[int, str],
+                  regs: Union[Results, Tuple[Results]],
+                  name_just: int = 24,
+                  stat_just: int = 12,
+                  digits: int = 3,
+                  se: str = "(",
+                  stars: bool = True) -> str:
 
     """Add a table row of regression coefficients with standard errors.
 
@@ -133,10 +151,18 @@ def table_mainrow(rowname, varname, regs,
     return full_row
 
 
-def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
-                  sd=False, digits=None,
-                  empty_left=0, empty_right=0, empty_slots=[],
-                  **kwargs) -> str:
+def table_statrow(
+        rowname: str,
+        vals: Iterable,
+        name_just: int = 24,
+        stat_just: int = 12,
+        wrapnum: bool = False,
+        sd: bool = False,
+        digits: Optional[int]=None,
+        empty_left: int = 0,
+        empty_right: int = 0,
+        empty_slots: list = [],
+        **kwargs) -> str:
     """Make a table row. Useful for bottom rows of regression tables
     (e.g., R-squared) or tables of summary statistics.
 
@@ -201,7 +227,7 @@ def table_statrow(rowname, vals, name_just=24, stat_just=12, wrapnum=False,
 
     return outstr
 
-def _add_sd_parens(sd, cell):
+def _add_sd_parens(sd, cell) -> str:
     """ Wrap table cell in parens/brackets if needed """
     # Make `sd=True` same as `sd='('`
     if sd is True:

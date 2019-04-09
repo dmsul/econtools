@@ -252,7 +252,7 @@ def loadbuild_cli():
     return rebuild, rebuild_down
 
 
-def save_cli():
+def save_cli() -> bool:
     """Add CLI boolean flag ``--save``
 
     Returns:
@@ -265,7 +265,7 @@ def save_cli():
     return args.save
 
 
-def try_pickle(filepath):
+def try_pickle(filepath: str) -> pd.DataFrame:
     """
     Use archived pickle for quicker reading. If archive doesn't exist,
     create it for next time.

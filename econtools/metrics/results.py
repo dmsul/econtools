@@ -39,6 +39,8 @@ class Results(object):
     """
 
     def __init__(self, **kwargs):
+        self.beta = None    # For mypy
+        self.se = None
         self.__dict__.update(kwargs)
 
     def pull_metadata(self, Reg):
@@ -107,6 +109,7 @@ class Results(object):
         return out_str
 
     # TODO: Why do I wrap this in a method? Why does `_add_stat` exist?
+    # Ans: I think to automate setting w/o using __dict__ every time?
     def _add_stat(self, stat_name, stat):
         self.__dict__[stat_name] = stat
 
