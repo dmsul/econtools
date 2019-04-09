@@ -119,9 +119,9 @@ def winsorize(df, by, p=(.01, .99)):
 
 def df_to_list(df: Union[list, pd.DataFrame]) -> list:
     """ Turn rows of DataFrame to list of Series objects """
-    if type(df) is list:
+    if isinstance(df, list):
         return df
-    elif type(df) is pd.DataFrame:
+    elif isinstance(df, pd.DataFrame):
         return [b for a, b in df.iterrows()]
     else:
-        raise(ValueError)
+        raise ValueError
