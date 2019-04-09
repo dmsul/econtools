@@ -62,7 +62,10 @@ def stata_merge(left: pd.DataFrame, right: pd.DataFrame,
     return new
 
 
-def group_id(df, cols=None, name='group_id', merge=False):
+def group_id(df: pd.DataFrame,
+             cols: Optional[list] = None,
+             name: str = 'group_id',
+             merge: bool = False) -> pd.DataFrame:
     """
     Generate a unique numeric ID from several columns of a DataFrame.
 
