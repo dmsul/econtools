@@ -3,7 +3,7 @@ from os import path
 import pandas as pd
 
 from econtools.metrics.util.testing import RegCompare
-from econtools.metrics.core import reg
+from econtools.metrics.api import reg
 from econtools.metrics.tests.data.src_areg import (areg_std, areg_robust,
                                                    areg_cluster)
 

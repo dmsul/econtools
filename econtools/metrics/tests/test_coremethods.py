@@ -24,7 +24,7 @@ class TestCheckCons(object):
 
     def test_add_nochange_orig(self):
         pass_to_func = self.needs.copy()
-        result = add_cons(pass_to_func)  # noqa
+        result = add_cons(pass_to_func)
         assert_frame_equal(self.needs, pass_to_func)
 
 
