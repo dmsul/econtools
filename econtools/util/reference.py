@@ -171,8 +171,8 @@ _state_abbr_to_name = {
 _state_name_to_abbr = {v: k
                        for k, v in _state_abbr_to_name.items()}
 
-state_fips = tuple(_fips_to_name_xwalk.keys())
+state_fips_list = tuple(_fips_to_name_xwalk.keys())
 
-state_names = tuple(_fips_to_name_xwalk.values())
+state_names_list = tuple(_fips_to_name_xwalk.values())
 
-state_abbr = tuple(_state_abbr_to_name.keys())
+state_abbr_list = tuple(_state_abbr_to_name.keys())
