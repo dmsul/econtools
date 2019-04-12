@@ -376,7 +376,7 @@ def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
 
     # Py2/Py3 compat check
     if IS_PY2:
-        ans = raw_input(prompt_str)     # noqa
+        ans = raw_input(prompt_str)
     else:
         ans = input(prompt_str)
 
@@ -399,7 +399,7 @@ def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
     return output
 
 def _parse_list_input(inp, dtype):
-    inp = re.sub('\s\s+', ' ', inp)
+    inp = re.sub(r'\s\s+', ' ', inp)
     list_inp = inp.split(' ')
     if dtype:
         list_inp = map(dtype, list_inp)

@@ -26,7 +26,7 @@ def flag_sample(df, *args):
 def set_sample(df, sample, names):
     return tuple(_set_samp_core(df, sample, names))
 
-def _set_samp_core(df, sample, names):      #noqa
+def _set_samp_core(df, sample, names):
     for name in names:
         if name is None:
             yield None
@@ -37,7 +37,7 @@ def _set_samp_core(df, sample, names):      #noqa
 def demeaner(A, *args):
     return tuple(_demean_guts(A.squeeze(), args))
 
-def _demean_guts(A, args):      #noqa
+def _demean_guts(A, args):
     for df in args:
         # Ignore empty `df` (e.g. empty list of exogenous included regressors)
         if df is None or df.empty:

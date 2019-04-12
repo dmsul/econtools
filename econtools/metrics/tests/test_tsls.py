@@ -3,7 +3,7 @@ from os import path
 import pandas as pd
 
 from econtools.metrics.util.testing import RegCompare
-from econtools.metrics.core import ivreg
+from econtools.metrics.api import ivreg
 from econtools.metrics.tests.data.src_tsls import (tsls_std, tsls_robust,
                                                    tsls_cluster)
 

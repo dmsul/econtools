@@ -3,7 +3,6 @@ from __future__ import division
 import pandas as pd
 import numpy as np
 import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
-from numpy.linalg import matrix_rank        # not in `scipy.linalg`
 from scipy.linalg import sqrtm              # notin `numpy.linalg`
 
 import scipy.stats as stats
@@ -11,110 +10,7 @@ import scipy.stats as stats
 from econtools.util import force_list, force_df
 from econtools.metrics.regutil import (unpack_shac_args, flag_sample,
                                        flag_nonsingletons, set_sample,)
-
-
-def reg(df, y_name, x_name,
-        a_name=None, nosingles=True,
-        vce_type=None, cluster=None, shac=None,
-        addcons=None, nocons=False,
-        awt_name=None
-        ):
-    """OLS Regression.
-
-    Args:
-        df (DataFrame): Data with any relevant variables.
-        y_name (str): Column name in ``df`` of the dependent variable.
-        x_name (str or list): Column name(s) in ``df`` of the independent
-                variables/regressors
-
-    Keyword Args:
-        vce_type (str): Type of estimator to use for variance-covariance matrix
-            of estimated coefficients. Default is standard OLS. Possible
-            choices are:
-                - 'robust' or 'hc1'
-                - 'hc2'
-                - 'hc3'
-                - 'cluster' (requires kwarg ``cluster``)
-                - 'shac' (requires kwarg ``shac``)
-        cluster (str): Column name in ``df`` used to cluster standard errors.
-        shac (dict): Arguments to pass to spatial HAC estimator.
-            Requires:
-                - **x** (*str*): Column name in ``df`` to serve as longitude.
-                - **y** (*str*): Column name in ``df`` to serve as latitude.
-                - **kern** (*str*): Kernel to use in estimation. May be
-                    triangle (``tria``) or uniform (``unif``).
-                - **band** (float): Bandwidth for kernel.
-        a_name (str) - Column name in ``df`` that defines groups for within
-            transformation (demeaning).
-        awt_name (str): Column name in ``df`` to use for analytic weights in
-            regression.
-        addcons (bool): Defaults to False. Add a constant to independent
-            variables. Has no effect if ``a_name`` is passed.
-        nocons (bool): Defaults to False. Flag so estimators know that
-            independent variables ``df`` do not include a constant. Only
-            affects degrees of freedom.
-        nosingles (bool): Defaults to True. Drop observations that are obsorbed
-            by the within transformation. Has no effect if ``a_name=None``.
-
-    Returns:
-        A :py:class:`~econtools.metrics.core.Results` object
-    """
-
-    RegWorker = Regression(
-        df, y_name, x_name,
-        a_name=a_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
-        vce_type=vce_type, cluster=cluster, shac=shac,
-        awt_name=awt_name,
-    )
-
-    results = RegWorker.main()
-    return results
-
-
-def ivreg(df, y_name, x_name, z_name, w_name,
-          a_name=None, nosingles=True,
-          iv_method='2sls', _kappa_debug=None,
-          vce_type=None, cluster=None, shac=None,
-          addcons=None, nocons=False,
-          awt_name=None,
-          ):
-    """Instrumental Variables Regression
-
-    Args:
-        df (DataFrame): Data with any relevant variables.
-        y_name (str): Column name in ``df`` of the dependent variable.
-        x_name (str or list): Column name(s) in ``df`` of the endogenous
-            regressor(s).
-        z_name (str or list): Column name(s) in ``df`` of the excluded
-            instrument(s)
-        w_name (str or list): Column name(s) in ``df`` of the included
-            instruments/exogenous regressors
-
-    Keyword Args:
-        a_name (str) - Column name in ``df`` that defines groups for within
-            transformation (demeaning). **All other keyword args in
-            :py:func:`~econtools.reg` may also be used.
-        iv_method (str): Instrumental variables method to use.
-            Options are:
-                - ``'2sls'``, two-stage least squares (default)
-                - ``'liml'``, limited-information maximum likelihood.
-
-    Returns:
-        A modified :py:class:`~econtools.metrics.core.Results` object:
-            - No r-squared (`r2` or `r2_a`)
-            - ``kappa`` attribute (always 1 if ``iv_method='2sls'``)
-    """
-
-    IVRegWorker = IVReg(
-        df, y_name, x_name, z_name, w_name,
-        a_name=a_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
-        iv_method=iv_method, _kappa_debug=_kappa_debug,
-        vce_type=vce_type, cluster=cluster, shac=shac,
-        awt_name=awt_name,
-    )
-
-    results = IVRegWorker.main()
-    return results
+from econtools.metrics.results import Results
 
 
 # Workhorse classes
@@ -126,7 +22,7 @@ class RegBase(object):
         self.__dict__.update(kwargs)
 
         self.sample_cols_labels = (
-            'y_name', 'x_name', 'a_name', 'cluster', 'shac_x', 'shac_y',
+            'y_name', 'x_name', 'fe_name', 'cluster', 'shac_x', 'shac_y',
             'awt_name'
         )
 
@@ -155,6 +51,7 @@ class RegBase(object):
         self.get_vce()
         self.set_dof()
         self.inference()
+        self.results.pull_metadata(self)
 
         return self.results
 
@@ -162,8 +59,8 @@ class RegBase(object):
         sample_cols = tuple(
             [self.__dict__[x] for x in self.sample_cols_labels])
         self.sample = flag_sample(self.df, *sample_cols)
-        if self.nosingles and self.a_name:
-            self.sample &= flag_nonsingletons(self.df, self.a_name,
+        if self.nosingles and self.fe_name:
+            self.sample &= flag_nonsingletons(self.df, self.fe_name,
                                               self.sample)
 
         sample_vars = set_sample(self.df, self.sample, sample_cols)
@@ -176,7 +73,7 @@ class RegBase(object):
             self.__dict__[var] = self.__dict__[var].astype(np.float64)
 
         # Demean or add constant
-        if self.a_name is not None:
+        if self.fe_name is not None:
             self._demean_sample()
         elif self.addcons:
             _cons = np.ones(self.y.shape[0])
@@ -202,7 +99,7 @@ class RegBase(object):
             self.__dict__[var] = self.__dict__[var].multiply(row_wt, axis=0)
 
     def estimate(self):
-        """Defined by Implementation"""
+        """ Defined by Implementation. Initializes self.Results object """
         raise NotImplementedError
 
     def get_vce(self):
@@ -286,8 +183,9 @@ class RegBase(object):
         N, K = self.x.shape
 
         if self.A is not None:
+            self.fe_count = len(self.A.unique())
             if not _fe_nested_in_cluster(self.cluster_id, self.A):
-                K += len(self.A.unique())    # Adjust dof's for group means
+                K += self.fe_count          # Adjust dof's for group means
             self.results.sst = self.y_raw
             self.results._nocons = True
         else:
@@ -321,22 +219,23 @@ class RegBase(object):
 
 def _set_vce_type(vce_type, cluster, shac):
     """ Check for argument conflicts, then set `vce_type` if needed.  """
-    # Check for valid arg
-    valid_vce = (None, 'robust', 'hc1', 'hc2', 'hc3', 'cluster', 'shac')
-    if vce_type not in valid_vce:
+
+    if vce_type not in (None, 'robust', 'hc1', 'hc2', 'hc3', 'cluster',
+                        'shac'):
         raise ValueError("VCE type '{}' is not supported".format(vce_type))
+
     # Check for conflicts
-    cluster_err = cluster and (vce_type != 'cluster' and vce_type is not None)
-    shac_err = shac and (vce_type != 'shac' and vce_type is not None)
-    if (cluster and shac) or cluster_err or shac_err:
-        raise ValueError("VCE type conflict!")
+    if cluster and shac:
+        raise ValueError("Cannot use `cluster` and `shac` together.")
+    elif cluster and vce_type != 'cluster' and vce_type is not None:
+        raise ValueError("Cannot pass argument to `cluster` and set `vce_type`"
+                         " to something other than 'cluster'")
+    elif shac and vce_type != 'shac' and vce_type is not None:
+        raise ValueError("Cannot pass argument to `shac` and set `vce_type`"
+                         " to something other than 'shac'")
+
     # Set `vce_type`
-    if cluster:
-        new_vce = 'cluster'
-    elif shac:
-        new_vce = 'shac'
-    else:
-        new_vce = vce_type
+    new_vce = 'cluster' if cluster else 'shac' if shac else vce_type
 
     return new_vce
 
@@ -518,197 +417,6 @@ def fitguts(y, x):
 
     return beta, xpx_inv
 
-
-# Results class
-class Results(object):
-    """Regression Results container.
-
-    Attributes:
-        summary (DataFrame): Summary of regression results.
-        beta (Series): All beta coefficients. Index is regressor names.
-        se (Series): Standard errors.
-        t_stat (Series): t-stats.
-        pt (Series): p-scores for t-stats.
-        ci_lo (Series): Confidence interval, lower bound.
-        ci_hi (Series): Confidence interval, upper bound.
-        r2 (float): R-squared
-        r2_a (float): Adjusted R-squared.
-        K (int): Number of regressors
-        N (int): Number of observations
-        vce (DataFrame): K-by-K variance-covariance matrix.
-        F (float): F-stat of joint significance of beta coefficients.
-        pF (float): p-score for F-stat.
-        df_m (int): Model degrees of freedom (excluding constant).
-        df_r (int): Residual degrees of freedom.
-        ssr (float): Sum of squared residuals.
-        sst (float): Total sum of squares.
-        yhat (array): Fit values (:math:`X\\hat{\\beta}`)
-        resid (array): Regression residuals (:math:`\\hat{\\varepsilon}`)
-        sample (array): Boolean array the same length of DataFrame passed to
-            original regression function. Row is `True` is the observation is
-            included in the regression, `False` otherwise. Regression function
-            will automatically drop observations where the outcome, regressor,
-            weights, etc., are missing/null.
-    """
-
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-    # TODO: Why do I wrap this in a method? Why does `_add_stat` exist?
-    def _add_stat(self, stat_name, stat):
-        self.__dict__[stat_name] = stat
-
-    @property
-    def summary(self):
-        if hasattr(self, '_summary'):
-            return self._summary
-        else:
-            out = pd.concat((self.beta, self.se, self.t_stat, self.pt,
-                             self.ci_lo, self.ci_hi), axis=1)
-            out.columns = ['coeff', 'se', 't', 'p>t', 'CI_low', 'CI_high']
-            self._summary = out
-            return self._summary
-
-    @property
-    def df_m(self):
-        """Degrees of freedom for non-constant parameters"""
-        try:
-            return self._df_m
-        except AttributeError:
-            self._df_m = self.K
-
-            if not self._nocons:
-                self._df_m -= 1
-
-            return self._df_m
-
-    @df_m.setter
-    def df_m(self, value):
-        self._df_m = value
-
-    @property
-    def df_r(self):
-        try:
-            return self._df_r
-        except AttributeError:
-            self._df_r = self.N - self.K
-            return self._df_r
-
-    @property
-    def ssr(self):
-        try:
-            return self._ssr
-        except AttributeError:
-            self._ssr = self.resid.dot(self.resid)
-            return self._ssr
-
-    @property
-    def sst(self):
-        return self._sst
-
-    @sst.setter
-    def sst(self, y):
-        y_demeaned = y - np.mean(y)
-        self._sst = y_demeaned.dot(y_demeaned)
-
-    @property
-    def r2(self):
-        try:
-            return self._r2
-        except AttributeError:
-            self._r2 = 1 - self.ssr/self.sst
-            return self._r2
-
-    @property
-    def r2_a(self):
-        try:
-            return self._r2_a
-        except AttributeError:
-            self._r2_a = (
-                1 - (self.ssr/(self.N - self.K))/(self.sst/(self.N - 1)))
-            return self._r2_a
-
-    def Ftest(self, col_names, equal=False):
-        """F test using regression results.
-
-        Args:
-            col_names (str or list): Regressor name(s) to test.
-
-        Keyword Args:
-            equal (bool): Defaults to False. If True, test if all coefficients
-                in ``col_names`` are equal. If False, test if ``col_names`` are
-                jointly significant.
-
-        Returns:
-            tuple: A tuple containing:
-                - **F** (float): F-stat.
-                - **pF** (float): p-score for ``F``.
-        """
-        cols = force_list(col_names)
-        V = self.vce.loc[cols, cols]
-        q = len(cols)
-        beta = self.beta.loc[cols]
-
-        if equal:
-            q -= 1
-            R = np.zeros((q, q+1))
-            for i in range(q):
-                R[i, i] = 1
-                R[i, i+1] = -1
-        else:
-            R = np.eye(q)
-
-        r = np.zeros(q)
-
-        return f_test(V, R, beta, r, self.df_r)
-
-    @property
-    def F(self):
-        """F-stat for 'are all *slope* coefficients zero?'"""
-        try:
-            return self._F
-        except AttributeError:
-            # TODO: What if the constant isn't '_cons'?
-            cols = [x for x in self.vce.index if x != '_cons']
-            self._F, self._pF = self.Ftest(cols)
-            return self._F
-
-    @property
-    def pF(self):
-        try:
-            return self._pF
-        except AttributeError:
-            __ = self.F  # noqa `F` also sets `pF`
-            return self._pF
-
-
-def f_test(V, R, beta, r, df_d):
-    """Arbitrary F test.
-
-    Args:
-        V (array): K-by-K variance-covariance matrix.
-        R (array): K-by-K Test matrix.
-        beta (array): Length-K vector of coefficient estimates.
-        r (array): Length-K vector of null hypotheses.
-        df_d (int): Denominator degrees of freedom.
-
-    Returns:
-        tuple: A tuple containing:
-            - **F** (float): F-stat.
-            - **pF** (float): p-score for ``F``.
-    """
-    Rbr = (R.dot(beta) - r)
-    if Rbr.ndim == 1:
-        Rbr = Rbr.reshape(-1, 1)
-
-    middle = la.inv(R.dot(V).dot(R.T))
-    df_n = matrix_rank(R)
-    # Can't just squeeze, or we get a 0-d array
-    F = (Rbr.T.dot(middle).dot(Rbr)/df_n).flatten()[0]
-    pF = 1 - stats.f.cdf(F, df_n, df_d)
-    return F, pF
-
-
 # VCE estimators
 def vce_homosk(xpx_inv, resid):
     """ Standard OLS VCE with spherical errors. """
@@ -824,18 +532,3 @@ def df_shac(n, k):
     df = n - k
     vce_correct = 1
     return df, vce_correct
-
-
-if __name__ == '__main__':
-    from os import path
-    test_path = path.split(path.relpath(__file__))[0]
-    data_path = path.join(test_path, 'tests', 'data')
-    df = pd.read_stata(path.join(data_path, 'auto.dta'))
-    y_name = 'price'
-    cluster = 'gear_ratio'
-    rhv = ['mpg', 'length']
-    results = reg(df, y_name, rhv,
-                  a_name=cluster,
-                  cluster=cluster
-                  )
-    print(results.summary)

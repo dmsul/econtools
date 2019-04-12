@@ -3,7 +3,7 @@ from os import path
 import pandas as pd
 
 from econtools.metrics.util.testing import RegCompare
-from econtools.metrics.core import ivreg
+from econtools.metrics.api import ivreg
 from econtools.metrics.tests.data.src_atsls import atsls_std
 
 
@@ -44,8 +44,8 @@ class TestAtsls_std(AtslsCompare):
         x_end = ['mpg', 'length']
         z = ['trunk', 'weight']
         x_exog = []
-        a = 'gear_ratio'
-        cls.result = ivreg(autodata, y, x_end, z, x_exog, a_name=a)
+        fe = 'gear_ratio'
+        cls.result = ivreg(autodata, y, x_end, z, x_exog, fe_name=fe)
         cls.expected = atsls_std
 
 

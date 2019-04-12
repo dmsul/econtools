@@ -8,6 +8,7 @@
     io.rst
     metrics.rst
     to_latex.rst
+    data.rst
     plot.rst
     reference.rst
     api.rst

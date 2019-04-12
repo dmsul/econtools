@@ -43,7 +43,7 @@ variable ``sample_wt``.
         df,                     # DataFrame
         y,                      # Dependent var (string)
         X,                      # Independent var(s) (string or list of strings)
-        a_name=fe_var,          # Fixed-effects/absorb var (string)
+        fe_name=fe_var,         # Fixed-effects/absorb var (string)
         cluster=cluster_var     # Cluster var (string)
         awt_name=weights_var    # Sample weights
     )
@@ -74,8 +74,8 @@ endogenous regressors, and exogenous regressors. Other keyword options, such as
 :py:func:`~econtools.metrics.reg`.
 
 One additional keyword argument is `method`, which sets the IV method used to
-estimate the model. Currently supported values are `2sls` (the default) and
-`liml`.
+estimate the model. Currently supported values are ``'2sls'`` (the default) and
+``'liml'``.
 
 .. code-block:: python
 
@@ -107,6 +107,9 @@ direct access to estimates is also possible.
 
     df = pd.read_stata('some_data.dta')
     results = mt.reg(df, 'ln_wage', ['educ', 'age'], addcons=True)
+
+    # Print a nice summary of the regression results (a string)
+    print(results)
 
     # Print DataFrame w/ betas, se's, t-stats, etc.
     print(results.summary)
@@ -167,7 +170,7 @@ etc.) can be calculated by passing a dictionary with the relevant fields to the
     }
     df = pd.read_stata('reg_data.dta')
     results = mt.reg(df, 'lnp', ['sqft', 'rooms'],
-                     a_name='state',
+                     fe_name='state',
                      shac=shac_params)
 
 
@@ -176,7 +179,7 @@ etc.) can be calculated by passing a dictionary with the relevant fields to the
     The ``band`` parameter is assumed to be in the same units as ``x`` and
     ``y``. If ``x`` and ``y`` are degrees latitude/longitude, ``band`` should
     also be in degrees. ``econtools`` does not do any advanced geographic
-    distance calculations here, just simple euclidean distance.
+    distance calculations here, just simple Euclidean distance.
 
 
 Local Linear Regression
