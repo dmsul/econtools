@@ -26,7 +26,7 @@ df = econtools.read('my_data.dta')
 result = mt.reg(df,                     # DataFrame to use
                 'y',                    # Outcome
                 ['x1', 'x2'],           # Indep. Variables
-                a_name='person_id',     # Fixed-effects using variable 'person_id'
+                fe_name='person_id',    # Fixed-effects using variable 'person_id'
                 cluster='state'         # Cluster by state
 )
 
@@ -45,6 +45,16 @@ equality_F = result.Ftest(['x1', 'x2'], equal=True)  # Test for coeff. equality
 - `table_statrow` can be used to add arbitrary statistics, notes, etc. to a
   table. Can also be used to create a table of summary statistics.
 - `write_notes` makes it easy to save table notes that depend on your data.
+
+## Misc. Data Manipulation Tools
+
+- `stata_merge` wraps `pandas.merge` and adds a lot of Stata's merge niceties
+  like a `'_m'` flag for successfully merge observations.
+- `group_id` generates an ID based on the variables past (compare `egen
+  group`).
+- Crosswalks of commonly used U.S. state labels.
+  - State abbreviation to state name (and reverse).
+  - State fips to state name (and reverse).
 
 ## Data I/O
 
@@ -98,4 +108,3 @@ equality_F = result.Ftest(['x1', 'x2'], equal=True)  # Test for coeff. equality
 ## Coming soon
 
 - Simple Kriging
-- Prettier regression output

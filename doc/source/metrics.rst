@@ -43,7 +43,7 @@ variable ``sample_wt``.
         df,                     # DataFrame
         y,                      # Dependent var (string)
         X,                      # Independent var(s) (string or list of strings)
-        a_name=fe_var,          # Fixed-effects/absorb var (string)
+        fe_name=fe_var,         # Fixed-effects/absorb var (string)
         cluster=cluster_var     # Cluster var (string)
         awt_name=weights_var    # Sample weights
     )
@@ -108,6 +108,9 @@ direct access to estimates is also possible.
     df = pd.read_stata('some_data.dta')
     results = mt.reg(df, 'ln_wage', ['educ', 'age'], addcons=True)
 
+    # Print a nice summary of the regression results (a string)
+    print(results)
+
     # Print DataFrame w/ betas, se's, t-stats, etc.
     print(results.summary)
 
@@ -167,7 +170,7 @@ etc.) can be calculated by passing a dictionary with the relevant fields to the
     }
     df = pd.read_stata('reg_data.dta')
     results = mt.reg(df, 'lnp', ['sqft', 'rooms'],
-                     a_name='state',
+                     fe_name='state',
                      shac=shac_params)
 
 
