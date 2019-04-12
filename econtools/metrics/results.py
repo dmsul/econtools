@@ -59,15 +59,15 @@ class Results(object):
     def __repr__(self):
         border_str = '='*55 + '\n'
         out_str = border_str
-        out_str += 'Dependent variable:\t{}\n'.format(self.y_name)
-        out_str += 'N:\t\t\t{}\n'.format(self.N)
-        out_str += 'R-squared:\t\t{:.4f}\n'.format(self.r2)
+        out_str += f'Dependent variable:\t{self.y_name}\n'
+        out_str += f'N:\t\t\t{self.N}\n'
+        out_str += f'R-squared:\t\t{self.r2:.4f}\n'
 
         out_str += 'Estimation method:\t'
         if hasattr(self, 'iv_method'):
-            out_str += '{}\n'.format(self.iv_method.upper())
+            out_str += f'{self.iv_method.upper()}\n'
             if self.iv_method == 'liml':
-                out_str += '  Kappa:\t\t  {}\n'.format(self.kappa)
+                out_str += f'  Kappa:\t\t  {self.kappa}\n'
         else:
             out_str += 'OLS\n'
 
@@ -77,28 +77,28 @@ class Results(object):
         else:
             vce = self.vce_type
             vce = vce.upper() if len(vce) < 5 else vce.title()
-            out_str += '{}\n'.format(vce)
+            out_str += f'{vce}\n'
         if hasattr(self, 'cluster_name'):
-            out_str += '  Cluster variable:\t  {}\n'.format(self.cluster_name)
-            out_str += '  No. of clusters:\t  {}\n'.format(self.g)
+            out_str += f'  Cluster variable:\t  {self.cluster_name}\n'
+            out_str += f'  No. of clusters:\t  {self.g}\n'
         elif hasattr(self, 'shac_kernel'):
-            out_str += '  SHAC kernel:\t  {}\n'.format(self.shac_kernel)
-            out_str += '  SHAC bandwidth:\t  {}\n'.format(self.shac_bandwidth)
+            out_str += f'  SHAC kernel:\t  {self.shac_kernel}\n'
+            out_str += f'  SHAC bandwidth:\t  {self.shac_bandwidth}\n'
 
         if hasattr(self, 'fe_name'):
-            out_str += 'Fixed effects by:\t{}\n'.format(self.fe_name)
-            out_str += '  No. of FE:\t\t  {}\n'.format(self.fe_count)
+            out_str += f'Fixed effects by:\t{self.fe_name}\n'
+            out_str += f'  No. of FE:\t\t  {self.fe_count}\n'
 
         out_str += border_str
 
         out_str += self.summary.to_string(
             formatters=[
-                lambda x: '{:.3f}'.format(x),       # Coeff
-                lambda x: '{:.3f}'.format(x),       # std. err.
-                lambda x: '{:.3f}'.format(x),       # t-stat
-                lambda x: '{:.3f}'.format(x),       # p-score
-                lambda x: '{:.3f}'.format(x),       # CI-low
-                lambda x: '{:.3f}'.format(x),       # CI-high
+                lambda x: f'{x:.3f}',       # Coeff
+                lambda x: f'{x:.3f}',       # std. err.
+                lambda x: f'{x:.3f}',       # t-stat
+                lambda x: f'{x:.3f}',       # p-score
+                lambda x: f'{x:.3f}',       # CI-low
+                lambda x: f'{x:.3f}',       # CI-high
             ]
         ) + '\n'
 
