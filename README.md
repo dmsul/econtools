@@ -105,6 +105,10 @@ equality_F = result.Ftest(['x1', 'x2'], equal=True)  # Test for coeff. equality
   python run_regression.py --save   # Runs regression and saves output
   ```
 
-## Coming soon
+## Requirements
 
-- Simple Kriging
+- Python 3.6+
+- Pandas and its dependencies (Numpy, etc.)
+- Scipy and its dependencies
+- Pytables (optional, if you use HDF5 files)
+- PyTest (optional, if you want to run the tests)

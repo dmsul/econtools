@@ -34,7 +34,7 @@ $ python setup.py install
 Requirements
 ++++++++++++
 
-* Python 2.7 or 3 (tested with 2.7 and 3.6)
+* Python 3.6+
 * Pandas and its dependencies (Numpy, etc.)
 * Scipy and its dependencies
 * Pytables (optional, if you use HDF5 files)
