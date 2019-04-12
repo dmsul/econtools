@@ -1,5 +1,3 @@
-from __future__ import division
-
 import numpy as np
 from scipy.spatial.distance import pdist, cdist
 from scipy.optimize import minimize
