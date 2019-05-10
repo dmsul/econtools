@@ -4,18 +4,12 @@ from functools import wraps
 import argparse
 from datetime import datetime
 
-import sys
 import numpy as np
 import pandas as pd
 
-from .gentools import force_df
 from .frametools import df_to_list
 
-IS_PY2 = sys.version_info[0] < 3
-if IS_PY2:
-    from inspect import getargspec as getfullargspec
-else:
-    from inspect import getfullargspec
+from inspect import getfullargspec
 
 
 PICKLE_EXT = ('pkl', 'p')   # First is default for writing to pickle
@@ -160,11 +154,8 @@ def _parse_pathargs(path_args, args, kwargs, argspec):
     """
     patharg_values = []
     # Handle default kwargs
-    if IS_PY2:
-        argnames, __, __, defaults = argspec
-    else:
-        argnames = argspec.args
-        defaults = argspec.defaults
+    argnames = argspec.args
+    defaults = argspec.defaults
 
     for arg in path_args:
         arg_type = type(arg)
@@ -380,11 +371,7 @@ def confirmer(prompt_str, default_no=True):
 def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
                          _count=0):
 
-    # Py2/Py3 compat check
-    if IS_PY2:
-        ans = raw_input(prompt_str)
-    else:
-        ans = input(prompt_str)
+    ans = input(prompt_str)
 
     if listin:
         output = _parse_list_input(ans, dtype)
