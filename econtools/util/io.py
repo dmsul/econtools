@@ -2,6 +2,7 @@ import re
 from os.path import isfile, splitext
 from functools import wraps
 import argparse
+from datetime import datetime
 
 import sys
 import numpy as np
@@ -94,11 +95,14 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
                 df = builder(*args, **kwargs)
             else:
                 # If it's just not on disk, build it, save it, and copy it
-                print("****** Building *******\n\tfile: {}".format(filepath))
-                print("\tfunc: {}".format(builder.__name__))
-                print("*************")
-                df = builder(*args, **kwargs)
-                write(df, filepath)
+                start_line = "BUILDING @ {} {} using {}"  # Time, file, func
+                finish_line = "WRITTEN  @ {} {}"          # Time, file
+                func_name = builder.__module__ + ':' + builder.__name__
+                print(start_line.format(_now(), filepath, func_name))
+                df = builder(*args, **kwargs)             # Build it!
+                write(df, filepath)                       # Save it!
+                print(finish_line.format(_now(), filepath), flush=True)
+
                 # Copy to Stata DTA if needed
                 fileroot, fileext = splitext(filepath)
                 if copydta and fileext != '.dta':
@@ -178,6 +182,9 @@ def _parse_pathargs(path_args, args, kwargs, argspec):
             raise ValueError("Path arg must be int or str.")
 
     return patharg_values
+
+def _now():
+    return datetime.now().strftime('%H:%M:%S')
 
 
 def load_or_build_direct(filepath, force=False,
