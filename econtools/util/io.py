@@ -104,9 +104,8 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
                 print(finish_line.format(_now(), filepath), flush=True)
 
                 # Copy to Stata DTA if needed
-                fileroot, fileext = splitext(filepath)
-                if copydta and fileext != '.dta':
-                    force_df(df).to_stata(fileroot + '.dta')
+                if copydta and filepath[-4:] != '.dta':
+                    df.to_stata(filepath[:-4] + '.dta')
 
             return df
         return wrapper
