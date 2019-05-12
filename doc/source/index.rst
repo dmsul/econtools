@@ -41,8 +41,8 @@ Requirements
 * PyTest (optional, if you want to run the tests)
 
 
-Data (I/O) Tools
-----------------
+Data Input/Output (I/O) Tools
+-----------------------------
 
 :mod:`econtools` contains a number of boilerplate methods that make it easier to
 create datasets, save them to disk, and prepare them for statistical analysis.
@@ -57,6 +57,17 @@ Highlights include
   data?"
 
 Full I/O documentation :ref:`here <io>`.
+
+Data Manipulation Tools
+-----------------------
+:mod:`econtools` also contains a few helper functions that make data cleaning a
+bit easier
+
+* :py:func:`~econtools.stata_merge` wraps `pandas.merge` and adds a few
+  Stata-like niceties like a flag for whether observations existed in the left,
+  right, or both datasets (cf `_merge` variable in Stata).
+* :py:func:`~econtools.group_id` makes it easy to generate your own arbitrary
+  ID number based on a list of other variables.
 
 Econometric Tools
 -----------------
@@ -108,6 +119,7 @@ Full plotting tools documentation :ref:`here <plot>`.
 Reference Tools
 ---------------
 
-Crosswalks between U.S. state names, abbreviations, and FIPS codes.
+Crosswalks between U.S. state names, abbreviations, and FIPS codes, as well as
+raw lists of each set of identifiers.
 
 Full reference tools documentation :ref:`here <reference>`.
