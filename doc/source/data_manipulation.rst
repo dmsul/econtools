@@ -1,6 +1,6 @@
 .. currentmodule: econtools
 
-.. _data:
+.. _data_manipulation:
 
 ***********************
 Data Manipulation Tools

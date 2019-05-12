@@ -8,7 +8,7 @@
     io.rst
     metrics.rst
     to_latex.rst
-    data.rst
+    data_manipulation.rst
     plot.rst
     reference.rst
     api.rst
@@ -41,8 +41,8 @@ Requirements
 * PyTest (optional, if you want to run the tests)
 
 
-Data Input/Output (I/O) Tools
------------------------------
+Input/Output (I/O) Tools
+------------------------
 
 :mod:`econtools` contains a number of boilerplate methods that make it easier to
 create datasets, save them to disk, and prepare them for statistical analysis.
