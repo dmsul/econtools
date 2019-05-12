@@ -24,7 +24,7 @@ def binscatter(
             of the mean. Only applies to y-axis values.
 
     Returns:
-        tuple: Tuple of arrays
+        tuple:
             * **x_bin_value** (*array*) - Array of x bin values.
             * **y_bin_value** (*array*) - Array of y bin values.
     """
