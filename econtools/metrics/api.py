@@ -107,9 +107,9 @@ def ivreg(df: pd.DataFrame,
                 - ``'liml'``, limited-information maximum likelihood.
 
     Returns:
-        A modified :py:class:`~econtools.metrics.core.Results` object:
-            - No r-squared (`r2` or `r2_a`)
-            - ``kappa`` attribute (always 1 if ``iv_method='2sls'``)
+        A :py:class:`~econtools.metrics.core.Results` object with (a) no
+        r-squared (``r2`` or ``r2_a`` attributes), and (b) a ``kappa``
+        attribute (always 1 if ``iv_method='2sls'``)
     """
 
     fe_name = _a_name_deprecation_handling(a_name, fe_name)
