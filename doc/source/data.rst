@@ -2,9 +2,9 @@
 
 .. _data:
 
-***************
-Reference Tools
-***************
+***********************
+Data Manipulation Tools
+***********************
 
 .. contents:: :local:
 
