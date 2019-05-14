@@ -1,5 +1,17 @@
 # Changelog
 
+## Next
+
+### Added
+- Mypy typing hints.
+
+### Changed
+- REF: Removed Python 2 compatibility (following Pandas). `econtools` now
+  requires Python >=3.6.
+- ENH: `load_or_build` messages are now more informative.
+- BUG: `state_name_to_fips` was not made accessible for external use.
+
+
 ## [0.1.1] - 2019-04-12
 
 ### Added
@@ -8,9 +20,9 @@
 - Raw lists of state FIPS, abbreviations, and names.
 
 ### Changed
-- The `a_name` keyword argument in regression methods has been deprecated in
+- REF: The `a_name` keyword argument in regression methods has been deprecated in
   favor of the new `fe_name` keyword argument.
-- A lot of metrics methods were refactored. This should not impact end users
+- REF: A lot of metrics methods were refactored. This should not impact end users
   but should make extending those methods a little easier.
 
 ## [0.1.0] - 2018-09-08
@@ -19,8 +31,8 @@
 - Tests for `load_or_build`.
 
 ### Changed
-- Tests now use `pytest` instead of `nose`.
-- `outreg` now defaults to adding all regressors to the table instead of
+- REF: Tests now use `pytest` instead of `nose`.
+- ENH: `outreg` now defaults to adding all regressors to the table instead of
   requiring a specific list.
 
 
