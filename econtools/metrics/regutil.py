@@ -77,29 +77,3 @@ def flag_nonsingletons(df, avar, sample):
     big_counts = df[[avar]].join(counts.to_frame('_T'), on=avar).fillna(0)
     non_single = big_counts['_T'] > 1
     return non_single
-
-
-def winsorize(df, by, p=(.01, .99)):
-    """Drop variables in `by' outside quantiles `p`."""
-    # TODO: Some kind of warning/error if too fine of quantiles are
-    #       requested for the number of rows, e.g. .99 with 5 rows.
-    df = df.copy()
-
-    by = force_iterable(by)
-
-    # Allow different cutoffs for different variables
-    if hasattr(p[0], '__iter__'):
-        assert len(p) == len(by)
-    else:
-        p = [p] * len(by)
-
-    survive_winsor = np.array([True] * df.shape[0])
-
-    for idx, col in enumerate(by):
-        cuts = df[col].quantile(p[idx]).values
-        survive_this = np.logical_and(df[col] >= cuts[0], df[col] <= cuts[1])
-        survive_winsor = np.minimum(survive_winsor, survive_this)
-
-    df = df[survive_winsor]
-
-    return df
