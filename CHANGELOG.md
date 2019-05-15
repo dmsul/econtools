@@ -4,6 +4,7 @@
 
 ### Added
 - Mypy typing hints.
+- New function `winsorize`.
 
 ### Changed
 - REF: Removed Python 2 compatibility (following Pandas). `econtools` now

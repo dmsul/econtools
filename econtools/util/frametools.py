@@ -1,4 +1,7 @@
 import pandas as pd
+import numpy as np
+
+from econtools.util.gentools import force_iterable
 
 
 def stata_merge(left, right, assertval=None, gen='_m', **kwargs):
@@ -82,6 +85,32 @@ def group_id(df, cols=None, name='group_id', merge=False):
         unique_df.index = df.index
 
     return unique_df
+
+
+def winsorize(df, by, p=(.01, .99)):
+    """Drop variables in `by' outside quantiles `p`."""
+    # TODO: Some kind of warning/error if too fine of quantiles are
+    #       requested for the number of rows, e.g. .99 with 5 rows.
+    df = df.copy()
+
+    by = force_iterable(by)
+
+    # Allow different cutoffs for different variables
+    if hasattr(p[0], '__iter__'):
+        assert len(p) == len(by)
+    else:
+        p = [p] * len(by)
+
+    survive_winsor = np.array([True] * df.shape[0])
+
+    for idx, col in enumerate(by):
+        cuts = df[col].quantile(p[idx]).values
+        survive_this = np.logical_and(df[col] >= cuts[0], df[col] <= cuts[1])
+        survive_winsor = np.minimum(survive_winsor, survive_this)
+
+    df = df[survive_winsor]
+
+    return df
 
 
 def df_to_list(df):
