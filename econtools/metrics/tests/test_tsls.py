@@ -79,7 +79,5 @@ class TestTsls_cluster(TslsCompare):
 
 
 if __name__ == '__main__':
-    import sys
-    from nose import runmodule
-    argv = [__file__, '-vs'] + sys.argv[1:]
-    runmodule(argv=argv, exit=False)
+    import pytest
+    pytest.main()
