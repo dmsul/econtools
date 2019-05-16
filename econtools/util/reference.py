@@ -108,9 +108,6 @@ _fips_to_name_xwalk: Dict[int, str] = {
     78: 'Virgin Islands',
 }
 
-_name_to_fips_xwalk = {v: k
-                       for k, v in _fips_to_name_xwalk.items()}
-
 _state_abbr_to_name: Dict[str, str] = {
     'AK': 'Alaska',
     'AL': 'Alabama',
@@ -170,6 +167,9 @@ _state_abbr_to_name: Dict[str, str] = {
     'WV': 'West Virginia',
     'WY': 'Wyoming'
 }
+
+_name_to_fips_xwalk = {v: k
+                       for k, v in _fips_to_name_xwalk.items()}
 
 _state_name_to_abbr = {v: k
                        for k, v in _state_abbr_to_name.items()}

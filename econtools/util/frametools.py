@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, List, Iterable, cast
 
 import pandas as pd
 import numpy as np
@@ -94,13 +94,14 @@ def group_id(df: pd.DataFrame,
     return unique_df
 
 
-def winsorize(df, by, p=(.01, .99)):
+def winsorize(df: pd.DataFrame, by: Union[str, Iterable[str]],
+              p: Iterable[Union[tuple, float]]=(.01, .99)):
     """Drop variables in `by' outside quantiles `p`."""
     # TODO: Some kind of warning/error if too fine of quantiles are
     #       requested for the number of rows, e.g. .99 with 5 rows.
     df = df.copy()
 
-    by = force_iterable(by)
+    by = cast(Iterable[str], force_iterable(by))
 
     # Allow different cutoffs for different variables
     if hasattr(p[0], '__iter__'):

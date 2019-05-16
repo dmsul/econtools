@@ -30,7 +30,9 @@ def binscatter(
     """
 
     # If no `data` is passed, assume arrays
-    if type(data) is pd.DataFrame and type(x) is str and type(y) is str:
+    if (isinstance(data, pd.DataFrame) and
+            isinstance(x, str) and
+            isinstance(y, str)):
         x = data[x]
         y = data[y]
 
