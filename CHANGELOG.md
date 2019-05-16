@@ -11,6 +11,7 @@
 - REF: Removed Python 2 compatibility (following Pandas). `econtools` now
   requires Python >=3.6.
 - ENH: `load_or_build` messages are now more informative.
+- ENH: Updated docstrings for several functions.
 - BUG: `state_name_to_fips` was not made accessible for external use.
 
 
