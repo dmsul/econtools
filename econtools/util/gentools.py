@@ -1,11 +1,12 @@
-from typing import Union, Generator
+from typing import Union, Generator, Optional, Any, Iterable
 
 import string
 
 import pandas as pd
 
 
-def force_df(s, name=None) -> pd.DataFrame:
+def force_df(s: Union[pd.DataFrame, pd.Series],
+             name: Optional[str]=None) -> pd.DataFrame:
     """
     Forces a Series to a DataFrame. DataFrames are returned unaffected. Other
     objects raise `ValueError`.
@@ -19,7 +20,7 @@ def force_df(s, name=None) -> pd.DataFrame:
         return s.to_frame(name)
 
 
-def force_list(x) -> list:
+def force_list(x: Any) -> list:
     """If type not `list`, pass to `force_interable`, then convert to list."""
     if isinstance(x, list):
         return x
@@ -27,7 +28,7 @@ def force_list(x) -> list:
         return list(force_iterable(x))
 
 
-def force_iterable(x):
+def force_iterable(x) -> Iterable:
     """If not iterable, wrap in tuple"""
     if hasattr(x, '__iter__') and type(x) is not str:
         return x

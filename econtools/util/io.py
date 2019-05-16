@@ -5,7 +5,7 @@ import warnings
 from functools import wraps
 from inspect import getfullargspec
 from os.path import isfile, splitext
-from typing import Optional, Callable, List
+from typing import Optional, Callable, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -185,9 +185,10 @@ def _now():
     return datetime.now().strftime('%H:%M:%S')
 
 
-def load_or_build_direct(filepath, force=False,
-                         build=None, bargs=[], bkwargs=dict(),
-                         copydta=False):
+def load_or_build_direct(filepath: str, force: bool=False,
+                         build: Callable=None, bargs: list=[],
+                         bkwargs: dict=dict(),
+                         copydta: bool=False) -> pd.DataFrame:
     """
     Loads `filepath` if it exists. If it does not exist, or if `force` is
     `True`, then builds a dataframe using `build` and writes it to disk at
@@ -233,7 +234,7 @@ def load_or_build_direct(filepath, force=False,
         return df
 
 
-def loadbuild_cli():
+def loadbuild_cli() -> Tuple[bool, bool]:
     """ Convenience CLI args for rebuilding data using `load_or_build` """
     parser = argparse.ArgumentParser()
     parser.add_argument('--rebuild', action='store_true')

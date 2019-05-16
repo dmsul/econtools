@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import pandas as pd
 import numpy as np
 import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
@@ -238,7 +240,8 @@ class Results(object):
 
 
 # TODO: Roll this into Results object?
-def f_test(V, R, beta, r, df_d):
+def f_test(V: np.ndarray, R: np.ndarray, beta: np.ndarray, r: int,
+           df_d: int) -> Tuple[float, float]:
     """Arbitrary F test.
 
     Args:

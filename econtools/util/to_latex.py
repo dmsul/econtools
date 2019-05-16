@@ -227,7 +227,7 @@ def table_statrow(
 
     return outstr
 
-def _add_sd_parens(sd, cell) -> str:
+def _add_sd_parens(sd: Union[bool, str], cell: str) -> str:
     """ Wrap table cell in parens/brackets if needed """
     # Make `sd=True` same as `sd='('`
     if sd is True:
