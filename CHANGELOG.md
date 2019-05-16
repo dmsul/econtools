@@ -5,6 +5,7 @@
 ### Added
 - Mypy typing hints.
 - New function `winsorize`.
+- Missing state name/abbreviation/fips crosswalk functions.
 
 ### Changed
 - REF: Removed Python 2 compatibility (following Pandas). `econtools` now

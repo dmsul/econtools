@@ -13,6 +13,18 @@ def state_name_to_fips(name: str) -> int:
     return _name_to_fips_xwalk[name]
 
 
+def state_name_to_abbr(name: str) -> str:
+    """Take state name, return 2-letter state abbreviation
+
+    Args:
+        x (str): State name (e.g., Idaho)
+
+    Returns:
+        str: 2-letter state abbreviation (e.g., ID)
+    """
+    return _state_name_to_abbr[name]
+
+
 def state_fips_to_name(fips: int) -> str:
     """Take fips as int and return state name
 
@@ -37,16 +49,12 @@ def state_abbr_to_name(abbr: str) -> str:
     return _state_abbr_to_name[abbr]
 
 
-def state_name_to_abbr(name: str) -> str:
-    """Take state name, return 2-letter state abbreviation
+def state_fips_to_abbr(fips: int) -> str:
+    return state_name_to_abbr(state_fips_to_name(fips))
 
-    Args:
-        x (str): State name (e.g., Idaho)
 
-    Returns:
-        str: 2-letter state abbreviation (e.g., ID)
-    """
-    return _state_name_to_abbr[name]
+def state_abbr_to_fips(abbr: str) -> int:
+    return state_name_to_fips(state_abbr_to_name(abbr))
 
 
 _fips_to_name_xwalk: Dict[int, str] = {
