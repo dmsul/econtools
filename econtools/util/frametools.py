@@ -1,10 +1,14 @@
+from typing import Optional, Union, List, Iterable, cast
+
 import pandas as pd
 import numpy as np
 
 from econtools.util.gentools import force_iterable
 
 
-def stata_merge(left, right, assertval=None, gen='_m', **kwargs):
+def stata_merge(left: pd.DataFrame, right: pd.DataFrame,
+                assertval: Optional[int] = None, gen: str = '_m',
+                **kwargs) -> pd.DataFrame:
     """
     Replicates Stata's generation of a flag for merge status.
         1 = Unmatched row from the left
@@ -58,7 +62,10 @@ def stata_merge(left, right, assertval=None, gen='_m', **kwargs):
     return new
 
 
-def group_id(df, cols=None, name='group_id', merge=False):
+def group_id(df: pd.DataFrame,
+             cols: Optional[list] = None,
+             name: str = 'group_id',
+             merge: bool = False) -> pd.DataFrame:
     """
     Generate a unique numeric ID from several columns of a DataFrame.
 
@@ -87,13 +94,14 @@ def group_id(df, cols=None, name='group_id', merge=False):
     return unique_df
 
 
-def winsorize(df, by, p=(.01, .99)):
+def winsorize(df: pd.DataFrame, by: Union[str, Iterable[str]],
+              p: Iterable[Union[tuple, float]]=(.01, .99)):
     """Drop variables in `by' outside quantiles `p`."""
     # TODO: Some kind of warning/error if too fine of quantiles are
     #       requested for the number of rows, e.g. .99 with 5 rows.
     df = df.copy()
 
-    by = force_iterable(by)
+    by = cast(Iterable[str], force_iterable(by))
 
     # Allow different cutoffs for different variables
     if hasattr(p[0], '__iter__'):
@@ -113,9 +121,11 @@ def winsorize(df, by, p=(.01, .99)):
     return df
 
 
-def df_to_list(df):
+def df_to_list(df: Union[list, pd.DataFrame]) -> list:
     """ Turn rows of DataFrame to list of Series objects """
-    if type(df) is list:
+    if isinstance(df, list):
         return df
-    else:
+    elif isinstance(df, pd.DataFrame):
         return [b for a, b in df.iterrows()]
+    else:
+        raise ValueError

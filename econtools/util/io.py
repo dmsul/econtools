@@ -1,22 +1,25 @@
-import re
-from os.path import isfile, splitext
-from functools import wraps
 import argparse
 from datetime import datetime
+import re
+import warnings
+from functools import wraps
+from inspect import getfullargspec
+from os.path import isfile, splitext
+from typing import Optional, Callable, List, Tuple
 
 import numpy as np
 import pandas as pd
 
-from .frametools import df_to_list
-
-from inspect import getfullargspec
+from econtools.util.frametools import df_to_list
 
 
 PICKLE_EXT = ('pkl', 'p')   # First is default for writing to pickle
 HDF5_EXT = ('h5', 'hdf5')
 
 
-def load_or_build(raw_filepath, copydta=False, path_args=[]):
+def load_or_build(raw_filepath: str,
+                  copydta: bool = False,
+                  path_args: list = []) -> Callable:
     """Loads `raw_filepath` as a DataFrame if it exists, otherwise builds the
     data and saves it to `raw_filepath`.
 
@@ -78,6 +81,8 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
             if not path_args:   # XXX this is preferred/keep old for compat
                 filepath = _set_filepath(raw_filepath, args, kwargs, builder)
             else:
+                warnings.warn(DeprecationWarning(
+                    "`path_args` is deprecated. Use curly brackets {}."))
                 filepath = _set_filepath_old(raw_filepath, path_args, args,
                                              kwargs, builder)
 
@@ -105,7 +110,10 @@ def load_or_build(raw_filepath, copydta=False, path_args=[]):
         return wrapper
     return actualDecorator
 
-def _set_filepath(raw_filepath, args, kwargs, builder):
+def _set_filepath(raw_filepath: str,
+                  args: list,
+                  kwargs: dict,
+                  builder: Callable) -> str:
     argspec = getfullargspec(builder)
     if re.search('{.*}', raw_filepath):
         argspec = getfullargspec(builder)
@@ -177,9 +185,10 @@ def _now():
     return datetime.now().strftime('%H:%M:%S')
 
 
-def load_or_build_direct(filepath, force=False,
-                         build=None, bargs=[], bkwargs=dict(),
-                         copydta=False):
+def load_or_build_direct(filepath: str, force: bool=False,
+                         build: Callable=None, bargs: list=[],
+                         bkwargs: dict=dict(),
+                         copydta: bool=False) -> pd.DataFrame:
     """
     Loads `filepath` if it exists. If it does not exist, or if `force` is
     `True`, then builds a dataframe using `build` and writes it to disk at
@@ -225,7 +234,7 @@ def load_or_build_direct(filepath, force=False,
         return df
 
 
-def loadbuild_cli():
+def loadbuild_cli() -> Tuple[bool, bool]:
     """ Convenience CLI args for rebuilding data using `load_or_build` """
     parser = argparse.ArgumentParser()
     parser.add_argument('--rebuild', action='store_true')
@@ -244,7 +253,7 @@ def loadbuild_cli():
     return rebuild, rebuild_down
 
 
-def save_cli():
+def save_cli() -> bool:
     """Add CLI boolean flag ``--save``
 
     Returns:
@@ -257,7 +266,7 @@ def save_cli():
     return args.save
 
 
-def try_pickle(filepath):
+def try_pickle(filepath: str) -> pd.DataFrame:
     """
     Use archived pickle for quicker reading. If archive doesn't exist,
     create it for next time.
@@ -275,7 +284,7 @@ def try_pickle(filepath):
     return df
 
 
-def read(path, **kwargs):
+def read(path: str, **kwargs) -> pd.DataFrame:
     """Read file to DataFrame by file's extension.
 
     Args:
@@ -307,7 +316,7 @@ def read(path, **kwargs):
     return read_f(path, **kwargs)
 
 
-def write(df, path, **kwargs):
+def write(df: pd.DataFrame, path: str, **kwargs) -> None:
     """Read file to DataFrame by file's extension.
 
     Args:
@@ -340,7 +349,7 @@ def write(df, path, **kwargs):
 
 
 # Iteractive stuff
-def confirmer(prompt_str, default_no=True):
+def confirmer(prompt_str: str, default_no: bool = True) -> bool:
     """Prompt user for yes/no answer.
 
     Args:
@@ -351,8 +360,8 @@ def confirmer(prompt_str, default_no=True):
     returns:
         bool: `True` if user responded 'Yes', else `False`.
     """
-    yes_opts = ('Y', 'y', 'yes', 'Yes', 'YES')
-    no_opts = ('N', 'n', 'no', 'No', 'NO')
+    yes_opts = ['Y', 'y', 'yes', 'Yes', 'YES']
+    no_opts = ['N', 'n', 'no', 'No', 'NO']
     default_opt = ('',)
     if default_no:
         choices = ' (y/[n]) >>> '
@@ -368,8 +377,9 @@ def confirmer(prompt_str, default_no=True):
     return ans in yes_opts
 
 
-def force_valid_response(prompt_str, good_answers, listin=False, dtype=None,
-                         _count=0):
+def force_valid_response(prompt_str: str, good_answers: List[str],
+                         listin: bool = False, dtype=None,
+                         _count: int = 0) -> str:
 
     ans = input(prompt_str)
 
@@ -405,7 +415,9 @@ class DataInteractModel(object):
         self.looplist = df_to_list(looplist)
         self.__dict__.update(kwargs)  # For secondary DataFrames
 
-    def interact(self, filepath=None, writeargs=dict()):
+    def interact(self,
+                 filepath: Optional[str] = None,
+                 writeargs: dict = dict()) -> pd.DataFrame:
 
         if filepath:
             split_path = splitext(filepath)
@@ -444,7 +456,10 @@ class DataInteractModel(object):
         """
         pass
 
-    def write_log(self, log_path, outdf, notes):
+    def write_log(self,
+                  log_path: str,
+                  outdf: pd.DataFrame,
+                  notes: pd.DataFrame) -> None:
         """
         By default writes the DataFrame as a dictionary for easy pasting
         into code. Can be overridden.
@@ -465,7 +480,7 @@ class DataInteractModel(object):
         return force_valid_response(*args, **kwargs)
 
 
-def _fix_dtypes(rowlist):
+def _fix_dtypes(rowlist: list) -> list:
     newlist = []
     for x in rowlist:
         dtype = type(x)

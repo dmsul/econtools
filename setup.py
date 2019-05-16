@@ -24,7 +24,8 @@ setup(name='econtools',
           'pytest',
       ],
       include_package_data=True,        # To copy stuff in `MANIFEST.in`
+      package_data={'econtools': ["py.typed"]},
+      zip_safe=False,
       # dependency_links=['http://
-      # zip_safe=False
       license='BSD'
       )

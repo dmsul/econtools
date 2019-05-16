@@ -1,12 +1,19 @@
 from math import factorial
+from typing import Union, Optional, Tuple, Callable, cast
 
 import numpy as np
 import pandas as pd
 
 from econtools.metrics import reg
 
+ArrayLike = Union[np.ndarray, pd.DataFrame]
 
-def kdensity(x, x0=None, N=None, h=None, wt=None, kernel='epan'):
+
+def kdensity(x: ArrayLike,
+             x0: Optional[Union[float, ArrayLike]]=None,
+             N: Optional[int]=None, h: Optional[Union[str, float]]=None,
+             wt: Optional[ArrayLike]=None,
+             kernel: str='epan') -> Tuple[ArrayLike, np.ndarray, dict]:
     """Kernel density estimation.
 
     Args:
@@ -17,6 +24,7 @@ def kdensity(x, x0=None, N=None, h=None, wt=None, kernel='epan'):
             caluculate density. If ``None``, these values will be calculated
             automatically. Default length of `x0` is min([len(x), 50]).
             At least one of ``x0`` and ``N`` must be ``None``.
+            ``x0`` may also be a scalar.
         N (int): Default ``None``. Number of ``x0`` values to calculate if
             ``x0`` is not specified. At least one of ``x0`` and ``N`` must be
             ``None``.
@@ -76,7 +84,10 @@ def _kdensity_core(x, x0, h, kernel_obj, wt=None):
     return f_hat
 
 
-def llr(y, x, x0=None, N=None, h=None, degree=1, kernel='epan', ci=False):
+def llr(y: np.ndarray, x: np.ndarray,
+        x0: Optional[ArrayLike]=None,
+        N: Optional[int]=None, h: Optional[Union[str, float]]=None,
+        degree: int=1, kernel: str='epan', ci: bool=False):
     """Local-linear Regression
 
     Args:
@@ -116,9 +127,9 @@ def llr(y, x, x0=None, N=None, h=None, degree=1, kernel='epan', ci=False):
     kernel_obj = kernel_parser(kernel)
     x0 = _set_x0(x, x0, N)      # TODO passed `x0` overwritten?
 
-    try:
-        return_only = 'return' in h
-    except TypeError:
+    if type(h) is str:
+        return_only = 'return' in cast(str, h)
+    else:
         return_only = False
     h_val = set_bandwidth(y, x, h, degree, kernel_obj, return_only=return_only)
     if return_only:
@@ -138,7 +149,7 @@ def llr(y, x, x0=None, N=None, h=None, degree=1, kernel='epan', ci=False):
     else:
         return xG, est_stats
 
-def _set_x0(x, x0, N):
+def _set_x0(x, x0, N) -> ArrayLike:
     if x0 is not None:
         return x0
     N = _set_N(x, N)
@@ -249,7 +260,7 @@ def _make_X(x, x0, degree):
     return X
 
 
-def kernel_func(u, h, kernel):
+def kernel_func(u: ArrayLike, h: float, kernel: Callable) -> np.ndarray:
     x = u / h
     K = kernel(x)
     return K / h
