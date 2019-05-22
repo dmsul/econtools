@@ -5,7 +5,7 @@ from scipy.linalg import sqrtm              # notin `numpy.linalg`
 
 import scipy.stats as stats
 
-from econtools.util import force_list, force_df
+from econtools.util.gentools import force_list, force_df
 from econtools.metrics.regutil import (unpack_shac_args, flag_sample,
                                        flag_nonsingletons, set_sample,)
 from econtools.metrics.results import Results

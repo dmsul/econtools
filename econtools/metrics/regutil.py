@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from econtools.util import force_list, force_iterable, force_df
+from econtools.util.gentools import force_list, force_df
 
 
 def add_cons(df):

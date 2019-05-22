@@ -5,8 +5,8 @@ import pytest
 from numpy.testing import assert_array_equal
 from pandas.util.testing import assert_frame_equal
 
-from econtools.util import (int2base, base2int, force_df, force_list,
-                            force_iterable)
+from econtools.util.gentools import (int2base, base2int, force_df, force_list,
+                                     force_iterable)
 
 
 class Test_BaseConvert(object):

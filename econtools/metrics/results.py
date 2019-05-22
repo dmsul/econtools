@@ -6,7 +6,7 @@ import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
 from numpy.linalg import matrix_rank        # not in `scipy.linalg`
 import scipy.stats as stats
 
-from econtools.util import force_list
+from econtools.util.gentools import force_list
 
 
 class Results(object):

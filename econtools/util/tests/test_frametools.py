@@ -5,7 +5,7 @@ import numpy as np
 
 from pandas.util.testing import assert_frame_equal
 
-from econtools.util import stata_merge, group_id, winsorize
+from econtools.util.frametools import stata_merge, group_id, winsorize
 
 
 class TestStata_merge(object):

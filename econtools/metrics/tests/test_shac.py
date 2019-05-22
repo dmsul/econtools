@@ -10,7 +10,7 @@ import numpy as np
 
 from numpy.testing import (assert_array_almost_equal,)
 
-from econtools.util import group_id
+from econtools.util.frametools import group_id
 
 from econtools.metrics.api import reg
 
