@@ -1,18 +1,19 @@
 # Changelog
 
-## Next
+## [0.2.0] - 2019-05-22
 
 ### Added
 - Mypy typing hints.
 - New function `winsorize`.
-- Missing state name/abbreviation/fips crosswalk functions.
+- Additional state name/abbreviation/fips crosswalk functions and lists.
 
 ### Changed
 - REF: Removed Python 2 compatibility (following Pandas). `econtools` now
   requires Python >=3.6.
+- ENH: General improvements to documentation and docstrings.
 - ENH: `load_or_build` messages are now more informative.
 - ENH: Updated docstrings for several functions.
-- BUG: `state_name_to_fips` was not made accessible for external use.
+- BUG: `state_name_to_fips` was not accessible for external use.
 
 
 ## [0.1.1] - 2019-04-12
