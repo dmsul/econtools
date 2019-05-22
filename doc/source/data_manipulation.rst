@@ -1,10 +1,10 @@
 .. currentmodule: econtools
 
-.. _data:
+.. _data_manipulation:
 
-***************
-Reference Tools
-***************
+***********************
+Data Manipulation Tools
+***********************
 
 .. contents:: :local:
 

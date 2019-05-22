@@ -20,6 +20,12 @@ Data I/O
 .. autofunction:: econtools.read
 .. autofunction:: econtools.write
 
+Data Manipulation
+~~~~~~~~~~~~~~~~~
+
+.. autofunction:: econtools.stata_merge
+.. autofunction:: econtools.group_id
+
 Econometrics
 ~~~~~~~~~~~~
 
