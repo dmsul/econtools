@@ -5,8 +5,6 @@ SHAC with trivially small bandwidth (so the only obs that fall in unit i's
 bandwidth are unit i's). However, the degress of freedom corrections may be
 different, so this must be adjusted for.
 """
-from __future__ import division
-
 import pandas as pd
 import numpy as np
 

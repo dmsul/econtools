@@ -1,11 +1,12 @@
-from __future__ import division
+from typing import Union, Generator, Optional, Any, Iterable
 
 import string
 
 import pandas as pd
 
 
-def force_df(s, name=None):
+def force_df(s: Union[pd.DataFrame, pd.Series],
+             name: Optional[str]=None) -> pd.DataFrame:
     """
     Forces a Series to a DataFrame. DataFrames are returned unaffected. Other
     objects raise `ValueError`.
@@ -19,7 +20,7 @@ def force_df(s, name=None):
         return s.to_frame(name)
 
 
-def force_list(x):
+def force_list(x: Any) -> list:
     """If type not `list`, pass to `force_interable`, then convert to list."""
     if isinstance(x, list):
         return x
@@ -27,7 +28,7 @@ def force_list(x):
         return list(force_iterable(x))
 
 
-def force_iterable(x):
+def force_iterable(x) -> Iterable:
     """If not iterable, wrap in tuple"""
     if hasattr(x, '__iter__') and type(x) is not str:
         return x
@@ -35,7 +36,9 @@ def force_iterable(x):
         return (x,)
 
 
-def generate_chunks(iterable, chunk_size):
+def generate_chunks(
+        iterable: Union[list, tuple],
+        chunk_size: int) -> Generator[Union[list, tuple], None, None]:
     """Go through `iterable` one chunk at a time."""
     length = len(iterable)
     N_chunks = length // chunk_size
@@ -51,7 +54,7 @@ def generate_chunks(iterable, chunk_size):
         runs += 1
 
 
-def int2base(x, base):
+def int2base(x: int, base: int) -> str:
     """
     Convert decimal x >= 0 to base <= 62
 
@@ -71,7 +74,7 @@ def int2base(x, base):
     return new_base
 
 
-def base2int(x, base):
+def base2int(x: str, base: int) -> int:
     """
     Convert x >= 0 of base `base` to decimal.
 
@@ -95,5 +98,5 @@ def base2int(x, base):
     return base10
 
 
-def _base62_alphabet():
+def _base62_alphabet() -> str:
     return string.digits + string.ascii_uppercase + string.ascii_lowercase

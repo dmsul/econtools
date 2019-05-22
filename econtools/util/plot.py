@@ -1,10 +1,14 @@
-from __future__ import division
+from typing import Union, Optional, Tuple
 
 import pandas as pd
 import numpy as np
 
 
-def binscatter(x, y, n=20, data=None, discrete=False, median=False):
+def binscatter(
+    x: Union[str, np.ndarray], y: Union[str, np.ndarray],
+    n: int=20, data: Optional[pd.DataFrame]=None,
+    discrete: bool=False, median: bool=False
+) -> Tuple[np.ndarray, np.ndarray]:
     """Binscatter.
 
     Args:
@@ -20,13 +24,15 @@ def binscatter(x, y, n=20, data=None, discrete=False, median=False):
             of the mean. Only applies to y-axis values.
 
     Returns:
-        tuple: Tuple of arrays
+        tuple:
             * **x_bin_value** (*array*) - Array of x bin values.
             * **y_bin_value** (*array*) - Array of y bin values.
     """
 
-    # If no data is passed, assume arrays
-    if type(data) is pd.DataFrame and type(x) is str and type(y) is str:
+    # If no `data` is passed, assume arrays
+    if (isinstance(data, pd.DataFrame) and
+            isinstance(x, str) and
+            isinstance(y, str)):
         x = data[x]
         y = data[y]
 
@@ -45,7 +51,7 @@ def binscatter(x, y, n=20, data=None, discrete=False, median=False):
     return x_bin_value, y_bin_value
 
 
-def legend_below(ax, *args, **kwargs):
+def legend_below(ax, *args, **kwargs) -> None:
     """Create a legend below and outside the main axis object.
 
     Args:
@@ -72,7 +78,7 @@ def legend_below(ax, *args, **kwargs):
     ax.legend(*args, loc='upper center', bbox_to_anchor=anchor, **kwargs)
 
 
-def shrink_axes_for_legend(*args):
+def shrink_axes_for_legend(*args) -> None:
     for ax in args:
         box = ax.get_position()
         new_box = [box.x0, box.y0 + box.height * 0.1,

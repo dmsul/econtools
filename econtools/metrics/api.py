@@ -1,14 +1,23 @@
 import warnings
+from typing import Union, List, Optional
+
+import pandas as pd
 
 from econtools.metrics.core import Regression, IVReg
+from econtools.metrics.results import Results
+
+RHV = Union[str, List[str]]
 
 
-def reg(df, y_name, x_name,
-        fe_name=None, a_name=None, nosingles=True,
-        vce_type=None, cluster=None, shac=None,
-        addcons=None, nocons=False,
-        awt_name=None
-        ):
+def reg(df: pd.DataFrame,
+        y_name: str, x_name: Union[str, List[str]],
+        fe_name: Optional[str]=None, a_name: Optional[str]=None,
+        nosingles: bool=True,
+        vce_type: Optional[str]=None, cluster: Optional[str]=None, shac:
+        Optional[dict]=None,
+        addcons: Optional[bool]=None, nocons: bool=False,
+        awt_name: Optional[str]=None
+        ) -> Results:
     """OLS Regression.
 
     Args:
@@ -64,13 +73,18 @@ def reg(df, y_name, x_name,
     return results
 
 
-def ivreg(df, y_name, x_name, z_name, w_name,
-          fe_name=None, a_name=None, nosingles=True,
-          iv_method='2sls', _kappa_debug=None,
-          vce_type=None, cluster=None, shac=None,
-          addcons=None, nocons=False,
-          awt_name=None,
-          ):
+def ivreg(df: pd.DataFrame,
+          y_name: str,
+          x_name: Union[str, List[str]], z_name: Union[str, List[str]],
+          w_name: Union[str, List[str]],
+          fe_name: Optional[str]=None, a_name: Optional[str]=None,
+          nosingles: bool=True,
+          iv_method: str='2sls', _kappa_debug=None,
+          vce_type: Optional[str]=None, cluster: Optional[str]=None,
+          shac: Optional[dict]=None,
+          addcons: Optional[bool]=None, nocons: bool=False,
+          awt_name: Optional[str]=None,
+          ) -> Results:
     """Instrumental Variables Regression
 
     Args:
@@ -93,9 +107,9 @@ def ivreg(df, y_name, x_name, z_name, w_name,
                 - ``'liml'``, limited-information maximum likelihood.
 
     Returns:
-        A modified :py:class:`~econtools.metrics.core.Results` object:
-            - No r-squared (`r2` or `r2_a`)
-            - ``kappa`` attribute (always 1 if ``iv_method='2sls'``)
+        A :py:class:`~econtools.metrics.core.Results` object with (a) no
+        r-squared (``r2`` or ``r2_a`` attributes), and (b) a ``kappa``
+        attribute (always 1 if ``iv_method='2sls'``)
     """
 
     fe_name = _a_name_deprecation_handling(a_name, fe_name)
@@ -112,7 +126,9 @@ def ivreg(df, y_name, x_name, z_name, w_name,
     return results
 
 
-def _a_name_deprecation_handling(a_name, fe_name):
+def _a_name_deprecation_handling(
+        a_name: Union[None, str],
+        fe_name: Union[None, str]) -> Union[None, str]:
     """
     Nothing deeper than user-facing `reg` and `ivreg` should ever see
     `a_name` argument
