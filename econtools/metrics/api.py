@@ -41,7 +41,7 @@ def reg(df: pd.DataFrame,
                 - **x** (*str*): Column name in ``df`` to serve as longitude.
                 - **y** (*str*): Column name in ``df`` to serve as latitude.
                 - **kern** (*str*): Kernel to use in estimation. May be
-                    triangle (``tria``) or uniform (``unif``).
+                  triangle (``tria``) or uniform (``unif``).
                 - **band** (float): Bandwidth for kernel.
         fe_name (str) - Column name in ``df`` that defines groups for within
             transformation (demeaning).

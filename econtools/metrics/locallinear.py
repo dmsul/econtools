@@ -31,21 +31,21 @@ def kdensity(x: ArrayLike,
         h (str or float): Defaults to None (Silverman's rule of thumb).
             Bandwidth for kernel. May pass a float or any of the following for
             Silverman's rule of thumb: ``'silverman'``, ``'thumb'``, ``'rot'``.
-        kernel (str): Default ``'epan'``. Type of kernel to be used. Options
+        kernel (str): Type of kernel to be used. Options
             are:
-                - ``'epan'``, Epanechnikov
+                - ``'epan'``, Epanechnikov (default)
                 - ``'unif'``, Uniform
                 - ``'tria'``, Triangle
         wt (array-like): Weights. Must be same length as ``x``.
 
     Returns:
-        Tuple containing
-            * **x0** (*float or array*) - Points are which kernel is
-                estimated. If ``x0`` is passed explicitly, this will be the
-                same.
-            * **f_hat** (*float or array*) - Estimated kernel density at
-                point(s) ``x0``.
-            * **est_stats** (*dict*) - Contains bandwidth and kernel name.
+        tuple: A tuple containing
+                - **x0** (*float or array*) - Points are which kernel is
+                  estimated. If ``x0`` is passed explicitly, this will be the
+                  same.
+                - **f_hat** (*float or array*) - Estimated kernel density at
+                  point(s) ``x0``.
+                - **est_stats** (*dict*) - Contains bandwidth and kernel name.
     """
 
     if wt is not None:
@@ -91,8 +91,8 @@ def llr(y: np.ndarray, x: np.ndarray,
     """Local-linear Regression
 
     Args:
-        y (array):
-        x (array):
+        y (array): Dependent variable
+        x (array): Independent variable
 
     Keyword Args:
         x0 (float or array-like): Default ``None``. Values at which to
@@ -105,9 +105,9 @@ def llr(y: np.ndarray, x: np.ndarray,
         h (str or float): Defaults to None (Silverman's rule of thumb).
             Bandwidth for kernel. May pass a float or any of the following for
             Silverman's rule of thumb: ``'silverman'``, ``'thumb'``, ``'rot'``.
-        kernel (str): Default ``'epan'``. Type of kernel to be used. Options
+        kernel (str): Type of kernel to be used. Options
             are:
-                - ``'epan'``, Epanechnikov
+                - ``'epan'``, Epanechnikov (default)
                 - ``'unif'``, Uniform
                 - ``'tria'``, Triangle
         degree (int): Defaults to 1. Degree of polynomial to use in local
@@ -147,7 +147,7 @@ def llr(y: np.ndarray, x: np.ndarray,
     if ci:
         raise NotImplementedError   # TODO, see `NonParametrics2`, sec 3.11
     else:
-        return xG, est_stats
+        return xG, est_stats        # TODO, separate x0 and yhat
 
 def _set_x0(x, x0, N) -> ArrayLike:
     if x0 is not None:
