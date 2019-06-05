@@ -15,8 +15,9 @@ def reg(df: pd.DataFrame,
         nosingles: bool=True,
         vce_type: Optional[str]=None, cluster: Optional[str]=None, shac:
         Optional[dict]=None,
-        addcons: Optional[bool]=None, nocons: bool=False,
-        awt_name: Optional[str]=None
+        addcons: bool=False, nocons: bool=False,
+        awt_name: Optional[str]=None,
+        save_mem: bool=False,
         ) -> Results:
     """OLS Regression.
 
@@ -55,6 +56,9 @@ def reg(df: pd.DataFrame,
             affects degrees of freedom.
         nosingles (bool): Defaults to True. Drop observations that are obsorbed
             by the within transformation. Has no effect if ``a_name=None``.
+        save_mem (bool): Defaults to False. If True, the returned
+            :py:class:`~econtools.metrics.core.Results` object will not save
+            large objects, specifically ``yhat``, ``sample``, and ``resid``.
 
     Returns:
         A :py:class:`~econtools.metrics.core.Results` object
@@ -67,6 +71,7 @@ def reg(df: pd.DataFrame,
         fe_name=fe_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
         vce_type=vce_type, cluster=cluster, shac=shac,
         awt_name=awt_name,
+        save_mem=save_mem,
     )
 
     results = RegWorker.main()
@@ -82,8 +87,9 @@ def ivreg(df: pd.DataFrame,
           iv_method: str='2sls', _kappa_debug=None,
           vce_type: Optional[str]=None, cluster: Optional[str]=None,
           shac: Optional[dict]=None,
-          addcons: Optional[bool]=None, nocons: bool=False,
+          addcons: bool=False, nocons: bool=False,
           awt_name: Optional[str]=None,
+          save_mem: bool=False,
           ) -> Results:
     """Instrumental Variables Regression
 
@@ -120,6 +126,7 @@ def ivreg(df: pd.DataFrame,
         iv_method=iv_method, _kappa_debug=_kappa_debug,
         vce_type=vce_type, cluster=cluster, shac=shac,
         awt_name=awt_name,
+        save_mem=save_mem,
     )
 
     results = IVRegWorker.main()
