@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1] - XXXX
+
+### Added
+- New `save_mem` option for `reg` and `ivreg`. When set to True, the regression
+  `Results` will not save `yhat`, the `sample` flag, or `resid`. This will make
+  each `Results` object much smaller for regressions with large samples.
+
 ## [0.2.0] - 2019-05-22
 
 ### Added

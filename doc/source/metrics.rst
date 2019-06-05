@@ -126,6 +126,12 @@ direct access to estimates is also possible.
 
 The full list of attributes is listed :py:class:`here <econtools.metrics.core.Results>`.
 
+The ``save_mem`` flag can be used to reduce the save of the
+:py:class:`~econtools.metrics.core.Results` object by not saving predictions
+(``yhat``), residuals (``resid``) or a sample flag (``sample``). Since these
+vectors are always size N (or bigger for ``sample``), setting ``save_mem=True``
+can be very useful when running many regressions on large samples.
+
 F tests
 ~~~~~~~
 
