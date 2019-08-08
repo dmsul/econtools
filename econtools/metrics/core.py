@@ -7,7 +7,8 @@ import scipy.stats as stats
 
 from econtools.util.gentools import force_list, force_df
 from econtools.metrics.regutil import (unpack_shac_args, flag_sample,
-                                       flag_nonsingletons, set_sample,)
+                                       flag_nonsingletons, set_sample,
+                                       find_colinear_columns)
 from econtools.metrics.results import Results
 
 
@@ -45,6 +46,7 @@ class RegBase(object):
 
     def main(self):
         self.set_sample()
+        self.check_colinearity()
         self.estimate()
         self.get_vce()
         self.set_dof()
@@ -280,6 +282,23 @@ class Regression(RegBase):
 
     def __init__(self, *args, **kwargs):
         super(Regression, self).__init__(*args, **kwargs)
+
+    def check_colinearity(self):
+        if not self.check_colinear:
+            return
+
+        K = self.x.shape[1]
+        x_rank = la.matrix_rank(self.x)
+        if x_rank < K:
+            colinear_idx = find_colinear_columns(self.x.values,
+                                                 arr_rank=x_rank)
+            colinear_cols = self.x.columns[colinear_idx]
+            colinear_col_str = '\n' + '\n'.join(colinear_cols.tolist())
+            raise ValueError(f"Colinear variables: {colinear_col_str}")
+        elif x_rank > K:
+            raise ValueError("Something has gone very, very wrong.")
+        else:
+            pass
 
     def estimate(self):
         beta, xpx_inv = fitguts(self.y, self.x)

@@ -1,5 +1,8 @@
+from typing import Optional, List
+
 import pandas as pd
 import numpy as np
+import numpy.linalg as la
 
 from econtools.util.gentools import force_list, force_df
 
@@ -77,3 +80,30 @@ def flag_nonsingletons(df, avar, sample):
     big_counts = df[[avar]].join(counts.to_frame('_T'), on=avar).fillna(0)
     non_single = big_counts['_T'] > 1
     return non_single
+
+
+def find_colinear_columns(
+        arr: np.ndarray,
+        arr_rank: Optional[int]=None) -> List[int]:
+
+    if arr_rank is None:
+        arr_rank = la.matrix_rank(arr)
+    K = arr.shape[1]
+    num_colinear_cols = K - arr_rank
+    if num_colinear_cols <= 0: raise ValueError("No colinear columns.")
+
+    # Cycle through all columns; if a col doesn't increase rank, it's
+    # colinear so flag it
+    target_rank = 2
+    colinear_cols = []
+    for j in range(2, K):
+        sub_rank = la.matrix_rank(arr[:, :j])
+        if sub_rank == target_rank:
+            target_rank += 1
+        else:
+            colinear_cols.append(j)
+
+        if len(colinear_cols) == num_colinear_cols:
+            break  # We found them all; quit.
+
+    return colinear_cols

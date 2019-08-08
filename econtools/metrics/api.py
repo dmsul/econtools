@@ -15,9 +15,10 @@ def reg(df: pd.DataFrame,
         nosingles: bool=True,
         vce_type: Optional[str]=None, cluster: Optional[str]=None, shac:
         Optional[dict]=None,
-        addcons: bool=False, nocons: bool=False,
+        addcons: Optional[bool]=None, nocons: bool=False,
         awt_name: Optional[str]=None,
         save_mem: bool=False,
+        check_colinear: bool=False,
         ) -> Results:
     """OLS Regression.
 
@@ -56,9 +57,15 @@ def reg(df: pd.DataFrame,
             affects degrees of freedom.
         nosingles (bool): Defaults to True. Drop observations that are obsorbed
             by the within transformation. Has no effect if ``a_name=None``.
+<<<<<<< HEAD
         save_mem (bool): Defaults to False. If True, the returned
             :py:class:`~econtools.metrics.core.Results` object will not save
             large objects, specifically ``yhat``, ``sample``, and ``resid``.
+=======
+        check_colinear (bool): Default False. Checks rank of regressor matrix,
+            X. If X is rank deficient, an error is raised that prints the
+            colinear columns.
+>>>>>>> rank check for `reg` (not `ivreg` yet)
 
     Returns:
         A :py:class:`~econtools.metrics.core.Results` object
