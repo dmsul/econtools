@@ -131,11 +131,13 @@ class RegBase(object):
         vce = _wrapSigma((vce + vce.T) / 2, X_for_resid.columns)
 
         self.results._add_stat('vce', vce)
-        self.results._add_stat('yhat', yhat)
-        self.results._add_stat('resid', resid)
 
-        # Not VCE, but needs to go somewhere
-        self.results._add_stat('sample', self.sample)
+        if not self.save_mem:
+            self.results._add_stat('yhat', yhat)
+            self.results._add_stat('resid', resid)
+
+            # Not VCE, but needs to go somewhere
+            self.results._add_stat('sample', self.sample)
 
     def _prep_inference_mats(self):
         """
