@@ -4,3 +4,4 @@ dist
 *.pyd
 *.pyc
 build*
+.mypy*
