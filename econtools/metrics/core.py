@@ -1,3 +1,4 @@
+from typing import Union
 import pandas as pd
 import numpy as np
 import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
@@ -46,7 +47,6 @@ class RegBase(object):
 
     def main(self):
         self.set_sample()
-        self.check_colinearity()
         self.estimate()
         self.get_vce()
         self.set_dof()
@@ -283,24 +283,10 @@ class Regression(RegBase):
     def __init__(self, *args, **kwargs):
         super(Regression, self).__init__(*args, **kwargs)
 
-    def check_colinearity(self):
-        if not self.check_colinear:
-            return
-
-        K = self.x.shape[1]
-        x_rank = la.matrix_rank(self.x)
-        if x_rank < K:
-            colinear_idx = find_colinear_columns(self.x.values,
-                                                 arr_rank=x_rank)
-            colinear_cols = self.x.columns[colinear_idx]
-            colinear_col_str = '\n' + '\n'.join(colinear_cols.tolist())
-            raise ValueError(f"Colinear variables: {colinear_col_str}")
-        elif x_rank > K:
-            raise ValueError("Something has gone very, very wrong.")
-        else:
-            pass
-
     def estimate(self):
+        if self.check_colinear:
+            has_colinear_cols(self.x)
+
         beta, xpx_inv = fitguts(self.y, self.x)
         self.results = Results(beta=beta, xpx_inv=xpx_inv)
         self.results.sst = self.y
@@ -324,6 +310,7 @@ class IVReg(RegBase):
         w = self.w
         z = self.z
 
+        # TODO: Generalize Z and X creation above _first_stage and _liml
         if self.iv_method == '2sls':
             self.Xhat, self.Xtrue = self._first_stage(x, w, z)
             beta, xpx_inv = fitguts(self.y, self.Xhat)
@@ -349,16 +336,29 @@ class IVReg(RegBase):
         X = pd.concat((x, w), axis=1)
         Xhat = X.copy()
         Z = pd.concat((z, w), axis=1)
+
+        if self.check_colinear:
+            has_colinear_cols(Z)
+
         for an_x in x.columns:
             this_x = x[an_x]
             pi_hat, __ = fitguts(this_x, Z)
             Xhat[an_x] = np.dot(Z, pi_hat)
+
+        if self.check_colinear:
+            has_colinear_cols(Xhat)
+
         return Xhat, X
 
     def _liml(self, y, x, z, w, _kappa_debug, vce_type):
         Z = pd.concat((z, w), axis=1)
         kappa, ZZ_inv = self._liml_kappa(y, x, w, Z)
         X = pd.concat((x, w), axis=1)
+
+        if self.check_colinear:
+            has_colinear_cols(Z)
+            has_colinear_cols(X)
+
         # Solve system
         XX = X.T.dot(X)
         XZ = X.T.dot(Z)
@@ -435,6 +435,21 @@ def fitguts(y, x):
     beta = pd.Series(np.dot(xpx_inv, xpy).squeeze(), index=x.columns)
 
     return beta, xpx_inv
+
+
+def has_colinear_cols(matrix: pd.DataFrame) -> bool:
+    K = matrix.shape[1]
+    rank = la.matrix_rank(matrix)
+    if rank < K:
+        colinear_idx = find_colinear_columns(matrix,
+                                             arr_rank=rank)
+        colinear_cols = matrix.columns[colinear_idx]
+        colinear_col_str = '\n' + '\n'.join(colinear_cols.tolist())
+        raise ValueError(f"Colinear variables: {colinear_col_str}")
+    elif rank > K:
+        raise ValueError("Something has gone very, very wrong.")
+    else:
+        return False
 
 # VCE estimators
 def vce_homosk(xpx_inv, resid):
