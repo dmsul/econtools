@@ -96,8 +96,8 @@ def find_colinear_columns(
     # colinear so flag it
     target_rank = 2
     colinear_cols = []
-    for j in range(2, K):
-        sub_rank = la.matrix_rank(arr[:, :j])
+    for j in range(1, K):
+        sub_rank = la.matrix_rank(arr[:, :(j + 1)])
         if sub_rank == target_rank:
             target_rank += 1
         else:

@@ -445,7 +445,7 @@ def _get_colinear_cols(matrix: pd.DataFrame) -> List[str]:
     K = matrix.shape[1]
     rank = la.matrix_rank(matrix)
     if rank < K:
-        colinear_idx = find_colinear_columns(matrix,
+        colinear_idx = find_colinear_columns(matrix.values,
                                              arr_rank=rank)
         colinear_cols = matrix.columns[colinear_idx]
         return colinear_cols.tolist()
