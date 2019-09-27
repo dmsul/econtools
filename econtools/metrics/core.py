@@ -1,3 +1,4 @@
+from typing import Union, List
 import pandas as pd
 import numpy as np
 import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
@@ -7,7 +8,8 @@ import scipy.stats as stats
 
 from econtools.util.gentools import force_list, force_df
 from econtools.metrics.regutil import (unpack_shac_args, flag_sample,
-                                       flag_nonsingletons, set_sample,)
+                                       flag_nonsingletons, set_sample,
+                                       find_colinear_columns)
 from econtools.metrics.results import Results
 
 
@@ -282,6 +284,9 @@ class Regression(RegBase):
         super(Regression, self).__init__(*args, **kwargs)
 
     def estimate(self):
+        if self.check_colinear:
+            check_colinear_cols(self.x)
+
         beta, xpx_inv = fitguts(self.y, self.x)
         self.results = Results(beta=beta, xpx_inv=xpx_inv)
         self.results.sst = self.y
@@ -305,6 +310,7 @@ class IVReg(RegBase):
         w = self.w
         z = self.z
 
+        # TODO: Generalize Z and X creation above _first_stage and _liml
         if self.iv_method == '2sls':
             self.Xhat, self.Xtrue = self._first_stage(x, w, z)
             beta, xpx_inv = fitguts(self.y, self.Xhat)
@@ -330,16 +336,29 @@ class IVReg(RegBase):
         X = pd.concat((x, w), axis=1)
         Xhat = X.copy()
         Z = pd.concat((z, w), axis=1)
+
+        if self.check_colinear:
+            check_colinear_cols(Z)
+
         for an_x in x.columns:
             this_x = x[an_x]
             pi_hat, __ = fitguts(this_x, Z)
             Xhat[an_x] = np.dot(Z, pi_hat)
+
+        if self.check_colinear:
+            check_colinear_cols(Xhat)
+
         return Xhat, X
 
     def _liml(self, y, x, z, w, _kappa_debug, vce_type):
         Z = pd.concat((z, w), axis=1)
         kappa, ZZ_inv = self._liml_kappa(y, x, w, Z)
         X = pd.concat((x, w), axis=1)
+
+        if self.check_colinear:
+            check_colinear_cols(Z)
+            check_colinear_cols(X)
+
         # Solve system
         XX = X.T.dot(X)
         XZ = X.T.dot(Z)
@@ -416,6 +435,31 @@ def fitguts(y, x):
     beta = pd.Series(np.dot(xpx_inv, xpy).squeeze(), index=x.columns)
 
     return beta, xpx_inv
+
+
+def check_colinear_cols(matrix: pd.DataFrame) -> None:
+    colinear_cols = _get_colinear_cols(matrix)
+    _raise_colinear_cols(colinear_cols)
+
+def _get_colinear_cols(matrix: pd.DataFrame) -> List[str]:
+    K = matrix.shape[1]
+    rank = la.matrix_rank(matrix)
+    if rank < K:
+        colinear_idx = find_colinear_columns(matrix.values,
+                                             arr_rank=rank)
+        colinear_cols = matrix.columns[colinear_idx]
+        return colinear_cols.tolist()
+    elif rank > K:
+        raise ValueError("Something has gone very, very wrong.")
+    else:
+        return []
+
+def _raise_colinear_cols(colinear_cols: list) -> None:
+    if len(colinear_cols) == 0:
+        return
+    else:
+        colinear_col_str = '\n' + '\n'.join(colinear_cols)
+        raise ValueError(f"Colinear variables: {colinear_col_str}")
 
 # VCE estimators
 def vce_homosk(xpx_inv, resid):
