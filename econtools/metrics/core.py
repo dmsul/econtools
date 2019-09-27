@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 import pandas as pd
 import numpy as np
 import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
@@ -285,7 +285,7 @@ class Regression(RegBase):
 
     def estimate(self):
         if self.check_colinear:
-            has_colinear_cols(self.x)
+            check_colinear_cols(self.x)
 
         beta, xpx_inv = fitguts(self.y, self.x)
         self.results = Results(beta=beta, xpx_inv=xpx_inv)
@@ -338,7 +338,7 @@ class IVReg(RegBase):
         Z = pd.concat((z, w), axis=1)
 
         if self.check_colinear:
-            has_colinear_cols(Z)
+            check_colinear_cols(Z)
 
         for an_x in x.columns:
             this_x = x[an_x]
@@ -346,7 +346,7 @@ class IVReg(RegBase):
             Xhat[an_x] = np.dot(Z, pi_hat)
 
         if self.check_colinear:
-            has_colinear_cols(Xhat)
+            check_colinear_cols(Xhat)
 
         return Xhat, X
 
@@ -356,8 +356,8 @@ class IVReg(RegBase):
         X = pd.concat((x, w), axis=1)
 
         if self.check_colinear:
-            has_colinear_cols(Z)
-            has_colinear_cols(X)
+            check_colinear_cols(Z)
+            check_colinear_cols(X)
 
         # Solve system
         XX = X.T.dot(X)
@@ -437,19 +437,29 @@ def fitguts(y, x):
     return beta, xpx_inv
 
 
-def has_colinear_cols(matrix: pd.DataFrame) -> bool:
+def check_colinear_cols(matrix: pd.DataFrame) -> None:
+    colinear_cols = _get_colinear_cols(matrix)
+    _raise_colinear_cols(colinear_cols)
+
+def _get_colinear_cols(matrix: pd.DataFrame) -> List[str]:
     K = matrix.shape[1]
     rank = la.matrix_rank(matrix)
     if rank < K:
         colinear_idx = find_colinear_columns(matrix,
                                              arr_rank=rank)
         colinear_cols = matrix.columns[colinear_idx]
-        colinear_col_str = '\n' + '\n'.join(colinear_cols.tolist())
-        raise ValueError(f"Colinear variables: {colinear_col_str}")
+        return colinear_cols.tolist()
     elif rank > K:
         raise ValueError("Something has gone very, very wrong.")
     else:
-        return False
+        return []
+
+def _raise_colinear_cols(colinear_cols: list) -> None:
+    if len(colinear_cols) == 0:
+        return
+    else:
+        colinear_col_str = '\n' + '\n'.join(colinear_cols)
+        raise ValueError(f"Colinear variables: {colinear_col_str}")
 
 # VCE estimators
 def vce_homosk(xpx_inv, resid):
