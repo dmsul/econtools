@@ -108,6 +108,24 @@ format_results `reg_type'_output "`reg_type'_cluster" 1
 
 file close `reg_type'_output
 
+* OLS (weighted)
+local reg_type awt
+format_results_header "src_`reg_type'.py" `reg_type'_output 1
+global wt mpg
+
+qui reg $Y $X [aw=$wt],
+format_results `reg_type'_output "`reg_type'_std" 1
+qui reg $Y $X [aw=$wt], robust
+format_results `reg_type'_output "`reg_type'_robust" 1
+qui reg $Y $X [aw=$wt], vce(hc2)
+format_results `reg_type'_output "`reg_type'_hc2" 1
+qui reg $Y $X [aw=$wt], vce(hc3)
+format_results `reg_type'_output "`reg_type'_hc3" 1
+qui reg $Y $X [aw=$wt], cluster($cluster)
+format_results `reg_type'_output "`reg_type'_cluster" 1
+
+file close `reg_type'_output
+
 * tsls
 local reg_type tsls
 format_results_header "src_`reg_type'.py" `reg_type'_output 1
