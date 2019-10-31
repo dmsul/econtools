@@ -94,6 +94,11 @@ The econometrics submodule :mod:`econtools.metrics` includes
 * F-tests by variable name or arbitrary ``R`` matrix.
 * Kernel density estimation
 * Local linear regression
+* WARNING [31 Oct 2019]: Predicted values (yhat and residuals) may not be as
+  expected in transformed regressions (when using fixed effects or using
+  weights). That is, the current behavior is different from Stata. I am looking
+  into this and will post a either a fix or a justification of current behavior
+  in the near future.
 
 Full econometrics documentation :ref:`here <metrics>`.
 
