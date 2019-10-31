@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0] - 2019-10-31
+
+### Added
+- New `save_mem` option for `reg` and `ivreg`. When set to True, the regression
+  `Results` will not save `yhat`, the `sample` flag, or `resid`. This will make
+  each `Results` object much smaller for regressions with large samples.
+- New `check_colinear` option for `reg` and `ivreg`. When set to True,
+  a rank deficiency (colinearity) check will be done on the regressor matrix.
+  If the regressor matrix is found to be deficient (if a colinear variable is
+  found), the colinear columns will be calculated and printed.
+
 ## [0.2.0] - 2019-05-22
 
 ### Added

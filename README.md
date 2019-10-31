@@ -14,6 +14,11 @@ shortcuts for data work with [pandas](http://github.com/pydata/pandas) and
     kernels
 - F-tests by variable name or `R` matrix.
 - Local linear regression.
+- WARNING [31 Oct 2019]: Predicted values (yhat and residuals) may not be as
+  expected in transformed regressions (when using fixed effects or using
+  weights). That is, the current behavior is different from Stata. I am looking
+  into this and will post a either a fix or a justification of current behavior
+  in the near future.
 
 ```python
 import econtools

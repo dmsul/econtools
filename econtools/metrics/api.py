@@ -13,10 +13,12 @@ def reg(df: pd.DataFrame,
         y_name: str, x_name: Union[str, List[str]],
         fe_name: Optional[str]=None, a_name: Optional[str]=None,
         nosingles: bool=True,
-        vce_type: Optional[str]=None, cluster: Optional[str]=None, shac:
-        Optional[dict]=None,
+        vce_type: Optional[str]=None, cluster: Optional[str]=None,
+        shac: Optional[dict]=None,
         addcons: Optional[bool]=None, nocons: bool=False,
-        awt_name: Optional[str]=None
+        awt_name: Optional[str]=None,
+        save_mem: bool=False,
+        check_colinear: bool=False,
         ) -> Results:
     """OLS Regression.
 
@@ -55,6 +57,12 @@ def reg(df: pd.DataFrame,
             affects degrees of freedom.
         nosingles (bool): Defaults to True. Drop observations that are obsorbed
             by the within transformation. Has no effect if ``a_name=None``.
+        save_mem (bool): Defaults to False. If True, the returned
+            :py:class:`~econtools.metrics.core.Results` object will not save
+            large objects, specifically ``yhat``, ``sample``, and ``resid``.
+        check_colinear (bool): Default False. Checks rank of regressor matrix,
+            X. If X is rank deficient, an error is raised that prints the
+            colinear columns.
 
     Returns:
         A :py:class:`~econtools.metrics.core.Results` object
@@ -67,6 +75,8 @@ def reg(df: pd.DataFrame,
         fe_name=fe_name, nosingles=nosingles, addcons=addcons, nocons=nocons,
         vce_type=vce_type, cluster=cluster, shac=shac,
         awt_name=awt_name,
+        save_mem=save_mem,
+        check_colinear=check_colinear,
     )
 
     results = RegWorker.main()
@@ -82,8 +92,10 @@ def ivreg(df: pd.DataFrame,
           iv_method: str='2sls', _kappa_debug=None,
           vce_type: Optional[str]=None, cluster: Optional[str]=None,
           shac: Optional[dict]=None,
-          addcons: Optional[bool]=None, nocons: bool=False,
+          addcons: bool=False, nocons: bool=False,
           awt_name: Optional[str]=None,
+          save_mem: bool=False,
+          check_colinear: bool=False,
           ) -> Results:
     """Instrumental Variables Regression
 
@@ -120,6 +132,8 @@ def ivreg(df: pd.DataFrame,
         iv_method=iv_method, _kappa_debug=_kappa_debug,
         vce_type=vce_type, cluster=cluster, shac=shac,
         awt_name=awt_name,
+        save_mem=save_mem,
+        check_colinear=check_colinear,
     )
 
     results = IVRegWorker.main()
