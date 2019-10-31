@@ -1,3 +1,0 @@
-include README.md
-include LICENSE.txt
-include econtools/metrics/tests/data/*.dta

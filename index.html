@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Package overview &mdash; econtools 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Data (I/O) Tools" href="io.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> econtools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Data (I/O) Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Econometrics Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="to_latex.html">LaTeX Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_manipulation.html">Data Manipulation Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plot.html">Plotting Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Function Signatures</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">econtools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>Package overview</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="overview"></span><div class="toctree-wrapper compound">
+</div>
+<div class="section" id="package-overview">
+<h1>Package overview<a class="headerlink" href="#package-overview" title="Permalink to this headline">¶</a></h1>
+<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">econtools</span></code> is a <a class="reference external" href="https://www.anaconda.com/download/">Python</a> package for
+econometrics and data manipulation.</p>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#installation" id="id1">Installation</a><ul>
+<li><a class="reference internal" href="#requirements" id="id2">Requirements</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#input-output-i-o-tools" id="id3">Input/Output (I/O) Tools</a></li>
+<li><a class="reference internal" href="#data-manipulation-tools" id="id4">Data Manipulation Tools</a></li>
+<li><a class="reference internal" href="#econometric-tools" id="id5">Econometric Tools</a></li>
+<li><a class="reference internal" href="#latex-tools" id="id6">LaTeX Tools</a></li>
+<li><a class="reference internal" href="#plotting-tools" id="id7">Plotting Tools</a></li>
+<li><a class="reference internal" href="#reference-tools" id="id8">Reference Tools</a></li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2><a class="toc-backref" href="#id1">Installation</a><a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Download or clone <code class="docutils literal notranslate"><span class="pre">econtools</span></code>
+<a class="reference external" href="https://github.com/dmsul/econtools">here</a> and run the <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python setup.py install
+</pre></div>
+</div>
+<div class="section" id="requirements">
+<h3><a class="toc-backref" href="#id2">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Python 3.6+</li>
+<li>Pandas and its dependencies (Numpy, etc.)</li>
+<li>Scipy and its dependencies</li>
+<li>Pytables (optional, if you use HDF5 files)</li>
+<li>PyTest (optional, if you want to run the tests)</li>
+</ul>
+</div>
+</div>
+<div class="section" id="input-output-i-o-tools">
+<h2><a class="toc-backref" href="#id3">Input/Output (I/O) Tools</a><a class="headerlink" href="#input-output-i-o-tools" title="Permalink to this headline">¶</a></h2>
+<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">econtools</span></code> contains a number of boilerplate methods that make it easier to
+create datasets, save them to disk, and prepare them for statistical analysis.</p>
+<p>Highlights include</p>
+<ul class="simple">
+<li><a class="reference internal" href="api.html#econtools.load_or_build" title="econtools.load_or_build"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_or_build()</span></code></a>: a decorator that caches a DataFrame to disk.</li>
+<li><a class="reference internal" href="api.html#econtools.save_cli" title="econtools.save_cli"><code class="xref py py-func docutils literal notranslate"><span class="pre">save_cli()</span></code></a>: an <code class="docutils literal notranslate"><span class="pre">argparse</span></code> wrapper that
+adds a <code class="docutils literal notranslate"><span class="pre">--save</span></code> command line switch to any script.</li>
+<li><a class="reference internal" href="api.html#econtools.confirmer" title="econtools.confirmer"><code class="xref py py-func docutils literal notranslate"><span class="pre">confirmer()</span></code></a>: a drop-in interactive method that prompts the
+user for a yes or no response, e.g. “Are you sure you want to delete all your
+data?”</li>
+</ul>
+<p>Full I/O documentation <a class="reference internal" href="io.html#io"><span class="std std-ref">here</span></a>.</p>
+</div>
+<div class="section" id="data-manipulation-tools">
+<h2><a class="toc-backref" href="#id4">Data Manipulation Tools</a><a class="headerlink" href="#data-manipulation-tools" title="Permalink to this headline">¶</a></h2>
+<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">econtools</span></code> also contains a few helper functions that make data cleaning a
+bit easier</p>
+<ul class="simple">
+<li><a class="reference internal" href="api.html#econtools.stata_merge" title="econtools.stata_merge"><code class="xref py py-func docutils literal notranslate"><span class="pre">stata_merge()</span></code></a> wraps <cite>pandas.merge</cite> and adds a few
+Stata-like niceties like a flag for whether observations existed in the left,
+right, or both datasets (cf <cite>_merge</cite> variable in Stata).</li>
+<li><a class="reference internal" href="api.html#econtools.group_id" title="econtools.group_id"><code class="xref py py-func docutils literal notranslate"><span class="pre">group_id()</span></code></a> makes it easy to generate your own arbitrary
+ID number based on a list of other variables.</li>
+</ul>
+</div>
+<div class="section" id="econometric-tools">
+<h2><a class="toc-backref" href="#id5">Econometric Tools</a><a class="headerlink" href="#econometric-tools" title="Permalink to this headline">¶</a></h2>
+<p>The econometrics submodule <code class="xref py py-mod docutils literal notranslate"><span class="pre">econtools.metrics</span></code> includes</p>
+<ul>
+<li><p class="first">Common regression techniques (OLS, 2SLS, LIML) with results tested against
+Stata (except where Stata has documented errors).</p>
+</li>
+<li><p class="first">Option to absorb any variable into fixed effects via within transformation.
+This is similar to the <code class="docutils literal notranslate"><span class="pre">areg,</span> <span class="pre">absorb</span></code> command in Stata but is included in
+the main regression functions. This consolidates most Stata regression
+methods into two <code class="xref py py-mod docutils literal notranslate"><span class="pre">econtools.metrics</span></code> functions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="api.html#econtools.metrics.reg" title="econtools.metrics.reg"><code class="xref py py-func docutils literal notranslate"><span class="pre">reg()</span></code></a>: <code class="docutils literal notranslate"><span class="pre">reg</span></code>, <code class="docutils literal notranslate"><span class="pre">areg</span></code>, <code class="docutils literal notranslate"><span class="pre">xtreg</span></code></li>
+<li><a class="reference internal" href="api.html#econtools.metrics.ivreg" title="econtools.metrics.ivreg"><code class="xref py py-func docutils literal notranslate"><span class="pre">ivreg()</span></code></a>: <code class="docutils literal notranslate"><span class="pre">ivreg</span></code>, <code class="docutils literal notranslate"><span class="pre">xtivreg</span></code></li>
+</ul>
+</div></blockquote>
+<p>These functions also use the correct degrees of freedom corrections.</p>
+</li>
+<li><p class="first">Robust standard errors</p>
+<blockquote>
+<div><ul class="simple">
+<li>robust/HC1, HC2, HC3</li>
+<li>Clustered standard errors</li>
+<li>Spatial HAC (aka Conley standard errors) with uniform or triangle kernel</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">F-tests by variable name or arbitrary <code class="docutils literal notranslate"><span class="pre">R</span></code> matrix.</p>
+</li>
+<li><p class="first">Kernel density estimation</p>
+</li>
+<li><p class="first">Local linear regression</p>
+</li>
+<li><p class="first">WARNING [31 Oct 2019]: Predicted values (yhat and residuals) may not be as
+expected in transformed regressions (when using fixed effects or using
+weights). That is, the current behavior is different from Stata. I am looking
+into this and will post a either a fix or a justification of current behavior
+in the near future.</p>
+</li>
+</ul>
+<p>Full econometrics documentation <a class="reference internal" href="metrics.html#metrics"><span class="std std-ref">here</span></a>.</p>
+</div>
+<div class="section" id="latex-tools">
+<h2><a class="toc-backref" href="#id6">LaTeX Tools</a><a class="headerlink" href="#latex-tools" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="api.html#econtools.outreg" title="econtools.outreg"><code class="xref py py-func docutils literal notranslate"><span class="pre">outreg()</span></code></a> creates LaTeX table fragments from
+regression results.</li>
+<li><a class="reference internal" href="api.html#econtools.table_statrow" title="econtools.table_statrow"><code class="xref py py-func docutils literal notranslate"><span class="pre">table_statrow()</span></code></a> creates bottom rows of regression tables
+(e.g., R-squared) and summary statistic tables.</li>
+</ul>
+<p>Full LaTeX documentation <a class="reference internal" href="to_latex.html#tolatex"><span class="std std-ref">here</span></a>.</p>
+</div>
+<div class="section" id="plotting-tools">
+<h2><a class="toc-backref" href="#id7">Plotting Tools</a><a class="headerlink" href="#plotting-tools" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="api.html#econtools.binscatter" title="econtools.binscatter"><code class="xref py py-func docutils literal notranslate"><span class="pre">binscatter()</span></code></a></li>
+</ul>
+<p>Full plotting tools documentation <a class="reference internal" href="plot.html#plot"><span class="std std-ref">here</span></a>.</p>
+</div>
+<div class="section" id="reference-tools">
+<h2><a class="toc-backref" href="#id8">Reference Tools</a><a class="headerlink" href="#reference-tools" title="Permalink to this headline">¶</a></h2>
+<p>Crosswalks between U.S. state names, abbreviations, and FIPS codes, as well as
+raw lists of each set of identifiers.</p>
+<p>Full reference tools documentation <a class="reference internal" href="reference.html#reference"><span class="std std-ref">here</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="io.html" class="btn btn-neutral float-right" title="Data (I/O) Tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Daniel M. Sullivan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

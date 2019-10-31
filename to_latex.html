@@ -1,0 +1,354 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>LaTeX Tools &mdash; econtools 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Data Manipulation Tools" href="data_manipulation.html" />
+    <link rel="prev" title="Econometrics Tools" href="metrics.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> econtools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="io.html">Data (I/O) Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Econometrics Tools</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">LaTeX Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#outreg"><code class="docutils literal notranslate"><span class="pre">outreg</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#table-mainrow"><code class="docutils literal notranslate"><span class="pre">table_mainrow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#table-statrow"><code class="docutils literal notranslate"><span class="pre">table_statrow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#write-notes"><code class="docutils literal notranslate"><span class="pre">write_notes</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_manipulation.html">Data Manipulation Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plot.html">Plotting Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Function Signatures</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">econtools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>LaTeX Tools</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/to_latex.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="latex-tools">
+<span id="tolatex"></span><h1>LaTeX Tools<a class="headerlink" href="#latex-tools" title="Permalink to this headline">¶</a></h1>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#outreg" id="id1"><code class="docutils literal notranslate"><span class="pre">outreg</span></code></a></li>
+<li><a class="reference internal" href="#table-mainrow" id="id2"><code class="docutils literal notranslate"><span class="pre">table_mainrow</span></code></a></li>
+<li><a class="reference internal" href="#table-statrow" id="id3"><code class="docutils literal notranslate"><span class="pre">table_statrow</span></code></a></li>
+<li><a class="reference internal" href="#write-notes" id="id4"><code class="docutils literal notranslate"><span class="pre">write_notes</span></code></a></li>
+<li><a class="reference internal" href="#example" id="id5">Example</a></li>
+</ul>
+</div>
+<div class="section" id="outreg">
+<h2><a class="toc-backref" href="#id1"><code class="docutils literal notranslate"><span class="pre">outreg</span></code></a><a class="headerlink" href="#outreg" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="api.html#econtools.outreg" title="econtools.outreg"><code class="xref py py-func docutils literal notranslate"><span class="pre">outreg()</span></code></a>.</p>
+</div>
+<div class="section" id="table-mainrow">
+<h2><a class="toc-backref" href="#id2"><code class="docutils literal notranslate"><span class="pre">table_mainrow</span></code></a><a class="headerlink" href="#table-mainrow" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="api.html#econtools.table_mainrow" title="econtools.table_mainrow"><code class="xref py py-func docutils literal notranslate"><span class="pre">table_mainrow()</span></code></a>.</p>
+</div>
+<div class="section" id="table-statrow">
+<h2><a class="toc-backref" href="#id3"><code class="docutils literal notranslate"><span class="pre">table_statrow</span></code></a><a class="headerlink" href="#table-statrow" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="api.html#econtools.table_statrow" title="econtools.table_statrow"><code class="xref py py-func docutils literal notranslate"><span class="pre">table_statrow()</span></code></a>.</p>
+</div>
+<div class="section" id="write-notes">
+<h2><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">write_notes</span></code></a><a class="headerlink" href="#write-notes" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="api.html#econtools.write_notes" title="econtools.write_notes"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_notes()</span></code></a>.</p>
+</div>
+<div class="section" id="example">
+<h2><a class="toc-backref" href="#id5">Example</a><a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">econtools</span> <span class="kn">import</span> <span class="n">read</span><span class="p">,</span> <span class="n">outreg</span><span class="p">,</span> <span class="n">table_statrow</span><span class="p">,</span> <span class="n">write_notes</span>
+<span class="kn">import</span> <span class="nn">econtools.metrics</span> <span class="kn">as</span> <span class="nn">mt</span>
+
+<span class="c1"># Load data</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;my_data.dta&#39;</span><span class="p">)</span>
+
+<span class="c1"># Run Regressions</span>
+<span class="n">reg1</span> <span class="o">=</span> <span class="n">mt</span><span class="o">.</span><span class="n">reg</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;ln_wage&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ed&#39;</span><span class="p">],</span> <span class="n">addcons</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">reg2</span> <span class="o">=</span> <span class="n">mt</span><span class="o">.</span><span class="n">reg</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;ln_wage&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;age2&#39;</span><span class="p">],</span> <span class="n">addcons</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c1"># Put coefficients and standard errors in a table</span>
+<span class="n">regs</span> <span class="o">=</span> <span class="p">(</span><span class="n">reg1</span><span class="p">,</span> <span class="n">reg2</span><span class="p">)</span>
+<span class="n">table_string</span> <span class="o">=</span> <span class="n">outreg</span><span class="p">(</span><span class="n">regs</span><span class="p">,</span>
+                      <span class="p">[</span><span class="s1">&#39;ed&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;age2&#39;</span><span class="p">,</span> <span class="s1">&#39;_cons&#39;</span><span class="p">],</span>     <span class="c1"># Add these coefficients to the table</span>
+                      <span class="p">[</span><span class="s1">&#39;Years Education&#39;</span><span class="p">,</span>                 <span class="c1"># Use these label for the coeffs</span>
+                       <span class="s1">&#39;Age&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;Age$^2$&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;Constant&#39;</span><span class="p">]</span>
+                      <span class="n">digits</span><span class="o">=</span><span class="mi">3</span>                            <span class="c1"># Round to 3 decimal digits.</span>
+                      <span class="p">)</span>
+
+<span class="c1"># Add R^2 to the table</span>
+<span class="n">table_string</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\\\</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>                           <span class="c1"># Empty line between betas and r2</span>
+<span class="n">table_string</span> <span class="o">+=</span> <span class="n">table_statrow</span><span class="p">(</span><span class="s2">&quot;R$^2$&quot;</span>               <span class="c1"># Add a row with this label</span>
+                              <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">r2</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">regs</span><span class="p">],</span> <span class="c1"># Fill the row with these values</span>
+                              <span class="n">digits</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Save the table string to a file</span>
+<span class="n">results_path</span> <span class="o">=</span> <span class="s1">&#39;my_results.tex&#39;</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">table_string</span><span class="p">)</span>
+
+<span class="c1"># Save separate file with table notes</span>
+<span class="n">notes</span> <span class="o">=</span> <span class="s2">&quot;Sample size is {}.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reg1</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+<span class="n">write_notes</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="n">results_path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The above snippet of code saves two files to disk, <code class="docutils literal notranslate"><span class="pre">my_results.tex</span></code>:</p>
+<div class="highlight-tex notranslate"><div class="highlight"><pre><span></span>Years Education  <span class="nb">&amp;</span> 3.142**    <span class="nb">&amp;</span>             <span class="k">\\</span>
+                 <span class="nb">&amp;</span> (1.413)    <span class="nb">&amp;</span>             <span class="k">\\</span>
+Age              <span class="nb">&amp;</span>            <span class="nb">&amp;</span> 1.590       <span class="k">\\</span>
+                 <span class="nb">&amp;</span>            <span class="nb">&amp;</span> (2.020)     <span class="k">\\</span>
+Age<span class="s">$</span><span class="nb">^</span><span class="m">2</span><span class="s">$</span>          <span class="nb">&amp;</span>            <span class="nb">&amp;</span> 1.390       <span class="k">\\</span>
+                 <span class="nb">&amp;</span>            <span class="nb">&amp;</span> (4.024)     <span class="k">\\</span>
+Constant         <span class="nb">&amp;</span> 11.132***  <span class="nb">&amp;</span> 10.324***   <span class="k">\\</span>
+                 <span class="nb">&amp;</span> (1.324)    <span class="nb">&amp;</span> (2.720)     <span class="k">\\</span>
+<span class="k">\\</span>
+R<span class="s">$</span><span class="nb">^</span><span class="m">2</span><span class="s">$</span>            <span class="nb">&amp;</span> 0.129      <span class="nb">&amp;</span> 0.132       <span class="k">\\</span>
+</pre></div>
+</div>
+<p>and <code class="docutils literal notranslate"><span class="pre">my_results_notes.tex</span></code>:</p>
+<div class="highlight-tex notranslate"><div class="highlight"><pre><span></span>Sample size is 934.
+</pre></div>
+</div>
+<p>These files can be incorporated into a LaTeX document using the <code class="docutils literal notranslate"><span class="pre">\input</span></code>
+command. In the main LaTeX document:</p>
+<div class="highlight-tex notranslate"><div class="highlight"><pre><span></span><span class="k">\documentclass</span><span class="nb">{</span>article<span class="nb">}</span>
+
+<span class="k">\usepackage</span><span class="nb">{</span>threeparttable<span class="nb">}</span>
+<span class="k">\usepackage</span><span class="nb">{</span>booktabs<span class="nb">}</span>
+
+<span class="k">\begin</span><span class="nb">{</span>document<span class="nb">}</span>
+
+<span class="k">\begin</span><span class="nb">{</span>table<span class="nb">}</span>
+    <span class="k">\centering</span>
+    <span class="k">\caption</span><span class="nb">{</span>Two Wage Regressions<span class="nb">}</span><span class="k">\label</span><span class="nb">{</span>tab:wage-reg<span class="nb">}</span>
+    <span class="k">\begin</span><span class="nb">{</span>threeparttable<span class="nb">}</span>
+    <span class="k">\begin</span><span class="nb">{</span>tabular<span class="nb">}{</span>lcc<span class="nb">}</span>
+        <span class="k">\toprule</span>
+         <span class="nb">&amp;</span> (1) <span class="nb">&amp;</span> (2) <span class="k">\\</span>
+        <span class="k">\midrule</span>
+        <span class="k">\input</span><span class="nb">{</span>my<span class="nb">_</span>results<span class="nb">}</span>  <span class="c">% The table fragment</span>
+        <span class="k">\bottomrule</span>
+    <span class="k">\end</span><span class="nb">{</span>tabular<span class="nb">}</span>
+    <span class="k">\begin</span><span class="nb">{</span>tablenotes<span class="nb">}</span>
+        <span class="k">\item</span> <span class="k">\emph</span><span class="nb">{</span>Notes:<span class="nb">}</span>
+            <span class="k">\input</span><span class="nb">{</span>my<span class="nb">_</span>results<span class="nb">_</span>notes<span class="nb">}</span>  <span class="c">% The note on sample size.</span>
+    <span class="k">\end</span><span class="nb">{</span>tablenotes<span class="nb">}</span>
+    <span class="k">\end</span><span class="nb">{</span>threeparttable<span class="nb">}</span>
+<span class="k">\end</span><span class="nb">{</span>table<span class="nb">}</span>
+
+<span class="k">\end</span><span class="nb">{</span>document<span class="nb">}</span>
+</pre></div>
+</div>
+<p>This results in</p>
+<div class="figure">
+<img alt="_images/main_tex.png" src="_images/main_tex.png" />
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="data_manipulation.html" class="btn btn-neutral float-right" title="Data Manipulation Tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="metrics.html" class="btn btn-neutral" title="Econometrics Tools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Daniel M. Sullivan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

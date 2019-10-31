@@ -1,0 +1,437 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Econometrics Tools &mdash; econtools 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="LaTeX Tools" href="to_latex.html" />
+    <link rel="prev" title="Data (I/O) Tools" href="io.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> econtools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="io.html">Data (I/O) Tools</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Econometrics Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ols">OLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#instrumental-variables">Instrumental Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#returned-results">Returned Results</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#f-tests">F tests</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#local-linear-regression">Local Linear Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#other-estimation-options">Other Estimation Options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#save-memory-by-not-computing-predicted-values">Save memory by not computing predicted values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#check-for-colinear-columns">Check for colinear columns</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#spatial-hac-conley-errors">Spatial HAC (Conley errors)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="to_latex.html">LaTeX Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_manipulation.html">Data Manipulation Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plot.html">Plotting Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Function Signatures</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">econtools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Econometrics Tools</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/metrics.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="econometrics-tools">
+<span id="metrics"></span><h1>Econometrics Tools<a class="headerlink" href="#econometrics-tools" title="Permalink to this headline">¶</a></h1>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#ols" id="id1">OLS</a></li>
+<li><a class="reference internal" href="#instrumental-variables" id="id2">Instrumental Variables</a></li>
+<li><a class="reference internal" href="#returned-results" id="id3">Returned Results</a><ul>
+<li><a class="reference internal" href="#f-tests" id="id4">F tests</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#local-linear-regression" id="id5">Local Linear Regression</a></li>
+<li><a class="reference internal" href="#other-estimation-options" id="id6">Other Estimation Options</a><ul>
+<li><a class="reference internal" href="#save-memory-by-not-computing-predicted-values" id="id7">Save memory by not computing predicted values</a></li>
+<li><a class="reference internal" href="#check-for-colinear-columns" id="id8">Check for colinear columns</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#spatial-hac-conley-errors" id="id9">Spatial HAC (Conley errors)</a></li>
+</ul>
+</div>
+<div class="section" id="ols">
+<h2><a class="toc-backref" href="#id1">OLS</a><a class="headerlink" href="#ols" title="Permalink to this headline">¶</a></h2>
+<p>To estimate an OLS regression, you pass the <a class="reference internal" href="api.html#econtools.metrics.reg" title="econtools.metrics.reg"><code class="xref py py-func docutils literal notranslate"><span class="pre">reg()</span></code></a>
+function at least three arguments</p>
+<ol class="arabic simple">
+<li>The DataFrame that contains the data.</li>
+<li>The name of the dependent variable as a string.</li>
+<li>The name(s) of the independent variable(s) as a string (for one variable) or
+as a list.</li>
+</ol>
+<p>Following these arguments, there are a number of keyword arguments for various
+other options. For example, the following code estimates a basic wage
+regression with state-level clustering and fixed effects, weighting by the
+variable <code class="docutils literal notranslate"><span class="pre">sample_wt</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">econtools.metrics</span> <span class="kn">as</span> <span class="nn">mt</span>
+
+<span class="c1"># Load a data file with columns &#39;ln_wage&#39;, &#39;educ&#39;, and &#39;state&#39;</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;my_data.csv&#39;</span><span class="p">)</span>
+
+<span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;wage&#39;</span>
+<span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;educ&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;male&#39;</span><span class="p">]</span>
+<span class="n">fe_var</span> <span class="o">=</span> <span class="s1">&#39;state&#39;</span>
+<span class="n">cluster_var</span> <span class="o">=</span> <span class="s1">&#39;state&#39;</span>
+<span class="n">weights_var</span> <span class="o">=</span> <span class="s1">&#39;sample_wt&#39;</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">mt</span><span class="o">.</span><span class="n">reg</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">,</span>                     <span class="c1"># DataFrame</span>
+    <span class="n">y</span><span class="p">,</span>                      <span class="c1"># Dependent var (string)</span>
+    <span class="n">X</span><span class="p">,</span>                      <span class="c1"># Independent var(s) (string or list of strings)</span>
+    <span class="n">fe_name</span><span class="o">=</span><span class="n">fe_var</span><span class="p">,</span>         <span class="c1"># Fixed-effects/absorb var (string)</span>
+    <span class="n">cluster</span><span class="o">=</span><span class="n">cluster_var</span>     <span class="c1"># Cluster var (string)</span>
+    <span class="n">awt_name</span><span class="o">=</span><span class="n">weights_var</span>    <span class="c1"># Sample weights</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that <a class="reference internal" href="api.html#econtools.metrics.reg" title="econtools.metrics.reg"><code class="xref py py-func docutils literal notranslate"><span class="pre">reg()</span></code></a> does <em>not</em> automatically estimate a
+constant term. In order to have a constant/intercept in your model, you can (a)
+add a column of ones to your DataFrame, or (b) use the <code class="docutils literal notranslate"><span class="pre">addcons</span></code> keyword arg:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">mt</span><span class="o">.</span><span class="n">reg</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="n">X</span><span class="p">,</span>              <span class="c1"># does not include a constant/intercept</span>
+    <span class="n">addcons</span><span class="o">=</span><span class="bp">True</span>    <span class="c1"># Adds a constant term</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="instrumental-variables">
+<h2><a class="toc-backref" href="#id2">Instrumental Variables</a><a class="headerlink" href="#instrumental-variables" title="Permalink to this headline">¶</a></h2>
+<p>Estimating an instrumental variables model is very similar, but is done using
+the <a class="reference internal" href="api.html#econtools.metrics.ivreg" title="econtools.metrics.ivreg"><code class="xref py py-func docutils literal notranslate"><span class="pre">ivreg()</span></code></a> function. The order of arguments is
+also slightly different in order to differentiate between the instruments,
+endogenous regressors, and exogenous regressors. Other keyword options, such as
+<code class="docutils literal notranslate"><span class="pre">addcons</span></code>, <code class="docutils literal notranslate"><span class="pre">cluster</span></code>, and so forth, are exactly the same as with
+<a class="reference internal" href="api.html#econtools.metrics.reg" title="econtools.metrics.reg"><code class="xref py py-func docutils literal notranslate"><span class="pre">reg()</span></code></a>.</p>
+<p>One additional keyword argument is <cite>method</cite>, which sets the IV method used to
+estimate the model. Currently supported values are <code class="docutils literal notranslate"><span class="pre">'2sls'</span></code> (the default) and
+<code class="docutils literal notranslate"><span class="pre">'liml'</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># &lt;Imports and loading data&gt;</span>
+
+<span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;wage&#39;</span>              <span class="c1"># Dependent var</span>
+<span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;educ&#39;</span><span class="p">]</span>            <span class="c1"># Endogenous regressor(s)</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;treatment&#39;</span><span class="p">]</span>       <span class="c1"># Instrumental variable(s)</span>
+<span class="n">W</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;male&#39;</span><span class="p">]</span>    <span class="c1"># Exogenous regressor(s)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">mt</span><span class="o">.</span><span class="n">ivreg</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="returned-results">
+<h2><a class="toc-backref" href="#id3">Returned Results</a><a class="headerlink" href="#returned-results" title="Permalink to this headline">¶</a></h2>
+<p>The regression functions <a class="reference internal" href="api.html#econtools.metrics.reg" title="econtools.metrics.reg"><code class="xref py py-func docutils literal notranslate"><span class="pre">reg()</span></code></a> and
+<a class="reference internal" href="api.html#econtools.metrics.ivreg" title="econtools.metrics.ivreg"><code class="xref py py-func docutils literal notranslate"><span class="pre">ivreg()</span></code></a> return a custom
+<a class="reference internal" href="api.html#econtools.metrics.core.Results" title="econtools.metrics.core.Results"><code class="xref py py-class docutils literal notranslate"><span class="pre">Results</span></code></a> object that contains beta
+estimates, variance-covariance matrix, and other relevant info.</p>
+<p>The easiest way to see regression results is the <code class="docutils literal notranslate"><span class="pre">summary</span></code> attribute. But
+direct access to estimates is also possible.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">econtools.metrics</span> <span class="kn">as</span> <span class="nn">mt</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_stata</span><span class="p">(</span><span class="s1">&#39;some_data.dta&#39;</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">mt</span><span class="o">.</span><span class="n">reg</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;ln_wage&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;educ&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">],</span> <span class="n">addcons</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c1"># Print a nice summary of the regression results (a string)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="c1"># Print DataFrame w/ betas, se&#39;s, t-stats, etc.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
+
+<span class="c1"># Print only betas</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+
+<span class="c1"># Print std. err. for `educ` coefficient</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">se</span><span class="p">[</span><span class="s1">&#39;educ&#39;</span><span class="p">])</span>
+
+<span class="c1"># Print full variance-covariance matrix</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">vce</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The full list of attributes is listed <a class="reference internal" href="api.html#econtools.metrics.core.Results" title="econtools.metrics.core.Results"><code class="xref py py-class docutils literal notranslate"><span class="pre">here</span></code></a>.</p>
+<div class="section" id="f-tests">
+<h3><a class="toc-backref" href="#id4">F tests</a><a class="headerlink" href="#f-tests" title="Permalink to this headline">¶</a></h3>
+<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">econtools.metrics</span></code> contains two functions for conducting F tests.</p>
+<p>The first, <a class="reference internal" href="api.html#econtools.metrics.core.Results.Ftest" title="econtools.metrics.core.Results.Ftest"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Ftest()</span></code></a>, is for simple,
+Stata-like tests for joint significance or equality. It is a method on the
+<a class="reference internal" href="api.html#econtools.metrics.core.Results" title="econtools.metrics.core.Results"><code class="xref py py-class docutils literal notranslate"><span class="pre">Results</span></code></a> object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">mt</span><span class="o">.</span><span class="n">reg</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;ln_wage&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;educ&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">],</span> <span class="n">addcons</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c1"># Test for joint significance</span>
+<span class="n">F1</span><span class="p">,</span> <span class="n">pF1</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">Ftest</span><span class="p">([</span><span class="s1">&#39;educ&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">])</span>
+<span class="c1"># Test for equality</span>
+<span class="n">F2</span><span class="p">,</span> <span class="n">pF2</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">Ftest</span><span class="p">([</span><span class="s1">&#39;educ&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">],</span> <span class="n">equal</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The second, <a class="reference internal" href="api.html#econtools.metrics.f_test" title="econtools.metrics.f_test"><code class="xref py py-func docutils literal notranslate"><span class="pre">f_test()</span></code></a>, is for F tests of arbitrary
+linear combinations of coefficients. The tests are defined by an <code class="docutils literal notranslate"><span class="pre">R</span></code>
+matrix and an <code class="docutils literal notranslate"><span class="pre">r</span></code> vector such that the null hypothesis is <span class="math notranslate nohighlight">\(R\beta = r\)</span>.</p>
+</div>
+</div>
+<div class="section" id="local-linear-regression">
+<h2><a class="toc-backref" href="#id5">Local Linear Regression</a><a class="headerlink" href="#local-linear-regression" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="api.html#econtools.metrics.llr" title="econtools.metrics.llr"><code class="xref py py-func docutils literal notranslate"><span class="pre">llr()</span></code></a>.</p>
+</div>
+<div class="section" id="other-estimation-options">
+<h2><a class="toc-backref" href="#id6">Other Estimation Options</a><a class="headerlink" href="#other-estimation-options" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="save-memory-by-not-computing-predicted-values">
+<h3><a class="toc-backref" href="#id7">Save memory by not computing predicted values</a><a class="headerlink" href="#save-memory-by-not-computing-predicted-values" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">save_mem</span></code> flag can be used to reduce the memory footprint of the
+<a class="reference internal" href="api.html#econtools.metrics.core.Results" title="econtools.metrics.core.Results"><code class="xref py py-class docutils literal notranslate"><span class="pre">Results</span></code></a> object by not saving predicted
+values for the dependent variable (<code class="docutils literal notranslate"><span class="pre">yhat</span></code>) and the residuals (<code class="docutils literal notranslate"><span class="pre">resid</span></code>), as
+well as the sample flag (<code class="docutils literal notranslate"><span class="pre">sample</span></code>). Since these vectors are always size N (or
+bigger for <code class="docutils literal notranslate"><span class="pre">sample</span></code>), setting <code class="docutils literal notranslate"><span class="pre">save_mem=True</span></code> can be very useful when
+running many regressions on large samples.</p>
+</div>
+<div class="section" id="check-for-colinear-columns">
+<h3><a class="toc-backref" href="#id8">Check for colinear columns</a><a class="headerlink" href="#check-for-colinear-columns" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">check_colinear</span></code> flag can be used to check whether the list of regressors
+contains any colinear variables. More technically, when <code class="docutils literal notranslate"><span class="pre">check_colinear</span></code> is
+<code class="docutils literal notranslate"><span class="pre">True</span></code>, the regression function checks whether the regressor matrix X is full
+rank. If it is not full rank, it figures out which columns are colinear and
+prints the names of those columns to screen. It <em>does not</em> automatically drop
+colinear columns.</p>
+<p>Because these checks can be computationally expensive, <code class="docutils literal notranslate"><span class="pre">check_colinear</span></code>
+defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</div>
+</div>
+<div class="section" id="spatial-hac-conley-errors">
+<h2><a class="toc-backref" href="#id9">Spatial HAC (Conley errors)</a><a class="headerlink" href="#spatial-hac-conley-errors" title="Permalink to this headline">¶</a></h2>
+<p>Spatial HAC standard errors (as in
+<a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0304407698000840">Conley (1999)</a>,
+<a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0304407606002260">Kelejian and Prucha (2007)</a>,
+etc.) can be calculated by passing a dictionary with the relevant fields to the
+<code class="docutils literal notranslate"><span class="pre">shac</span></code> keyword:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">shac_params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="s1">&#39;longitude&#39;</span><span class="p">,</span>   <span class="c1"># Column in `df`</span>
+    <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="s1">&#39;latitude&#39;</span><span class="p">,</span>    <span class="c1"># Column in `df`</span>
+    <span class="s1">&#39;kern&#39;</span><span class="p">:</span> <span class="s1">&#39;unif&#39;</span><span class="p">,</span>     <span class="c1"># Kernel name</span>
+    <span class="s1">&#39;band&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>          <span class="c1"># Kernel bandwidth</span>
+<span class="p">}</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_stata</span><span class="p">(</span><span class="s1">&#39;reg_data.dta&#39;</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">mt</span><span class="o">.</span><span class="n">reg</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;lnp&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;sqft&#39;</span><span class="p">,</span> <span class="s1">&#39;rooms&#39;</span><span class="p">],</span>
+                 <span class="n">fe_name</span><span class="o">=</span><span class="s1">&#39;state&#39;</span><span class="p">,</span>
+                 <span class="n">shac</span><span class="o">=</span><span class="n">shac_params</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">The <code class="docutils literal notranslate"><span class="pre">band</span></code> parameter is assumed to be in the same units as <code class="docutils literal notranslate"><span class="pre">x</span></code> and
+<code class="docutils literal notranslate"><span class="pre">y</span></code>. If <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> are degrees latitude/longitude, <code class="docutils literal notranslate"><span class="pre">band</span></code> should
+also be in degrees. <code class="docutils literal notranslate"><span class="pre">econtools</span></code> does not do any advanced geographic
+distance calculations here, just simple Euclidean distance.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="to_latex.html" class="btn btn-neutral float-right" title="LaTeX Tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="io.html" class="btn btn-neutral" title="Data (I/O) Tools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Daniel M. Sullivan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
