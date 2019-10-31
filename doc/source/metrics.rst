@@ -126,12 +126,6 @@ direct access to estimates is also possible.
 
 The full list of attributes is listed :py:class:`here <econtools.metrics.core.Results>`.
 
-The ``save_mem`` flag can be used to reduce the save of the
-:py:class:`~econtools.metrics.core.Results` object by not saving predictions
-(``yhat``), residuals (``resid``) or a sample flag (``sample``). Since these
-vectors are always size N (or bigger for ``sample``), setting ``save_mem=True``
-can be very useful when running many regressions on large samples.
-
 F tests
 ~~~~~~~
 
@@ -153,6 +147,38 @@ Stata-like tests for joint significance or equality. It is a method on the
 The second, :py:func:`~econtools.metrics.f_test`, is for F tests of arbitrary
 linear combinations of coefficients. The tests are defined by an ``R``
 matrix and an ``r`` vector such that the null hypothesis is :math:`R\beta = r`.
+
+Local Linear Regression
+-----------------------
+
+See :py:func:`~econtools.metrics.llr`.
+
+
+Other Estimation Options
+------------------------
+
+Save memory by not computing predicted values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``save_mem`` flag can be used to reduce the memory footprint of the
+:py:class:`~econtools.metrics.core.Results` object by not saving predicted
+values for the dependent variable (``yhat``) and the residuals (``resid``), as
+well as the sample flag (``sample``). Since these vectors are always size N (or
+bigger for ``sample``), setting ``save_mem=True`` can be very useful when
+running many regressions on large samples.
+
+Check for colinear columns
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``check_colinear`` flag can be used to check whether the list of regressors
+contains any colinear variables. More technically, when ``check_colinear`` is
+``True``, the regression function checks whether the regressor matrix X is full
+rank. If it is not full rank, it figures out which columns are colinear and
+prints the names of those columns to screen. It *does not* automatically drop
+colinear columns.
+
+Because these checks can be computationally expensive, ``check_colinear``
+defaults to ``False``.
 
 
 Spatial HAC (Conley errors)
@@ -188,7 +214,3 @@ etc.) can be calculated by passing a dictionary with the relevant fields to the
     distance calculations here, just simple Euclidean distance.
 
 
-Local Linear Regression
------------------------
-
-See :py:func:`~econtools.metrics.llr`.
