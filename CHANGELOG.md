@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.0] - XXXX
+## [0.3.0] - 2019-10-31
 
 ### Added
 - New `save_mem` option for `reg` and `ivreg`. When set to True, the regression

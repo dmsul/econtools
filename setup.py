@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 setup(name='econtools',
-      version='0.2.0',
+      version='0.3.0',
       description='Econometrics and other tools',
       long_description=readme(),
       # url=
