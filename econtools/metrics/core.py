@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import List
 import pandas as pd
 import numpy as np
 import numpy.linalg as la    # scipy.linalg yields slightly diff results (tsls)
