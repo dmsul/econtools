@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.3.1] - 2020-03-10
+- Changes to `setup.py` and `readme.md` for upload to PYPI.
+
 ## [0.3.0] - 2019-10-31
 
 ### Added

@@ -4,6 +4,23 @@ shortcuts for data work with [pandas](http://github.com/pydata/pandas) and
 [numpy](https://github.com/numpy/numpy). Full documentation
 [here](http://www.danielmsullivan.com/econtools).
 
+## Installation
+
+You can install directly from PYPI:
+
+```bash
+$ pip install econtools
+```
+
+Or you can clone from Github and install directly.
+
+```bash
+$ git clone http://github.com/dmsul/econtools
+$ cd econtools
+$ python setup.py install
+```
+
+
 ## Econometrics
 - OLS, 2SLS, LIML
 - Option to absorb any variable via within-transformation (a la `areg` in Stata)
