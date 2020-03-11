@@ -9,10 +9,11 @@ def readme():
 dependencies = [
     'pandas>=0.16.0',
     'numpy>=1.9.2',
+    'scipy',
 ]
 
 setup(name='econtools',
-      version='0.3.1',
+      version='0.3.2',
       description='Econometrics and other tools',
       long_description=readme(),
       long_description_content_type="text/markdown",
